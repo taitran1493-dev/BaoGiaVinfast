@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VINFAST THẾ TÀI - Báo Giá Chuẩn</title>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- THƯ VIỆN XUẤT ẢNH -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { brand: { primary: '#1464F4', dark: '#111827' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f3f4f6; margin: 0; padding: 0; }
+        
+        /* KHÓA CỨNG KÍCH THƯỚC BÁO GIÁ ĐỂ XUẤT ẢNH LUÔN NÉT */
+        #capture-area {
+            box-sizing: border-box; width: 1024px; min-width: 1024px; max-width: 1024px;
+            background: white; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden;
+        }
+        #capture-area, #capture-area * { box-sizing: border-box; }
+
+        .capture-grid-main { display: grid; grid-template-columns: minmax(0, 58fr) minmax(0, 42fr); gap: 32px; align-items: center; }
+        .capture-grid-cost { display: grid; grid-template-columns: minmax(0, 42fr) minmax(0, 58fr); gap: 28px; align-items: stretch; }
+        .capture-col { min-width: 0; }
+
+        #quote-promo-list { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; min-width: 0; }
+        #quote-promo-list > li { width: auto !important; min-width: 0; }
+        
+        .dot-leader { flex: 1; border-bottom: 1px dotted #cbd5e1; margin: 0 10px; position: relative; top: -4px; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-color: transparent; outline: none; }
+
+        .quote-option-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+        .quote-fee-option-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+        .quote-option { min-width: 0; height: 40px; display: flex; align-items: center; padding: 0 10px; background: #f3f4f6; border-radius: 6px; }
+        .quote-fee-option-grid .quote-option { background:#eff6ff; border:1px solid #dbeafe; }
+        .quote-fee-option-grid .quote-option label { color:#1d4ed8; }
+        .quote-option label { font-size: 11px; font-weight: 700; color: #6b7280; margin-right: 5px; white-space: nowrap; }
+        .quote-option select { min-width: 0; flex: 1; font-size: 11px; font-weight: 700; color: #374151; }
+        
+        #quoteInfoModal .quote-info-row { display: flex; justify-content: space-between; gap: 20px; padding: 11px 0; border-bottom: 1px solid #e5e7eb; }
+        #quoteInfoModal .quote-info-row:last-child { border-bottom: 0; }
+        #quoteInfoModal .quote-info-label { color: #6b7280; font-size: 13px; }
+        #quoteInfoModal .quote-info-value { color: #111827; font-size: 14px; font-weight: 700; text-align: right; }
+        
+        .customize-check-wrap { background:#7c3aed; color:#fff; padding:10px 18px; display:flex; align-items:center; gap:10px; font-weight:700; cursor:pointer; user-select:none; }
+        .customize-check-wrap input { width:18px; height:18px; accent-color:#fff; cursor:pointer; }
+        
+        #live-customize-panel { position:fixed; right:24px; bottom:90px; z-index:45; width:650px; max-width:calc(100vw - 32px); max-height:calc(100vh - 120px); overflow-y:auto; background:#fff; border:1px solid #ddd6fe; border-radius:18px; box-shadow:0 20px 50px rgba(17,24,39,.25); padding:16px; }
+        #live-customize-panel.hidden-panel { display:none; }
+        #live-customize-panel .live-title { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; }
+        #live-customize-panel .live-close { border:0; background:#f3f4f6; width:30px; height:30px; border-radius:50%; font-size:18px; cursor:pointer; }
+        #live-customize-panel .live-grid { display:grid; grid-template-columns:1fr; gap:10px; }
+        #live-customize-panel .live-fee-row { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(170px,.75fr); gap:10px; }
+        #live-customize-panel .live-field { min-width:0; background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px; padding:10px; }
+        #live-customize-panel .live-field label { display:block; font-size:12px; font-weight:700; color:#4b5563; margin-bottom:6px; }
+        #live-customize-panel .live-field input, #live-customize-panel .live-field select { width:100%; height:40px; border:1px solid #cbd5e1; border-radius:8px; padding:0 11px; font-size:13px; font-weight:800; text-align:right; outline:none; background:#fff; }
+        #live-customize-panel .live-field select { text-align:left; font-weight:700; }
+        #live-customize-panel .live-section-title { font-size:12px; font-weight:900; color:#1f2937; text-transform:uppercase; border-top:1px solid #e5e7eb; padding-top:11px; margin-top:2px; }
+        #live-customize-panel .live-section-title:first-child { border-top:0; padding-top:0; }
+        #live-customize-panel .live-help { margin-top:5px; font-size:10px; line-height:1.35; color:#6b7280; }
+        #live-customize-panel .live-field input:focus, #live-customize-panel .live-field select:focus { border-color:#7c3aed; box-shadow:0 0 0 2px rgba(124,58,237,.10); }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        #preview-scroll-container::-webkit-scrollbar { width: 8px; }
+        #preview-scroll-container::-webkit-scrollbar-thumb { background: #6b7280; border-radius: 4px; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @media (max-width: 640px) { 
+            #live-customize-panel .live-grid { grid-template-columns:1fr; }
+            #live-customize-panel .live-fee-row { grid-template-columns:1fr; }
+            #live-customize-panel { left:16px; right:16px; bottom:75px; width:auto; max-width:none; max-height:calc(100vh - 105px); } 
+        }
+
+
+        /* ================= MOBILE-FIRST WORKSPACE ================= */
+        html { -webkit-text-size-adjust: 100%; }
+        button, input, select, textarea { touch-action: manipulation; }
+
+        @media (max-width: 767px) {
+            body { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+
+            /* Vùng làm việc chính: gọn, dễ thao tác một tay */
+            body > .max-w-\[1450px\] { padding: 10px !important; gap: 12px !important; padding-bottom: 96px !important; }
+            body > .max-w-\[1450px\] > div:first-child { gap: 12px !important; }
+            body > .max-w-\[1450px\] > div:first-child > div { border-radius: 14px !important; }
+            body > .max-w-\[1450px\] > div:first-child .p-5 { padding: 14px !important; }
+
+            /* Input đủ lớn để iPhone không tự zoom khi focus */
+            input[type="text"], input[type="number"], select, textarea { font-size: 16px !important; }
+            #vf-dealer-extra, #vf-catmau { min-height: 50px; font-size: 18px !important; padding: 10px 12px !important; }
+            #vf-dealer-extra-panel > .flex { align-items:flex-start !important; }
+            #vf-dealer-extra-panel .text-right.shrink-0 { min-width: 112px; }
+
+            /* Thanh công cụ dưới: vuốt ngang, nút lớn, không che nội dung */
+            #action-buttons {
+                padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) !important;
+                gap: 7px !important;
+                scroll-snap-type: x proximity;
+                overscroll-behavior-x: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+            #action-buttons > *, #action-buttons > div > * { scroll-snap-align: start; }
+            #action-buttons button, #action-buttons label {
+                min-height: 46px !important;
+                border-radius: 12px !important;
+                box-shadow: none !important;
+                font-size: 12px !important;
+                padding: 9px 12px !important;
+            }
+
+            /* Popup tùy chỉnh thành bottom sheet */
+            #live-customize-panel {
+                left: 0 !important; right: 0 !important; bottom: 0 !important;
+                width: 100% !important; max-width: none !important;
+                max-height: 86dvh !important;
+                padding: 14px 12px calc(16px + env(safe-area-inset-bottom)) !important;
+                border-radius: 22px 22px 0 0 !important;
+                border-left: 0 !important; border-right: 0 !important; border-bottom: 0 !important;
+                box-shadow: 0 -16px 45px rgba(17,24,39,.24) !important;
+            }
+            #live-customize-panel .live-title { position: sticky; top: -14px; z-index: 3; background:#fff; padding: 10px 2px 10px; margin-bottom:8px; }
+            #live-customize-panel .live-close { width: 40px; height: 40px; font-size: 24px; }
+            #live-customize-panel .live-fee-row { grid-template-columns: 1fr !important; gap: 7px !important; }
+            #live-customize-panel .live-field { padding: 9px; border-radius: 10px; }
+            #live-customize-panel .live-field input, #live-customize-panel .live-field select { height: 46px; font-size:16px !important; }
+
+            /* Báo giá LIVE responsive. Chỉ #capture-area thật bị đổi; clone xuất ảnh vẫn 1024px. */
+            #quote-live-shell { overflow: visible !important; box-shadow: none !important; background: transparent !important; }
+            #capture-area {
+                width: 100% !important; min-width: 0 !important; max-width: 100% !important;
+                border-radius: 14px; box-shadow: 0 5px 20px rgba(17,24,39,.10) !important;
+            }
+            #capture-area header { padding: 15px !important; gap: 10px; align-items:flex-start !important; }
+            #capture-area header h1 { font-size: 17px !important; }
+            #capture-area header p { font-size: 10px !important; }
+            #capture-area > header + div { padding: 14px !important; }
+            #capture-area .capture-grid-main, #capture-area .capture-grid-cost { grid-template-columns: 1fr !important; gap: 14px !important; }
+            #capture-area .capture-grid-main { align-items: stretch !important; }
+            #capture-area #quote-car-name { font-size: 24px !important; line-height: 1.12 !important; margin-bottom: 10px !important; }
+
+            /* Hàng chọn xe / biển */
+            #capture-area .quote-primary-row { display:grid !important; grid-template-columns: minmax(0,1.35fr) minmax(0,.8fr); gap:8px !important; margin-top:10px !important; }
+            #capture-area .quote-primary-row > div { width:auto !important; min-width:0 !important; height:48px !important; padding-left:10px !important; padding-right:8px !important; }
+            #capture-area .quote-primary-row select { min-width:0; width:100%; }
+
+            /* Màu/TT/Hộ khẩu/Sử dụng = 2 cột; phí = 1 cột để đọc đủ */
+            #capture-area .quote-option-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap:8px !important; }
+            #capture-area .quote-fee-option-grid { grid-template-columns: 1fr !important; gap:7px !important; }
+            #capture-area .quote-option { height:48px !important; padding:0 10px !important; border-radius:9px !important; }
+            #capture-area .quote-option label { font-size:11px !important; min-width:56px; }
+            #capture-area .quote-option select { font-size:14px !important; }
+            #capture-area select { -webkit-appearance: menulist; appearance: auto; }
+
+            /* Thông tin xe / ảnh xe xếp dọc */
+            #capture-area .quote-spec-card { flex-direction: column !important; }
+            #capture-area .quote-spec-card > div { width:100% !important; }
+            #capture-area .quote-spec-card > div:first-child { padding:16px !important; border-right:0 !important; border-bottom:1px solid #f3f4f6; }
+            #capture-area .quote-spec-card > div:last-child { padding:10px !important; }
+            #capture-area #quote-car-img { max-height:190px !important; }
+            #capture-area #quote-car-specs li { width:100% !important; }
+
+            /* Các bảng chi phí/khuyến mãi đọc theo một cột */
+            #capture-area .capture-grid-cost > .capture-col > h3 { font-size:12px !important; }
+            #capture-area .capture-grid-cost > .capture-col > div { padding:14px !important; }
+            #capture-area #quote-promo-list { grid-template-columns: 1fr !important; }
+            #capture-area #quote-bought-acc-list { columns:1 !important; }
+            #capture-area .dot-leader { margin:0 7px; }
+
+            /* Footer tổng tiền không ép ngang */
+            #capture-area .quote-total-footer { padding:16px !important; gap:10px; flex-direction:column !important; align-items:stretch !important; }
+            #capture-area .quote-total-footer > div:first-child { text-align:center; }
+            #capture-area #quote-total { margin:0 !important; padding:12px 10px !important; font-size:30px !important; text-align:center; }
+
+            /* Modal: ưu tiên thao tác ngón tay */
+            #carManagerModal > div, #accManagerModal > div, #promoManagerModal > div { border-radius:0 !important; }
+            #carManagerModal input, #carManagerModal select, #carManagerModal textarea,
+            #accManagerModal input, #accManagerModal select,
+            #promoManagerModal input, #promoManagerModal select { min-height:46px; }
+            #accPickerModal table { min-width: 620px !important; }
+
+            /* Copy text */
+            #quoteInfoModal > div { height:92dvh !important; }
+            #quoteInfoModal textarea { font-size:14px !important; }
+        }
+
+        @media (max-width: 380px) {
+            #capture-area .quote-primary-row, #capture-area .quote-option-grid { grid-template-columns:1fr !important; }
+            #capture-area #quote-car-name { font-size:21px !important; }
+        }
+
+        #previewModal { padding-top: 18px !important; }
+        #preview-scroll-container { align-items: flex-start; padding: 10px 20px 40px; }
+        #preview-container { width: 1024px; transform-origin: top center !important; margin: 0 auto !important; }
+        #preview-container #capture-area-clone { width: 1024px !important; min-width: 1024px !important; max-width: 1024px !important; margin: 0 !important; box-shadow: 0 12px 35px rgba(0,0,0,.28); }
+        @media (max-width: 1100px) { #preview-container { transform: scale(.72) !important; } }
+        @media (max-width: 800px) { #preview-container { transform: scale(.55) !important; } }
+    </style>
+</head>
+<body class="antialiased text-gray-800 relative bg-gray-100">
+
+    <!-- FIXED BOTTOM BAR CÔNG CỤ -->
+    <div id="action-buttons" class="fixed bottom-0 left-0 w-full z-40 flex overflow-x-auto bg-white border-t border-gray-200 p-2.5 gap-2 shadow-[0_-5px_15px_rgba(0,0,0,0.08)] sm:bottom-6 sm:right-6 sm:left-auto sm:w-auto sm:bg-transparent sm:border-none sm:p-0 sm:shadow-none sm:flex-col sm:overflow-visible sm:gap-3 hide-scroll items-center sm:items-end">
+        <div class="flex gap-2 w-auto shrink-0">
+            <button onclick="exportAllDataToFile()" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2.5 px-4 sm:py-2 sm:px-3 rounded-xl shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center text-[13px] sm:text-xs whitespace-nowrap">Xuất Data</button>
+            <label class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-4 sm:py-2 sm:px-3 rounded-xl shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center text-[13px] sm:text-xs cursor-pointer mb-0 whitespace-nowrap">Nhập Data<input type="file" class="hidden" accept=".json" onchange="importAllDataFromFile(event)"></label>
+        </div>
+        <button onclick="openPromoManager()" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 512 512"><path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM135 241c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l87 87c9.4 9.4 24.6 9.4 33.9 0L377 207c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0L205 311 135 241z"/></svg>Quản Lý CTKM
+        </button>
+        <button onclick="openAccManager()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">Quản Lý Phụ Kiện</button>
+        <button onclick="openCarManager()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">Quản Lý Dữ Liệu Xe</button>
+        <button onclick="openPreview()" class="bg-brand-primary hover:bg-blue-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">Lưu hình</button>
+        <label class="customize-check-wrap rounded-xl sm:rounded-full shadow-lg shrink-0 text-[13px] sm:text-base py-2.5 px-4 sm:py-3 sm:px-6">
+            <input type="checkbox" id="customize-toggle" onchange="toggleLiveCustomize(this.checked)"><span>⚙ Phí ĐK & Bank</span>
+        </label>
+        <button onclick="openQuoteInfo()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">Copy Text</button>
+    </div>
+
+    <!-- BẢNG TÙY CHỈNH PHÍ BỔ SUNG & BANK -->
+    <div id="live-customize-panel" class="hidden-panel">
+        <div class="live-title">
+            <div><div class="font-bold text-gray-900">Chi phí bổ sung & Bank</div><div id="live-customize-car" class="text-xs text-gray-500 mt-1">Xe đang chọn</div></div>
+            <button type="button" class="live-close" onclick="toggleLiveCustomize(false)">&times;</button>
+        </div>
+        <div class="live-grid">
+            <div class="live-section-title">Chi phí đăng ký xe</div>
+
+            <div class="live-fee-row">
+                <div class="live-field"><label>Khu vực đăng ký</label><select id="live-registration-preset" onchange="applyRegistrationPreset()"><option value="ward">Phường/Xã — 140.000 Đ</option><option value="metro">TP. HCM / Hà Nội — 14.000.000 Đ</option><option value="custom">Tùy chỉnh</option></select></div>
+                <div class="live-field"><label>Lệ phí đăng ký</label><input type="text" id="live-registration-fee" autocomplete="off"></div>
+            </div>
+
+            <div class="live-fee-row">
+                <div class="live-field"><label>Loại đăng kiểm</label><select id="live-inspection-preset" onchange="applyInspectionPreset()"><option value="57">Xe 5/7 chỗ — 90.000 Đ</option><option value="custom">Tùy chỉnh</option></select></div>
+                <div class="live-field"><label>Phí đăng kiểm</label><input type="text" id="live-inspection-fee" autocomplete="off"></div>
+            </div>
+
+            <div class="live-fee-row">
+                <div class="live-field"><label>Loại Bảo hiểm dân sự</label><select id="live-civil-preset" onchange="applyCivilPreset()"><option value="family5">Gia đình 5 chỗ / Biển trắng — 530.700 Đ</option><option value="family7">Gia đình 7 chỗ / Biển trắng — 1.013.400 Đ</option><option value="taxi5">Taxi 5 chỗ / Biển vàng — 1.443.720 Đ</option><option value="taxi7">Taxi 7 chỗ / Biển vàng — 2.049.600 Đ</option><option value="business5">KD UDCN 5 chỗ / Biển vàng — 861.600 Đ</option><option value="business7">KD UDCN 7 chỗ / Biển vàng — 1.218.000 Đ</option><option value="custom">Tùy chỉnh</option></select><div class="live-help">Phí tai nạn đã được tính trong tổng BHDS theo mức chọn.</div></div>
+                <div class="live-field"><label>Bảo hiểm dân sự</label><input type="text" id="live-civil-fee" autocomplete="off"></div>
+            </div>
+
+            <div class="live-fee-row">
+                <div class="live-field"><label>Phí bảo trì đường bộ</label><select id="live-road-preset" onchange="applyRoadPreset()"><option value="white1">Biển trắng — 1 năm — 1.560.000 Đ</option><option value="white3">Biển trắng — 3 năm — 4.325.000 Đ</option><option value="yellow1">Biển vàng / EC VAN / Bán tải — 1 năm — 2.160.000 Đ</option><option value="custom">Tùy chỉnh</option></select></div>
+                <div class="live-field"><label>Phí đường bộ</label><input type="text" id="live-road-fee" autocomplete="off"></div>
+            </div>
+
+            <div class="live-section-title">Chi phí tùy chỉnh</div>
+            <div class="live-fee-row">
+                <div class="live-field"><label>Dịch vụ ĐK xe</label><input type="text" id="live-registration-service" autocomplete="off" placeholder="VD: 5.000.000"></div>
+                <div class="live-field"><label>Thuế TB tùy chỉnh</label><input type="text" id="live-tax-adjust" autocomplete="off" placeholder="VD: 1.000.000"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTAINER CHÍNH -->
+    <div class="max-w-[1450px] mx-auto flex flex-col xl:flex-row gap-6 p-4 xl:p-8 items-start justify-center pb-24 sm:pb-32">
+        
+        <!-- ================= LỆNH ĐIỀU KHIỂN BÊN TRÁI ================= -->
+        <div class="flex flex-col gap-6 w-full xl:w-[450px] shrink-0 xl:sticky top-6 z-10">
+            
+            <!-- TOOL: CTKM VINFAST MỚI ĐƯỢC LOAD ĐỘNG TỪ TRÌNH QUẢN LÝ -->
+            <div class="bg-white rounded-2xl shadow-2xl border border-blue-200 overflow-hidden">
+                <div class="bg-brand-primary text-white p-4">
+                    <h3 class="font-black text-[16px] uppercase flex items-center gap-2"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 512 512"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z"/></svg>Công Cụ Tính KM VinFast</h3>
+                    <p class="text-[11px] text-blue-200 mt-1">Các CTKM bên dưới được đồng bộ từ Quản Lý CTKM.</p>
+                </div>
+                
+                <div class="p-5">
+                    <!-- CTKM ĐẶC QUYỀN (CHỌN 1) -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-2">CTKM Đặc quyền (Chỉ chọn 1)</label>
+                        <div id="vf-main-policy-container"></div>
+                    </div>
+
+                    <hr class="my-5 border-gray-200">
+
+                    <!-- MỨC GIẢM TỐI ĐA NHÀ MÁY THEO DÒNG XE -->
+                    <div class="mb-4 bg-amber-50 border border-amber-300 rounded-xl p-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <div class="text-xs font-black text-amber-800">Mức giảm tối đa của Nhà máy</div>
+                                <div class="text-[10px] text-amber-700 mt-0.5">Theo từng dòng xe / KEY chuẩn · Cập nhật theo từng thời điểm</div>
+                            </div>
+                            <div id="vf-car-cut-limit-display" class="text-base font-black text-amber-700 whitespace-nowrap">0 Đ</div>
+                        </div>
+                    </div>
+
+                    <!-- GIẢM THÊM RIÊNG CỦA ĐẠI LÝ - LUÔN HIỂN THỊ THEO XE -->
+                    <div id="vf-dealer-extra-panel" class="mb-4 bg-blue-50 border-2 border-blue-300 rounded-xl p-4 shadow-sm">
+                        <div class="flex items-center justify-between gap-3 mb-3">
+                            <div>
+                                <div class="text-xs font-black text-blue-800 uppercase tracking-wide">Giảm thêm riêng của Đại lý</div>
+                                <div class="text-[10px] text-blue-600 mt-0.5">Khoản giảm riêng của Đại lý, Sale có thể tự cân đối mức thực tế.</div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="text-[9px] uppercase font-bold text-blue-500">Gợi ý giảm thêm</div>
+                                <div id="vf-dealer-suggest" class="text-base font-black text-blue-700">0 Đ</div>
+                            </div>
+                        </div>
+                        <label class="block text-[10px] font-bold text-gray-600 mb-1">Nhập giảm thêm của Đại lý</label>
+                        <input type="text" inputmode="numeric" id="vf-dealer-extra" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập mức giảm thêm của Đại lý..." class="w-full border-2 border-blue-300 rounded-lg p-3 text-lg font-black text-blue-800 text-right outline-none bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-shadow">
+                        <div class="flex items-center justify-between gap-2 mt-2 text-[10px]">
+                            <span class="text-gray-500">Gợi ý chỉ để tham khảo, người dùng có thể nhập mức khác.</span>
+                            <button type="button" onclick="applyDealerSuggestion()" class="shrink-0 px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">Dùng mức gợi ý</button>
+                        </div>
+                    </div>
+
+                    <!-- CTKM BỔ SUNG (CỘNG DỒN) -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-3">CTKM Bổ sung áp dụng cho xe đang chọn</label>
+                        <div id="vf-additive-promos"></div>
+                    </div>
+
+                    <hr class="my-5 border-gray-200">
+
+                    <!-- CẮT MÁU (LƯƠNG SALE) -->
+                    <div class="bg-red-50 border-2 border-red-300 rounded-xl p-4 shadow-sm relative overflow-hidden">
+                        <div class="absolute right-0 top-0 w-2 h-full bg-red-500"></div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-black text-red-600 uppercase tracking-wide">Lương Cắt Máu Giảm</label>
+                        </div>
+                        <p class="text-[10px] text-red-400 font-medium mb-3 leading-tight flex justify-between">
+                            <span>Nhập phần lương Sale dùng để giảm thêm cho khách.</span>
+                            <span id="vf-catmau-limit" class="font-bold text-red-600 underline">Lương xe: 0 Đ</span>
+                        </p>
+                        <input type="text" id="vf-catmau" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập lương cắt máu giảm..." class="w-full border border-red-300 rounded-lg p-3 text-lg font-black text-red-600 text-right outline-none bg-white focus:ring-2 focus:ring-red-200 transition-shadow">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHỌN BHVC & PHỤ KIỆN -->
+            <div class="bg-white rounded-2xl shadow-xl border border-purple-200 p-5">
+                <div class="flex items-center gap-3 border-b border-gray-100 pb-3 mb-4">
+                    <div class="bg-purple-100 p-2 rounded-xl text-purple-700"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 512 512"><path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40zM192 384c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192z"/></svg></div>
+                    <div><h3 class="font-black text-gray-800 text-[15px] uppercase">Bảo Hiểm & Phụ Kiện</h3></div>
+                </div>
+                <!-- BHVC -->
+                <div id="left-bhvc-panel" class="flex flex-col gap-2 mb-4"></div>
+                <hr class="border-gray-100 mb-4">
+                <!-- Phụ Kiện -->
+                <button onclick="openAccPicker()" class="w-full py-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold rounded-xl border border-purple-200 mb-4 transition-colors text-sm">+ Quản lý Phụ Kiện Gói Báo Giá</button>
+                <div id="left-acc-summary" class="flex flex-col gap-2"></div>
+            </div>
+        </div>
+        
+        <!-- ================= BẢNG BÁO GIÁ PHẢI ================= -->
+        <div id="quote-live-shell" class="w-full max-w-[1024px] overflow-x-auto shrink-0 shadow-lg rounded-lg bg-white custom-scrollbar" style="border-radius: 8px;">
+            <div id="capture-area" class="relative bg-white w-[1024px] min-w-[1024px]">
+                <!-- Header -->
+                <header class="flex items-center justify-between p-7 border-b-[5px] border-brand-primary bg-white rounded-t-lg">
+                    <div>
+                        <h1 class="text-xl font-bold tracking-wide text-brand-dark">VINFAST THẾ TÀI</h1>
+                        <p class="text-xs text-gray-500 uppercase tracking-widest font-semibold">Đại lý ủy quyền chính hãng</p>
+                    </div>
+                    <div class="text-right"><p class="text-sm text-gray-500 italic mt-1" id="current-date">Ngày lập: --/--/----</p></div>
+                </header>
+
+                <div class="p-7 space-y-7 bg-white">
+                    <!-- Section 1 -->
+                    <div class="capture-grid-main">
+                        <div class="capture-col">
+                            <h3 class="text-sm font-bold text-gray-400 uppercase mb-1">Kính gửi khách hàng</h3>
+                            <h2 id="quote-car-name" class="text-3xl font-extrabold text-brand-primary mb-3">Đang tải...</h2>
+                            
+                            <div class="quote-primary-row flex gap-3 text-sm mt-4">
+                                <div class="relative bg-gray-100 rounded-md border-2 border-transparent h-10 flex items-center px-3 w-[220px]">
+                                    <svg class="w-4 h-4 text-gray-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 512 512"><path d="M135.2 117.4L109.1 192H402.9l-26.1-74.6C372.3 104.6 360.2 96 346.6 96H165.4c-13.6 0-25.7 8.6-30.2 21.4zM39.6 196.8L74.8 96.3C88.3 57.8 124.6 32 165.4 32H346.6c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2V400v48c0 17.7-14.3 32-32 32H448c-17.7 0-32-14.3-32-32V400H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V400V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
+                                    <select id="carSelect" onchange="renderPromosUI(); updateQuotationUI()" class="font-semibold text-gray-700 h-full w-full outline-none"></select>
+                                </div>
+                                <div id="plate-wrapper" class="relative bg-gray-100 rounded-md border-2 border-transparent h-10 flex items-center px-3 w-[150px]">
+                                    <svg id="plate-icon" class="w-4 h-4 text-gray-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 576 512"><path d="M0 96l576 0c0-35.3-28.7-64-64-64H64C28.7 32 0 60.7 0 96zm0 32V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V128L0 128zm64 64H256c17.7 0 32 14.3 32 32v96c0 17.7-14.3 32-32 32H64c-17.7 0-32-14.3-32-32V224c0-17.7 14.3-32 32-32zm384-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM320 320c0-17.7 14.3-32 32-32H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H352c-17.7 0-32-14.3-32-32z"/></svg>
+                                    <select id="plateSelect" onchange="changePlateColor(); updateQuotationUI();" class="font-semibold text-gray-700 h-full w-full outline-none">
+                                        <option value="trang" selected>Biển trắng</option><option value="vang">Biển vàng</option><option value="congty">Xe Công Ty</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="quote-option-grid">
+                                <div class="quote-option" id="color-wrapper">
+                                    <label>Màu</label>
+                                    <select id="colorSelect" onchange="updateQuotationUI()"><option value="Trắng" selected>Trắng</option><option value="Đen">Đen</option><option value="Đỏ">Đỏ</option><option value="Xanh">Xanh</option><option value="Bạc">Bạc</option></select>
+                                </div>
+                                <div class="quote-option" id="payment-wrapper">
+                                    <label>TT</label>
+                                    <select id="paymentSelect" onchange="updateQuotationUI()"><option value="CASH" selected>CASH</option><option value="BANK">BANK</option></select>
+                                </div>
+                                <div class="quote-option" id="city-plate-wrapper">
+                                    <label>Hộ khẩu</label>
+                                    <select id="cityPlateSelect" onchange="syncRegistrationFromCityPlate(); updateQuotationUI()">
+                                        <option value="tinh" selected>Tỉnh</option>
+                                        <option value="thanhpho">TP (+14Tr)</option>
+                                    </select>
+                                </div>
+                                <div class="quote-option" id="usage-wrapper">
+                                    <label>Sử dụng</label>
+                                    <select id="usageSelect" onchange="syncChargingUsage()">
+                                        <option value="family" selected>Gia đình</option>
+                                        <option value="service">Dịch vụ</option>
+                                        <option value="xanhsm">Độc quyền Xanh SM</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="quote-fee-option-grid">
+                                <div class="quote-option">
+                                    <label>Phí ĐK</label>
+                                    <select id="quoteRegistrationPreset" onchange="syncQuoteFeePreset('registration')">
+                                        <option value="ward">Phường/Xã · 140.000</option>
+                                        <option value="metro">TP.HCM/HN · 14.000.000</option>
+                                        <option value="custom">Tùy chỉnh...</option>
+                                    </select>
+                                </div>
+                                <div class="quote-option">
+                                    <label>Đăng kiểm</label>
+                                    <select id="quoteInspectionPreset" onchange="syncQuoteFeePreset('inspection')">
+                                        <option value="57">Xe 5/7 chỗ · 90.000</option>
+                                        <option value="custom">Tùy chỉnh...</option>
+                                    </select>
+                                </div>
+                                <div class="quote-option">
+                                    <label>BHDS</label>
+                                    <select id="quoteCivilPreset" onchange="syncQuoteFeePreset('civil')">
+                                        <option value="family5">Gia đình 5 chỗ · 530.700</option>
+                                        <option value="family7">Gia đình 7 chỗ · 1.013.400</option>
+                                        <option value="taxi5">Taxi 5 chỗ · 1.443.720</option>
+                                        <option value="taxi7">Taxi 7 chỗ · 2.049.600</option>
+                                        <option value="business5">KD UDCN 5 chỗ · 861.600</option>
+                                        <option value="business7">KD UDCN 7 chỗ · 1.218.000</option>
+                                        <option value="custom">Tùy chỉnh...</option>
+                                    </select>
+                                </div>
+                                <div class="quote-option">
+                                    <label>Đường bộ</label>
+                                    <select id="quoteRoadPreset" onchange="syncQuoteFeePreset('road')">
+                                        <option value="white1">Biển trắng 1 năm · 1.560.000</option>
+                                        <option value="white3">Biển trắng 3 năm · 4.325.000</option>
+                                        <option value="yellow1">Biển vàng/Van/Bán tải · 2.160.000</option>
+                                        <option value="custom">Tùy chỉnh...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="capture-col bg-gray-50 p-5 rounded-lg border border-gray-100 space-y-3 text-[15px]">
+                            <div class="flex justify-between items-end"><span class="font-medium text-gray-600">Giá xe niêm yết</span><div class="dot-leader"></div><span id="quote-price-listed" class="font-bold">0 Đ</span></div>
+                            <div class="flex justify-between items-end text-brand-primary"><span class="font-medium">Tổng Khuyến Mãi</span><div class="dot-leader"></div><span id="quote-discount" class="font-bold">- 0 Đ</span></div>
+                            <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-3"><span class="font-bold text-gray-800 uppercase text-sm">Giá xe sau giảm</span><div class="dot-leader"></div><span id="quote-price-final" class="font-bold text-xl text-brand-primary">0 Đ</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <div class="quote-spec-card border border-gray-200 rounded-lg flex bg-white shadow-sm items-stretch overflow-hidden">
+                        <div class="w-[55%] p-6 z-10 bg-white border-r border-gray-100">
+                            <h3 class="text-sm font-bold text-brand-dark mb-4 uppercase border-b pb-2">Thông tin xe & Trang bị</h3>
+                            <ul id="quote-car-specs" class="flex flex-wrap gap-y-3 text-[12px] text-gray-700"></ul>
+                        </div>
+                        <div class="w-[45%] bg-white flex items-center justify-center p-4 min-w-0 overflow-hidden">
+                            <img id="quote-car-img" crossorigin="anonymous" class="max-w-full max-h-[260px] object-contain drop-shadow-xl" />
+                        </div>
+                    </div>
+
+                    <!-- Section 3 -->
+                    <div class="capture-grid-cost">
+                        <div class="capture-col flex flex-col min-w-0">
+                            <h3 class="text-sm font-bold text-white bg-brand-dark py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Chi phí lăn bánh</h3>
+                            <div class="border border-brand-dark border-t-0 rounded-b-lg p-5 space-y-3.5 text-sm bg-white shadow-sm flex-1">
+                                <div class="flex justify-between items-end"><span id="quote-tax-label" class="text-gray-600">Lệ phí trước bạ (0%)</span><div class="dot-leader"></div><span id="quote-tax" class="font-bold">0 Đ</span></div>
+                                <div class="flex justify-between items-end"><span class="text-gray-600">Lệ phí đăng ký (Biển số)</span><div class="dot-leader"></div><span id="quote-phi-dang-ky" class="font-bold">140.000 Đ</span></div>
+                                <div class="flex justify-between items-end"><span class="text-gray-600">Lệ phí đăng kiểm</span><div class="dot-leader"></div><span id="quote-phi-dang-kiem" class="font-bold">90.000 Đ</span></div>
+                                <div class="flex justify-between items-end"><span class="text-gray-600">Lệ phí đường bộ</span><div class="dot-leader"></div><span id="quote-phi-duong-bo" class="font-bold">0 Đ</span></div>
+                                <div class="flex justify-between items-end"><span class="text-gray-600">Bảo hiểm dân sự</span><div class="dot-leader"></div><span id="quote-phi-tnds" class="font-bold">0 Đ</span></div>
+                                <div class="flex justify-between items-end"><span class="text-gray-600">Dịch vụ ĐK xe</span><div class="dot-leader"></div><span id="quote-phi-dich-vu" class="font-bold">0 Đ</span></div>
+                                <div id="quote-bu-thue-row" class="flex justify-between items-end" style="display:none;"><span class="text-gray-600">Bù thuế</span><div class="dot-leader"></div><span id="quote-bu-thue" class="font-bold">0 Đ</span></div>
+                                <div id="quote-bh-vc-row" class="flex justify-between items-end" style="display:none;"><span class="text-blue-700 font-bold">Bảo hiểm vật chất</span><div class="dot-leader border-blue-200"></div><span id="quote-bh-vc" class="font-bold text-blue-700">0 Đ</span></div>
+                                <div id="quote-acc-cost-row" class="flex justify-between items-end" style="display:none;"><span class="text-purple-700 font-bold">Option Phụ kiện</span><div class="dot-leader border-purple-200"></div><span id="quote-acc-cost" class="font-bold text-purple-700">0 Đ</span></div>
+                                <div class="flex justify-between items-end pt-3 border-t mt-3"><span class="font-bold text-gray-800 uppercase text-xs">Tổng chi phí ĐK</span><div class="dot-leader"></div><span id="quote-reg-total" class="font-bold text-brand-primary text-base">0 Đ</span></div>
+                            </div>
+                        </div>
+
+                        <div class="capture-col flex flex-col min-w-0">
+                            <h3 class="text-sm font-bold text-white bg-green-600 py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Chi tiết Khuyến mãi & Tri ân</h3>
+                            <div class="border border-green-600 border-t-0 rounded-b-lg p-4 bg-green-50/50 flex-1 shadow-sm">
+                                <ul id="quote-promo-list" class="grid grid-cols-2 gap-2.5 items-start"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG PHỤ KIỆN MUA THÊM -->
+                    <div id="quote-accessories-container" class="mt-6" style="display: none;">
+                        <h3 class="text-sm font-bold text-white bg-purple-600 py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Danh Sách Phụ Kiện Mua Thêm</h3>
+                        <div class="border border-purple-600 border-t-0 rounded-b-lg p-5 bg-purple-50/50 shadow-sm">
+                            <ul id="quote-bought-acc-list" class="space-y-1.5 columns-2 gap-8"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: BANK -->
+                    <div id="bank-info-container" class="mt-6" style="display: none;">
+                        <div class="capture-grid-cost">
+                            <div class="capture-col flex flex-col min-w-0">
+                                <h3 class="text-sm font-bold text-white bg-blue-700 py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Chính Sách Vay Ngân Hàng</h3>
+                                <div class="border border-blue-700 border-t-0 rounded-b-lg p-5 space-y-3.5 text-sm bg-white shadow-sm flex-1">
+                                    <div class="flex justify-between items-end bg-blue-100 -mx-2 px-2 py-1 rounded transition-colors duration-200"><span class="text-blue-900 font-bold">Cấn trừ Bù thuế tự động</span><div class="dot-leader border-blue-300"></div><input type="checkbox" id="bank-auto-butax" class="w-4 h-4 cursor-pointer accent-blue-700" onchange="syncBank('autobutax')"></div>
+                                    <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Tỷ lệ vay (%)</span><div class="dot-leader"></div><input type="number" id="bank-percent" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('percent')"></div>
+                                    <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Thời gian vay (Năm)</span><div class="dot-leader"></div><input type="number" id="bank-years" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('other')"></div>
+                                    <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Ưu đãi cố định</span><div class="dot-leader"></div><select id="bank-promo-months" class="font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" onchange="syncBank('other')"><option value="6">6 Tháng</option><option value="12">12 Tháng</option><option value="24">24 Tháng</option></select></div>
+                                    <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Lãi suất ưu đãi (%/năm)</span><div class="dot-leader"></div><input type="number" id="bank-promo-rate" step="0.1" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('other')"></div>
+                                    <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Biên độ thả nổi (%/năm)</span><div class="dot-leader"></div><input type="number" id="bank-float-rate" step="0.1" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('other')"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="capture-col flex flex-col min-w-0">
+                                <h3 class="text-sm font-bold text-white bg-blue-500 py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Số Tiền Thanh Toán Nhận Xe</h3>
+                                <div class="border border-blue-500 border-t-0 rounded-b-lg p-5 bg-blue-50 flex-1 shadow-sm flex flex-col justify-center space-y-4">
+                                    <div class="flex justify-between items-center bg-white p-3 rounded shadow-sm border border-blue-200"><span class="text-gray-600 text-sm font-semibold">Số tiền vay (NH giải ngân)</span><input type="text" id="bank-loan-amount" class="w-32 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="formatInputMoney(this); syncBank('loan');"></div>
+                                    <div class="flex justify-between items-center bg-white p-3 rounded shadow-sm border border-blue-200"><span class="text-gray-600 text-sm font-semibold">Số tiền đối ứng (Vốn tự có)</span><input type="text" id="bank-down-payment" class="w-32 text-right font-bold text-gray-800 outline-none border-b border-dashed border-gray-400" oninput="formatInputMoney(this); syncBank('down');"></div>
+                                    <div class="flex justify-between items-end pt-3 mt-1 border-t border-blue-200"><div><span class="font-bold text-gray-800 uppercase text-sm block">Tổng thanh toán nhận xe</span><span class="text-[11px] text-gray-500 italic block">(Vốn đối ứng + Tổng chi phí ĐK)</span></div><span id="bank-total-pay" class="font-bold text-xl text-brand-primary">0 Đ</span></div>
+                                    <div class="flex justify-between items-end pt-3 mt-1 border-t border-blue-200"><div><span class="font-bold text-blue-800 uppercase text-sm block">Trung bình trả góp 1 năm đầu</span></div><span id="bank-avg-monthly" class="font-bold text-lg text-blue-700 bg-blue-100 px-3 py-1 rounded shadow-sm">0 Đ / tháng</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tổng kết -->
+                <div class="quote-total-footer bg-brand-primary text-white p-7 flex justify-between items-center rounded-b-lg border-b-8 border-brand-primary">
+                    <div><h2 class="text-xl font-bold uppercase tracking-wider">Tổng Giá Lăn Bánh</h2><p class="text-sm text-blue-200 mt-0.5">Đã bao gồm VAT và các chi phí hợp lệ</p></div>
+                    <div id="quote-total" class="text-[40px] font-black bg-white text-brand-primary px-8 py-3 rounded-xl mr-3 shadow-xl leading-none">0 Đ</div>
+                </div>
+            </div>
+        </div>
+    </div> 
+
+    <!-- ================== CÁC MODAL QUẢN LÝ DỮ LIỆU ================== -->
+
+    <!-- 1. MODAL QUẢN LÝ XE -->
+    <div id="carManagerModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden justify-center items-center backdrop-blur-sm sm:p-4">
+        <div class="bg-white w-full h-full sm:h-auto sm:rounded-xl shadow-2xl max-w-6xl max-h-full sm:max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 shrink-0">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800">Quản Lý Dữ Liệu Xe</h2>
+                <button onclick="closeCarManager()" class="text-gray-500 hover:text-red-500 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col lg:flex-row gap-6">
+                <!-- FORM -->
+                <div class="w-full lg:w-5/12 bg-gray-50 p-4 sm:p-5 rounded-lg border flex flex-col h-fit shrink-0">
+                    <h3 class="font-bold text-brand-dark border-b pb-2 mb-4 text-lg">Thêm / Sửa Dữ Liệu Xe</h3>
+                    <input type="hidden" id="form-car-id">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Tên Xe</label><input type="text" id="form-car-name" class="w-full border rounded p-2 text-sm outline-none"></div>
+                        <div><label class="block text-xs font-semibold text-blue-700 mb-1">Tên chuẩn đối chiếu</label><input type="text" id="form-car-standard-name" list="standard-car-name-list" class="w-full border border-blue-200 rounded p-2 text-sm outline-none" placeholder="Chọn hoặc nhập tên chuẩn mới"><datalist id="standard-car-name-list"></datalist></div>
+                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Phiên Bản</label><input type="text" id="form-car-version" class="w-full border rounded p-2 text-sm outline-none"></div>
+                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Năm SX</label><input type="text" id="form-car-year" class="w-full border rounded p-2 text-sm outline-none"></div>
+                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Loại Xe</label><select id="form-car-type" class="w-full border rounded p-2 text-sm outline-none bg-white"><option value="dulich">Du lịch</option><option value="bantai">Bán Tải</option></select></div>
+                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Giá Niêm Yết</label><input type="text" inputmode="numeric" id="form-car-price" oninput="formatInputMoney(this)" class="w-full border rounded p-2 text-sm outline-none text-right font-bold" placeholder="VD: 1.290.000.000"></div>
+                        <div><label class="block text-xs font-semibold text-amber-700 mb-1">Mức giảm tối đa của Nhà máy</label><input type="text" inputmode="numeric" id="form-car-cut-limit" oninput="formatInputMoney(this)" class="w-full border border-amber-300 rounded p-2 text-sm outline-none font-bold text-amber-700 text-right" placeholder="VD: 50.000.000"><p class="text-[10px] text-amber-700 mt-1">Hiển thị để Sale biết mức hỗ trợ tối đa của Nhà máy cho KEY xe này.</p></div>
+                        <div><label class="block text-xs font-semibold text-red-600 mb-1">Lương xe bán ra</label><input type="text" inputmode="numeric" id="form-car-sale-salary" oninput="formatInputMoney(this)" class="w-full border border-red-300 rounded p-2 text-sm outline-none font-bold text-red-600 text-right" placeholder="VD: 15.000.000"><p class="text-[10px] text-red-600 mt-1">Đây là khung tối đa dùng để cảnh báo khi nhập “Lương Cắt Máu Giảm”.</p></div>
+                        <div class="col-span-1 sm:col-span-2"><p class="text-[11px] text-gray-500 leading-relaxed bg-blue-50 border border-blue-100 rounded p-2 w-full"><b>Tên chuẩn</b> là key dùng để đối chiếu CTKM. Khi có dòng xe mới, chỉ cần nhập key chuẩn mới tại đây.</p></div>
+                        
+                        <!-- 2 Ô GỢI Ý MỚI THÊM VÀO -->
+                        <div>
+                            <label class="block text-xs font-semibold text-blue-600 mb-1">Gợi ý giảm thêm của Đại lý (hiển thị ngoài báo giá)</label>
+                            <input type="text" inputmode="numeric" id="form-car-dealer-promo-suggest" oninput="formatInputMoney(this)" class="w-full border rounded p-2 text-sm outline-none border-blue-300 font-bold text-blue-700 text-right" placeholder="VD: 20.000.000">
+                            <p class="text-[10px] text-blue-600 mt-1">Chỉ là số tiền gợi ý; Sale vẫn được nhập mức giảm thực tế khác.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-blue-600 mb-1">Ghi chú CTKM 2 - Đại lý</label>
+                            <input type="text" id="form-car-ctkm2-desc" class="w-full border rounded p-2 text-sm outline-none border-blue-200" placeholder="VD: Hỗ trợ riêng Đại lý / điều kiện áp dụng">
+                        </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-semibold text-blue-600 mb-1">Gợi ý CTKM 4 Voucher (Hiển thị khi báo giá)</label>
+                            <input type="text" id="form-car-voucher-desc" class="w-full border rounded p-2 text-sm outline-none border-blue-200" placeholder="VD: Voucher Fadil 30 triệu">
+                        </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-semibold text-green-700 mb-1">Nội dung Khuyến mãi & Tri ân hiển thị trên báo giá</label>
+                            <textarea id="form-car-promo-text" rows="4" class="w-full border border-green-300 rounded p-2 text-sm outline-none bg-green-50/40" placeholder="Mỗi dòng là 1 nội dung khuyến mãi. VD:\nTặng thảm sàn cao cấp\nTặng dán phim cách nhiệt"></textarea>
+                            <p class="text-[10px] text-green-700 mt-1">Các nội dung nhập tại đây sẽ xuất hiện trong “Chi tiết Khuyến mãi & Tri ân”. Riêng ưu đãi sạc được hệ thống tự thêm khi Biển số + Mục đích sử dụng đáp ứng điều kiện; các khoản giảm giá, giảm thêm Đại lý và lương cắt máu không tự đưa vào mục này.</p>
+                        </div>
+
+                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Tỉ lệ BH Tặng (%)</label><input type="number" step="0.01" id="form-car-bh-tang" class="w-full border rounded p-2 text-sm outline-none"></div>
+                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Tỉ lệ BH Mua (%)</label><input type="number" step="0.01" id="form-car-bh-mua" class="w-full border rounded p-2 text-sm outline-none"></div>
+                        <div class="col-span-1 sm:col-span-2"><label class="block text-xs font-semibold text-gray-600 mb-1">Link Ảnh</label><input type="text" id="form-car-img" class="w-full border rounded p-2 text-sm outline-none"></div>
+                    </div>
+                    <div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Thông tin xe</label><textarea id="form-car-specs" rows="3" class="w-full border rounded p-2 text-xs outline-none"></textarea></div>
+                    <div class="flex gap-2">
+                        <button onclick="saveCar()" class="flex-1 bg-green-600 text-white py-2 rounded font-bold">Lưu Dữ Liệu</button>
+                        <button onclick="clearCarForm()" class="px-5 bg-gray-300 text-gray-800 rounded font-bold">Tạo mới</button>
+                    </div>
+                </div>
+                <!-- BẢNG -->
+                <div class="w-full lg:w-7/12 flex flex-col">
+                    <div class="overflow-x-auto border rounded-lg bg-white h-[400px] lg:h-[600px] custom-scrollbar">
+                        <table class="w-full text-left text-sm text-gray-600 min-w-[500px]">
+                            <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10 shadow-sm"><tr><th class="p-3 w-16">Ảnh</th><th class="p-3">Tên Xe</th><th class="p-3">Giá Bán</th><th class="p-3 text-center">Xóa</th></tr></thead>
+                            <tbody id="car-table-body" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MODAL QUẢN LÝ PHỤ KIỆN -->
+    <div id="accManagerModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden justify-center items-center backdrop-blur-sm sm:p-4">
+        <!-- Nội dung như cũ -->
+        <div class="bg-white w-full h-full sm:h-auto sm:rounded-xl shadow-2xl max-w-5xl max-h-full sm:max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 shrink-0">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800">Danh Mục Phụ Kiện</h2>
+                <button onclick="closeAccManager()" class="text-gray-500 hover:text-red-500 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col lg:flex-row gap-6">
+                <!-- FORM -->
+                <div class="w-full lg:w-1/3 bg-gray-50 p-4 sm:p-5 rounded-lg border flex flex-col h-fit shrink-0">
+                    <h3 class="font-bold text-brand-dark border-b pb-2 mb-4 text-lg">Thêm / Sửa Phụ Kiện</h3>
+                    <input type="hidden" id="form-acc-id">
+                    <div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Loại Phụ Kiện</label><input type="text" id="form-acc-category" class="w-full border rounded p-2 text-sm outline-none"></div>
+                    <div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Tên Phụ Kiện</label><input type="text" id="form-acc-name" class="w-full border rounded p-2 text-sm outline-none"></div>
+                    <div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Giá trị Tặng (Đ)</label><input type="text" inputmode="numeric" id="form-acc-price-tang" oninput="formatInputMoney(this)" class="w-full border rounded p-2 text-sm outline-none text-right font-bold"></div>
+                    <div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Giá trị Bán (Đ)</label><input type="text" inputmode="numeric" id="form-acc-price-mua" oninput="formatInputMoney(this)" class="w-full border rounded p-2 text-sm outline-none text-right font-bold"></div>
+                    <div class="flex gap-2 mt-2"><button onclick="saveAcc()" class="flex-1 bg-green-600 text-white py-2 rounded font-bold">Lưu Dữ Liệu</button><button onclick="clearAccForm()" class="px-4 bg-gray-300 text-gray-800 rounded font-bold">Tạo mới</button></div>
+                </div>
+                <!-- BẢNG -->
+                <div class="w-full lg:w-2/3 flex flex-col">
+                    <div class="overflow-x-auto border rounded-lg bg-white h-[400px] lg:h-[600px] custom-scrollbar">
+                        <table class="w-full text-left text-sm text-gray-600 min-w-[600px]">
+                            <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10 shadow-sm"><tr><th class="p-3">Loại</th><th class="p-3">Tên Phụ Kiện</th><th class="p-3">Giá Tặng</th><th class="p-3">Giá Bán</th><th class="p-3 text-center">Xóa</th></tr></thead>
+                            <tbody id="acc-table-body" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MODAL QUẢN LÝ CTKM -->
+    <div id="promoManagerModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden justify-center items-center backdrop-blur-sm sm:p-4">
+        <div class="bg-white w-full h-full sm:h-auto sm:rounded-xl shadow-2xl max-w-6xl max-h-full sm:max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 shrink-0">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800">Quản Lý Chương Trình Khuyến Mãi</h2>
+                <button onclick="closePromoManager()" class="text-gray-500 hover:text-red-500 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col lg:flex-row gap-6">
+                <!-- FORM -->
+                <div class="w-full lg:w-4/12 bg-gray-50 p-4 sm:p-5 rounded-lg border flex flex-col h-fit shrink-0">
+                    <h3 class="font-bold text-brand-dark border-b pb-2 mb-4 text-lg">Thêm / Sửa CTKM</h3>
+                    <input type="hidden" id="form-promo-id">
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Tên Chương Trình</label>
+                        <input type="text" id="form-promo-name" class="w-full border rounded p-2 text-sm outline-none" placeholder="VD: Vì Tương Lai Xanh, VinClub...">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Đối tượng / Điều kiện</label>
+                        <input type="text" id="form-promo-target" class="w-full border rounded p-2 text-sm outline-none" placeholder="VD: Hạng Gold, Khách có xe máy điện...">
+                    </div>
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <label class="block text-xs font-semibold text-blue-700">Xe được áp dụng (theo Key chuẩn)</label>
+                            <button type="button" onclick="toggleAllPromoCarKeys()" class="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded">Chọn / bỏ tất cả</button>
+                        </div>
+                        <input type="hidden" id="form-promo-car-keys">
+                        <div id="form-promo-car-key-options" class="max-h-44 overflow-y-auto border border-blue-200 rounded-lg bg-white p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
+                        <p class="text-[10px] text-gray-500 mt-1">CTKM chỉ hiển thị khi KEY xe đang chọn nằm trong danh sách này. Bắt buộc chọn ít nhất 1 KEY.</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Phân Nhóm</label>
+                        <select id="form-promo-group" class="w-full border rounded p-2 text-sm outline-none font-bold text-indigo-700">
+                            <option value="exclusive">Nhóm Đặc quyền (Chỉ được chọn 1)</option>
+                            <option value="additive">Nhóm Bổ sung (Có thể chọn nhiều)</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Hình thức Giảm</label>
+                        <select id="form-promo-type" onchange="handlePromoTypeChange()" class="w-full border rounded p-2 text-sm outline-none bg-white">
+                            <option value="pct_msrp">% trên Giá Niêm Yết MSRP</option>
+                            <option value="pct_after">% trên Giá Sau Khuyến Mãi (VD: Công vụ)</option>
+                            <option value="money">Tiền mặt cố định (VND)</option>
+                            <option value="custom">Nhập số tiền khi Báo giá (VD: Voucher)</option>
+                        </select>
+                    </div>
+                    <div class="mb-5">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Mức giảm</label>
+                        <input type="text" inputmode="decimal" id="form-promo-value" oninput="handlePromoValueInput(this)" class="w-full border rounded p-2 text-sm outline-none font-bold text-right" placeholder="VD: 3 hoặc 30.000.000">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="savePromo()" class="flex-1 bg-fuchsia-600 text-white py-2.5 rounded font-bold transition-colors hover:bg-fuchsia-700">Lưu Dữ Liệu</button>
+                        <button onclick="clearPromoForm()" class="px-4 bg-gray-300 text-gray-800 rounded font-bold">Tạo mới</button>
+                    </div>
+                </div>
+                <!-- BẢNG -->
+                <div class="w-full lg:w-8/12 flex flex-col">
+                    <div class="overflow-x-auto border rounded-lg bg-white h-[400px] lg:h-[600px] custom-scrollbar">
+                        <table class="w-full text-left text-sm text-gray-600 min-w-[700px]">
+                            <thead class="bg-gray-100 text-gray-700 sticky top-0 z-10 shadow-sm"><tr><th class="p-3">Tên CTKM</th><th class="p-3">Dòng xe</th><th class="p-3">Đối tượng</th><th class="p-3">Mức giảm</th><th class="p-3">Phân nhóm</th><th class="p-3 text-center">Xóa</th></tr></thead>
+                            <tbody id="promo-table-body" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. MODAL CHỌN PHỤ KIỆN -->
+    <div id="accPickerModal" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 hidden justify-center items-end sm:items-center sm:p-4">
+        <!-- Nội dung như cũ -->
+        <div class="bg-white w-full sm:rounded-2xl shadow-2xl max-w-4xl flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh]">
+            <div class="bg-purple-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between sm:rounded-t-2xl shrink-0">
+                <div><h2 class="text-lg sm:text-xl font-bold">Thêm Phụ Kiện Tặng / Mua</h2><p class="text-purple-100 text-xs mt-1" id="acc-picker-subtitle"></p></div>
+                <button onclick="closeAccPicker()" class="text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="overflow-x-auto bg-gray-50 flex-1 custom-scrollbar">
+                <table class="w-full text-left bg-white min-w-[700px]">
+                    <thead class="bg-gray-100 text-gray-600 text-xs uppercase font-bold sticky top-0 shadow-sm">
+                        <tr><th class="p-3 pl-6">Tên Phụ Kiện</th><th class="p-3 w-40 text-center">Hình thức</th><th class="p-3 w-[280px]">Tùy chỉnh giá Mua</th></tr>
+                    </thead>
+                    <tbody id="acc-picker-list" class="divide-y text-sm"></tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-white border-t flex justify-end gap-3 sm:rounded-b-2xl shrink-0">
+                <button onclick="closeAccPicker()" class="px-5 py-2.5 bg-gray-200 text-gray-800 font-bold rounded-xl">Hủy</button>
+                <button onclick="saveAccPicker()" class="px-6 py-2.5 bg-purple-600 text-white font-bold rounded-xl">Lưu vào Báo giá</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MODAL THÔNG TIN BÁO GIÁ (COPY TEXT) -->
+    <div id="quoteInfoModal" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 hidden justify-center items-end sm:items-center sm:p-4">
+        <!-- Nội dung như cũ -->
+        <div class="bg-white w-full sm:rounded-2xl shadow-2xl max-w-xl flex flex-col h-[85vh] sm:h-auto">
+            <div class="bg-emerald-600 text-white px-6 py-4 flex items-center justify-between sm:rounded-t-2xl shrink-0">
+                <h2 class="text-xl font-bold">Thông tin báo giá</h2><button onclick="closeQuoteInfo()" class="text-3xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div id="quoteInfoSummary" class="border rounded-xl px-4 divide-y divide-gray-100"></div>
+                <div class="mt-5"><textarea id="quoteInfoText" readonly class="w-full h-40 border rounded-xl p-3 text-sm bg-gray-50 outline-none"></textarea></div>
+                <div class="flex gap-3 mt-5">
+                    <button onclick="copyQuoteInfo()" id="copyQuoteInfoBtn" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold">Sao chép thông tin</button>
+                    <button onclick="closeQuoteInfo()" class="px-6 bg-gray-200 text-gray-800 py-3 rounded-xl font-bold">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. PREVIEW MODAL -->
+    <div id="previewModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 hidden flex-col items-center pt-8 pb-4">
+        <!-- Nội dung như cũ -->
+        <div class="w-[1024px] max-w-[100vw] flex justify-between items-center text-white mb-4 px-4 shrink-0">
+            <h2 class="text-xl sm:text-2xl font-bold">Xem trước Báo giá</h2>
+            <div class="flex gap-2 sm:gap-4">
+                <button onclick="closePreview()" class="bg-gray-700 px-3 sm:px-5 py-2 rounded-lg font-bold text-sm">Đóng</button>
+                <button onclick="savePreviewImage()" id="save-image-btn" class="bg-brand-primary px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">Lưu hình HD</button>
+            </div>
+        </div>
+        <div id="preview-scroll-container" class="flex-1 w-full overflow-y-auto overflow-x-auto flex justify-center pb-12">
+            <div id="preview-container" class="shadow-2xl rounded-lg origin-top" style="transform: scale(0.85); margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- SCRIPT CHÍNH ĐIỀU KHIỂN LOGIC -->
+    <script>
+        const PHI_DANG_KY = 140000; const PHI_DANG_KIEM = 90000; const PHI_DICH_VU = 5000000;
+        const REG_FEE_PRESETS = { ward:140000, metro:14000000 };
+        const CIVIL_FEE_PRESETS = { family5:530700, family7:1013400, taxi5:1443720, taxi7:2049600, business5:861600, business7:1218000 };
+        const ROAD_FEE_PRESETS = { white1:1560000, white3:4325000, yellow1:2160000 };
+        const DEFAULT_STANDARD_CAR_NAMES = [
+            'MINIO GREEN','HERIO GREEN','NERIO GREEN','LIMO GREEN','EC VAN TIÊU CHUẨN','EC VAN NÂNG CAO','EC VAN NÂNG CAO (Cửa trượt)','VF2','VF3 ECO','VF3 PLUS','VF5','VF6 ECO','VF6 PLUS','VF7 ECO','VF7 PLUS TIÊU CHUẨN 2 - TRẦN THÉP','VF7 PLUS NC TIÊU CHUẨN 3 - TRẦN THÉP','VF MVP 7','VF8 ECO TIÊU CHUẨN 1 - 1 CẦU','VF8 ECO NÂNG CAO - 1 CẦU','VF8 PLUS TIÊU CHUẨN 1 - 2 CẦU','VF8 ALL NEW','VF9 ECO','VF9 PLUS','LẠC HỒNG','LẠC HỒNG (chống đạn)','VF WILD COMFORT'
+        ];
+        const SVG_CHECK = `<svg class="w-3 h-3 text-brand-primary mr-2 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 448 512"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>`;
+
+        const defaultCars = [{
+            id: 'car_1', name: 'VF 8', standardName: 'VF8 ALL NEW', version: 'All New', year: '2026', type: 'dulich',
+            price: 1290000000, cutLimit: 50000000, saleSalary: 15000000, dealerPromoSuggested: 51000000, bhTangRate: 1.2, bhMuaRate: 1.3,
+            ctkm2_desc: 'Giảm 51 triệu + CS Cọc', voucher_desc: 'Voucher VinFast 30 triệu', promoText: '',
+            image: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&q=80&w=800',
+            specs: "11 túi khí an toàn\nTrợ lý ảo thông minh\nKhả năng tăng tốc ấn tượng\nNội thất sang trọng\nHệ thống ADAS cao cấp\nPin dung lượng lớn"
+        }];
+
+        const initPromos = [
+            { id: 'pr_1', name: 'Vì Tương Lai Xanh', target: 'KH có xe Vin (VF2, VF3...)', type: 'pct_msrp', value: 3, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_2', name: 'Vì Tương Lai Xanh', target: 'KH có xe Vin (VF7, VF8, VF9...)', type: 'pct_msrp', value: 5, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_3', name: 'Vì Tương Lai Xanh', target: 'KH có xe Vin (VF5, VF6...)', type: 'pct_msrp', value: 9, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_4', name: 'Ưu đãi CA, QĐ, VNPost', target: 'VF2, VF3, Minio', type: 'pct_msrp', value: 6, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_5', name: 'Ưu đãi CA, QĐ, VNPost', target: 'VF7, VF8, VF9, EC Van, VF Wild', type: 'pct_msrp', value: 7, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_6', name: 'Ưu đãi CA, QĐ, VNPost', target: 'VF5, VF6, Herio, Limo, MVP7', type: 'pct_msrp', value: 9, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_7', name: 'VinClub', target: 'Hạng Member', type: 'pct_msrp', value: 0.5, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_8', name: 'VinClub', target: 'Hạng Gold', type: 'pct_msrp', value: 1.5, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_9', name: 'VinClub', target: 'Hạng Platinum', type: 'pct_msrp', value: 3, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_10', name: 'VinClub', target: 'Hạng Diamond', type: 'pct_msrp', value: 4.5, group: 'exclusive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_11', name: 'CTKM 2 - Ưu đãi riêng Đại lý', target: 'Chính sách riêng của Đại lý', type: 'custom', value: 0, group: 'additive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_12', name: 'Voucher Tri Ân (CTKM 4)', target: 'Khách đổi xe xăng', type: 'custom', value: 0, group: 'additive', carKeys: 'VF8 ALL NEW' },
+            { id: 'pr_13', name: 'Ưu đãi Xe Công Vụ', target: 'Cơ quan NN', type: 'pct_after', value: 5, group: 'additive', carKeys: 'VF8 ALL NEW' }
+        ];
+
+        let carList = []; let accList = []; let promoList = []; let quoteAdjustments = {};
+
+        function formatMoney(num) { return Math.round(Number(num) || 0).toLocaleString('vi-VN') + ' Đ'; }
+        function parseMoneyInput(val) { const d = String(val ?? '').replace(/\D/g, ''); return d ? Number(d) : 0; }
+        function formatInputMoney(inp) { if(!inp)return; const old = inp.value||''; const caret=inp.selectionStart??old.length; const dBefore=old.slice(0,caret).replace(/\D/g,'').length; const d=old.replace(/\D/g,''); inp.value=d?Number(d).toLocaleString('vi-VN'):''; let p=0,c=0; while(p<inp.value.length&&c<dBefore){if(/\d/.test(inp.value[p]))c++; p++;} try{inp.setSelectionRange(p,p);}catch(e){} }
+
+        function normalizeCarKey(v) { return String(v || '').trim().replace(/\s+/g,' ').toLocaleUpperCase('vi-VN'); }
+        function getCarStandardName(car) { return normalizeCarKey(car?.standardName || [car?.name, car?.version].filter(Boolean).join(' ')); }
+        function getPromoCarKeys(promo) { return String(promo?.carKeys || '').split(',').map(normalizeCarKey).filter(Boolean); }
+        function promoAppliesToCar(promo, car) { const keys=getPromoCarKeys(promo); const carKey=getCarStandardName(car); return !!carKey && keys.includes(carKey); }
+        function renderStandardCarNameList() {
+            const el=document.getElementById('standard-car-name-list'); if(!el)return;
+            const names=[...DEFAULT_STANDARD_CAR_NAMES, ...carList.map(c=>c.standardName).filter(Boolean)];
+            const unique=[...new Map(names.map(n=>[normalizeCarKey(n),n])).values()];
+            el.innerHTML=unique.map(n=>`<option value="${n.replace(/"/g,'&quot;')}"></option>`).join('');
+        }
+        function getFactoryMaxDiscount(car) {
+            if(!car) return 0;
+            return Number(car.cutLimit || car.discount || 0);
+        }
+        function getSaleSalaryLimit(car) {
+            if(!car) return 0;
+            return Number(car.saleSalary || 0);
+        }
+        function getAllStandardCarKeys() {
+            const names=[...DEFAULT_STANDARD_CAR_NAMES, ...carList.map(c=>c.standardName).filter(Boolean)];
+            return [...new Map(names.map(n=>[normalizeCarKey(n), String(n).trim()])).values()];
+        }
+        function renderPromoCarKeyOptions(selectedKeys=[]) {
+            const box=document.getElementById('form-promo-car-key-options'); if(!box)return;
+            const selected=new Set((selectedKeys||[]).map(normalizeCarKey));
+            box.innerHTML=getAllStandardCarKeys().map((name,i)=>{
+                const key=normalizeCarKey(name), checked=selected.has(key)?'checked':'';
+                return `<label class="flex items-start gap-2 p-1.5 rounded hover:bg-blue-50 cursor-pointer"><input type="checkbox" class="promo-car-key-check mt-0.5 accent-blue-600" value="${name.replace(/"/g,'&quot;')}" ${checked} onchange="syncPromoCarKeysFromChecks()"><span class="text-[11px] font-semibold text-gray-700 leading-tight">${name}</span></label>`;
+            }).join('');
+            syncPromoCarKeysFromChecks();
+        }
+        function syncPromoCarKeysFromChecks() {
+            const hidden=document.getElementById('form-promo-car-keys'); if(!hidden)return;
+            hidden.value=Array.from(document.querySelectorAll('.promo-car-key-check:checked')).map(x=>x.value).join(', ');
+        }
+        function toggleAllPromoCarKeys() {
+            const boxes=Array.from(document.querySelectorAll('.promo-car-key-check')); if(!boxes.length)return;
+            const shouldCheck=boxes.some(x=>!x.checked); boxes.forEach(x=>x.checked=shouldCheck); syncPromoCarKeysFromChecks();
+        }
+
+        function getDefaultQuoteAdjustments(car) {
+            return { 
+                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', accessories: [], chargingUsage: 'family',
+                regFees: { registrationPreset:'ward', registrationFee:140000, inspectionPreset:'57', inspectionFee:90000, civilPreset:'family5', civilFee:530700, roadPreset:'white1', roadFee:1560000 },
+                loan: { autoBuTax: false, percent: 80, years: 8, promoMonths: 12, promoRate: 10.2, floatRate: 3.6, manualLoan: null },
+                vfPromos: { exclusiveId: 'none', additiveIds: [], customValues: {}, dealerExtra: 0, catMau: 0 } 
+            };
+        }
+        function getQuoteAdjustments(car) {
+            const def = getDefaultQuoteAdjustments(car); if (!car) return def; const sav = quoteAdjustments[car.id] || {};
+            let merged = { ...def, ...sav };
+            merged.regFees = { ...def.regFees, ...(sav.regFees || {}) };
+            merged.vfPromos = { ...def.vfPromos, ...(sav.vfPromos || {}) };
+            if (sav.discount && !merged.vfPromos.catMau) merged.vfPromos.catMau = sav.discount;
+            return merged;
+        }
+        function saveQuoteAdjustmentsToStorage() { localStorage.setItem('vinfast_quote_adj_v3', JSON.stringify(quoteAdjustments)); }
+        function toggleModal(id, show) { const el = document.getElementById(id); if(!el)return; if(show){el.classList.remove('hidden');el.classList.add('flex');}else{el.classList.add('hidden');el.classList.remove('flex');} }
+
+        // ================== DATA IMPORT / EXPORT ==================
+        function exportAllDataToFile() {
+            const dataToExport = { cars: carList, accessories: accList, promos: promoList };
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" }));
+            link.download = "Ucar_Data_Full_Vinfast.json"; link.click();
+        }
+
+        function importAllDataFromFile(e) {
+            const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (data && data.cars && Array.isArray(data.cars)) { carList = data.cars.map(c=>({...c, standardName:c.standardName||normalizeCarKey([c.name,c.version].filter(Boolean).join(' ')), cutLimit:Number(c.cutLimit ?? c.discount ?? 0), saleSalary:Number(c.saleSalary ?? 0), dealerPromoSuggested:Number(c.dealerPromoSuggested ?? 0)})); localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList)); }
+                    if (data && data.accessories && Array.isArray(data.accessories)) { accList = data.accessories; localStorage.setItem('vinfast_accessories_v2', JSON.stringify(accList)); }
+                    if (data && data.promos && Array.isArray(data.promos)) { promoList = data.promos.map(({cutLimit,...p})=>p); localStorage.setItem('vinfast_promos_v1', JSON.stringify(promoList)); }
+                    
+                    renderStandardCarNameList(); renderPromoCarKeyOptions([]); renderTable(); renderAccTable(); renderPromoTable();
+                    renderDropdown(); renderPromosUI(); updateQuotationUI(); alert("Nhập dữ liệu thành công!");
+                } catch (err) { alert("Lỗi đọc file dữ liệu!"); }
+                e.target.value = '';
+            }; reader.readAsText(file);
+        }
+
+        // ================== QUẢN LÝ CTKM ==================
+        function openPromoManager() { renderPromoTable(); if(!document.getElementById('form-promo-id').value) renderPromoCarKeyOptions([]); toggleModal('promoManagerModal', true); }
+        function closePromoManager() { toggleModal('promoManagerModal', false); }
+        function handlePromoValueInput(inp) {
+            const type = document.getElementById('form-promo-type')?.value;
+            if(type === 'money') { formatInputMoney(inp); return; }
+            // Các trường tỷ lệ cho phép số thập phân, không ép định dạng tiền.
+            inp.value = String(inp.value || '').replace(',', '.').replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+        }
+        function handlePromoTypeChange() {
+            const type = document.getElementById('form-promo-type').value;
+            const valInput = document.getElementById('form-promo-value');
+            if(type === 'custom') {
+                valInput.value = ''; valInput.disabled = true; valInput.classList.add('bg-gray-200'); valInput.placeholder = 'Nhập ở màn hình ngoài...';
+            } else {
+                valInput.disabled = false; valInput.classList.remove('bg-gray-200');
+                valInput.placeholder = type === 'money' ? 'VD: 30.000.000' : 'VD: 3 hoặc 1.5';
+                if(type === 'money' && valInput.value) formatInputMoney(valInput);
+            }
+        }
+        function renderPromoTable() {
+            document.getElementById('promo-table-body').innerHTML = promoList.map(p => {
+                let valStr = '';
+                if(p.type === 'pct_msrp') valStr = `<span class="text-blue-600 font-bold">${p.value}% MSRP</span>`;
+                else if(p.type === 'pct_after') valStr = `<span class="text-orange-600 font-bold">${p.value}% Sau KM</span>`;
+                else if(p.type === 'money') valStr = `<span class="text-green-600 font-bold">${formatMoney(p.value)}</span>`;
+                else if(p.type === 'custom') valStr = `<span class="text-gray-500 italic">Nhập tay</span>`;
+                
+                let grpStr = p.group === 'exclusive' ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">CHỌN 1</span>' : '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">CỘNG DỒN</span>';
+
+                return `<tr class="hover:bg-gray-50 border-b cursor-pointer" onclick="editPromo('${p.id}')">
+                    <td class="p-3 font-bold text-gray-800">${p.name}</td>
+                    <td class="p-3 text-xs text-blue-700 font-semibold">${p.carKeys ? p.carKeys : '<span class="text-red-500 italic">Chưa gán KEY</span>'}</td>
+                    <td class="p-3 text-xs">${p.target}</td>
+                    <td class="p-3">${valStr}</td>
+                    <td class="p-3">${grpStr}</td>
+                    <td class="p-3 text-center"><button onclick="event.stopPropagation(); deletePromo('${p.id}')" class="text-red-500 hover:text-red-700">Xóa</button></td>
+                </tr>`;
+            }).join('');
+        }
+        function clearPromoForm() {
+            document.querySelectorAll('#form-promo-id,#form-promo-name,#form-promo-target,#form-promo-value,#form-promo-car-keys').forEach(e=>e.value='');
+            document.getElementById('form-promo-group').value = 'exclusive';
+            document.getElementById('form-promo-type').value = 'pct_msrp';
+            handlePromoTypeChange();
+            renderPromoCarKeyOptions([]);
+        }
+        function savePromo() {
+            const id = document.getElementById('form-promo-id').value || 'pr_' + Date.now();
+            const name = document.getElementById('form-promo-name').value.trim();
+            const target = document.getElementById('form-promo-target').value.trim();
+            const group = document.getElementById('form-promo-group').value;
+            const type = document.getElementById('form-promo-type').value;
+            const rawPromoValue = document.getElementById('form-promo-value').value;
+            const value = type === 'money' ? parseMoneyInput(rawPromoValue) : (parseFloat(String(rawPromoValue).replace(',','.')) || 0);
+            const carKeys = document.getElementById('form-promo-car-keys').value.split(',').map(x=>x.trim()).filter(Boolean).join(', ');
+            if(!name) return alert('Vui lòng nhập Tên CTKM!');
+            if(!carKeys) return alert('Vui lòng chọn ít nhất 1 KEY xe được áp dụng!');
+            const obj = { id, name, target, group, type, value: type==='custom'?0:value, carKeys };
+            
+            const idx = promoList.findIndex(x => x.id === id);
+            if(idx >= 0) promoList[idx] = obj; else promoList.push(obj);
+            
+            localStorage.setItem('vinfast_promos_v1', JSON.stringify(promoList));
+            renderPromoTable(); clearPromoForm(); renderPromosUI(); updateQuotationUI();
+        }
+        function editPromo(id) {
+            const p = promoList.find(x => x.id === id); if(!p) return;
+            document.getElementById('form-promo-id').value = p.id;
+            document.getElementById('form-promo-name').value = p.name;
+            document.getElementById('form-promo-target').value = p.target;
+            document.getElementById('form-promo-group').value = p.group;
+            document.getElementById('form-promo-type').value = p.type;
+            document.getElementById('form-promo-value').value = p.type === 'money' && p.value ? Number(p.value).toLocaleString('vi-VN') : p.value;
+            document.getElementById('form-promo-car-keys').value = p.carKeys || '';
+            renderPromoCarKeyOptions(getPromoCarKeys(p));
+            handlePromoTypeChange();
+        }
+        function deletePromo(id) {
+            if(confirm('Xóa CTKM này?')) {
+                promoList = promoList.filter(x => x.id !== id);
+                localStorage.setItem('vinfast_promos_v1', JSON.stringify(promoList));
+                renderPromoTable(); clearPromoForm(); renderPromosUI(); updateQuotationUI();
+            }
+        }
+
+        // ================== RENDER LEFT PANEL PROMOS ==================
+        function renderPromosUI() {
+            // Dropdown Exclusive
+            let excHtml = `<option value="none">-- Không áp dụng CTKM Chọn 1 --</option>`;
+            const currentCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            promoList.filter(p => p.group === 'exclusive' && (!currentCar || promoAppliesToCar(p,currentCar))).forEach(p => {
+                const valStr = p.type === 'pct_msrp' ? `Giảm ${p.value}%` : (p.type === 'money' ? `Giảm ${formatMoney(p.value)}` : '');
+                excHtml += `<option value="${p.id}">${p.name} - ${p.target} (${valStr})</option>`;
+            });
+            document.getElementById('vf-main-policy-container').innerHTML = `
+                <select id="vf-main-policy" onchange="syncVF()" class="w-full border-2 border-blue-100 rounded-lg p-2.5 text-[12px] font-bold text-brand-primary outline-none bg-blue-50 focus:border-blue-400 transition-colors">
+                    ${excHtml}
+                </select>
+            `;
+
+            // List Additive
+            let addHtml = '';
+            promoList.filter(p => p.group === 'additive' && (!currentCar || promoAppliesToCar(p,currentCar))).forEach(p => {
+                if (p.type === 'custom') {
+                    const isVoucher = p.name.includes('CTKM 4') || p.name.includes('Voucher');
+                    const isDealerPromo = !isVoucher && (p.name.includes('CTKM 2') || p.name.toLocaleLowerCase('vi-VN').includes('đại lý'));
+                    if (isDealerPromo) return; // Giảm Đại lý có khối nhập riêng, luôn hiển thị theo xe.
+                    let hintId = isVoucher ? 'vf-ctkm4-hint' : 'vf-ctkm2-hint';
+                    {
+                        addHtml += `
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">${p.name} <span class="text-gray-500 font-normal">(${p.target})</span></label>
+                            <input type="text" inputmode="numeric" id="promo_custom_${p.id}" data-id="${p.id}" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập số tiền..." class="w-full border rounded-lg p-2 text-sm font-bold text-gray-800 text-right outline-none focus:border-brand-primary promo-custom-input">
+                            <p id="${hintId}_${p.id}" class="text-[10px] text-green-600 mt-1 italic font-semibold empty:hidden"></p>
+                        </div>`;
+                    }
+                } else {
+                    const valStr = p.type === 'pct_msrp' || p.type === 'pct_after' ? `Giảm ${p.value}%` : `Giảm ${formatMoney(p.value)}`;
+                    addHtml += `
+                    <label class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors mb-2">
+                        <input type="checkbox" id="promo_chk_${p.id}" data-id="${p.id}" onchange="syncVF()" class="w-5 h-5 accent-brand-primary cursor-pointer promo-additive-chk">
+                        <span class="text-sm font-bold text-gray-700">${p.name}<br><span class="text-[11px] text-gray-500 font-normal">${p.target} (${valStr}${p.type==='pct_after'?' sau KM':''})</span></span>
+                    </label>`;
+                }
+            });
+            document.getElementById('vf-additive-promos').innerHTML = addHtml || '<span class="text-xs text-gray-400 italic">Chưa có CTKM bổ sung nào.</span>';
+        }
+
+        // ================== ACCESSORIES ==================
+        function openAccManager() { renderAccTable(); toggleModal('accManagerModal', true); }
+        function closeAccManager() { toggleModal('accManagerModal', false); }
+        function renderAccTable() { document.getElementById('acc-table-body').innerHTML = accList.map(acc => `<tr class="hover:bg-gray-50 border-b cursor-pointer" onclick="editAcc('${acc.id}')"><td class="p-3 text-xs font-bold text-gray-500 uppercase">${acc.category||'Khác'}</td><td class="p-3 font-bold text-gray-800">${acc.name}</td><td class="p-3 text-green-600 font-medium">${formatMoney(acc.priceTang)}</td><td class="p-3 text-purple-600 font-medium">${formatMoney(acc.priceMua)}</td><td class="p-3 text-center"><button onclick="event.stopPropagation(); deleteAcc('${acc.id}')" class="text-red-500 hover:text-red-700">Xóa</button></td></tr>`).join(''); }
+        function clearAccForm() { document.querySelectorAll('#form-acc-id,#form-acc-category,#form-acc-name,#form-acc-price-tang,#form-acc-price-mua').forEach(e=>e.value=''); }
+        function saveAcc() {
+            const id=document.getElementById('form-acc-id').value||'acc_'+Date.now(), category=document.getElementById('form-acc-category').value.trim()||'Khác', name=document.getElementById('form-acc-name').value.trim(), priceTang=parseMoneyInput(document.getElementById('form-acc-price-tang').value)||0, priceMua=parseMoneyInput(document.getElementById('form-acc-price-mua').value)||0;
+            if(!name)return alert('Nhập Tên Phụ Kiện!');
+            const idx=accList.findIndex(c=>c.id===id); if(idx>=0)accList[idx]={id,category,name,priceTang,priceMua}; else accList.push({id,category,name,priceTang,priceMua});
+            localStorage.setItem('vinfast_accessories_v2', JSON.stringify(accList)); renderAccTable(); clearAccForm(); updateQuotationUI();
+        }
+        function editAcc(id) { const a=accList.find(c=>c.id===id); if(a){document.getElementById('form-acc-id').value=a.id; document.getElementById('form-acc-category').value=a.category||''; document.getElementById('form-acc-name').value=a.name; document.getElementById('form-acc-price-tang').value=a.priceTang?Number(a.priceTang).toLocaleString('vi-VN'):''; document.getElementById('form-acc-price-mua').value=a.priceMua?Number(a.priceMua).toLocaleString('vi-VN'):'';} }
+        function deleteAcc(id) { if(confirm('Xóa?')){accList=accList.filter(c=>c.id!==id); localStorage.setItem('vinfast_accessories_v2',JSON.stringify(accList)); renderAccTable(); clearAccForm(); updateQuotationUI();} }
+
+        function openAccPicker() {
+            const carId = document.getElementById('carSelect').value; const car = carList.find(c => c.id === carId); if(!car)return alert("Chọn xe!");
+            document.getElementById('acc-picker-subtitle').innerText = `Xe: ${car.name} ${car.version}`;
+            const savedAccs = getQuoteAdjustments(car).accessories || [];
+            document.getElementById('acc-picker-list').innerHTML = accList.map(acc => {
+                let sav=savedAccs.find(x=>x.id===acc.id), type=sav?sav.type:'khong', price=sav?sav.finalPrice:acc.priceMua, pct=acc.priceMua>0?(1-price/acc.priceMua)*100:0;
+                return `<tr class="border-b hover:bg-purple-50"><td class="p-3 pl-6 font-semibold"><span class="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mr-2 uppercase block sm:inline-block w-fit mb-1 sm:mb-0">${acc.category||'Khác'}</span>${acc.name}<div class="text-[11px] text-gray-400 mt-1">Tặng: ${formatMoney(acc.priceTang)} | Bán: ${formatMoney(acc.priceMua)}</div></td><td class="p-3 text-center"><select id="pk_type_${acc.id}" onchange="toggleAccInputs('${acc.id}')" class="bg-gray-50 border p-2 rounded outline-none w-full"><option value="khong" ${type==='khong'?'selected':''}>Không chọn</option><option value="tang" ${type==='tang'?'selected':''}>Đại lý Tặng</option><option value="mua" ${type==='mua'?'selected':''}>Khách Mua</option></select></td><td class="p-3 w-[280px]"><div id="pk_inputs_${acc.id}" class="flex gap-2" style="display:${type==='mua'?'flex':'none'};"><div class="flex flex-col"><span class="text-[10px] text-gray-500 font-bold mb-0.5">GIẢM (%)</span><input type="number" id="pk_pct_${acc.id}" value="${pct.toFixed(1)}" oninput="calcAccPriceFromPct('${acc.id}',${acc.priceMua})" class="w-16 border p-2 rounded text-center"></div><div class="flex flex-col flex-1"><span class="text-[10px] text-gray-500 font-bold mb-0.5">GIÁ BÁN (Đ)</span><input type="text" id="pk_price_${acc.id}" value="${price.toLocaleString('vi-VN')}" oninput="formatInputMoney(this); calcAccPctFromPrice('${acc.id}',${acc.priceMua})" class="w-full border p-2 rounded text-right font-bold text-purple-700"></div></div></td></tr>`;
+            }).join('') || '<tr><td colspan="3" class="p-6 text-center text-gray-500">Chưa có dữ liệu</td></tr>';
+            toggleModal('accPickerModal', true);
+        }
+        function closeAccPicker() { toggleModal('accPickerModal', false); }
+        function toggleAccInputs(id) { document.getElementById(`pk_inputs_${id}`).style.display = document.getElementById(`pk_type_${id}`).value === 'mua' ? 'flex' : 'none'; }
+        function calcAccPctFromPrice(id, base) { if(base<=0)return; const p=parseMoneyInput(document.getElementById(`pk_price_${id}`).value); document.getElementById(`pk_pct_${id}`).value = ((1-p/base)*100).toFixed(1); }
+        function calcAccPriceFromPct(id, base) { const pct=parseFloat(document.getElementById(`pk_pct_${id}`).value)||0; let p=base*(1-pct/100); if(p<0)p=0; document.getElementById(`pk_price_${id}`).value=Math.round(p).toLocaleString('vi-VN'); }
+        function saveAccPicker() {
+            const carId = document.getElementById('carSelect').value; const car = carList.find(c => c.id === carId); if(!car)return;
+            if(!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            let sel = []; accList.forEach(a => { const t = document.getElementById(`pk_type_${a.id}`); if(!t)return; if(t.value==='tang')sel.push({id:a.id,type:'tang',finalPrice:0}); else if(t.value==='mua')sel.push({id:a.id,type:'mua',finalPrice:parseMoneyInput(document.getElementById(`pk_price_${a.id}`).value)}); });
+            quoteAdjustments[car.id].accessories = sel; saveQuoteAdjustmentsToStorage(); closeAccPicker(); updateQuotationUI();
+        }
+
+        // ================== CAR MANAGER ==================
+        function openCarManager() { renderTable(); toggleModal('carManagerModal', true); }
+        function closeCarManager() { toggleModal('carManagerModal', false); }
+        function renderTable() { document.getElementById('car-table-body').innerHTML = carList.map(car => `<tr class="hover:bg-gray-50 border-b cursor-pointer" onclick="editCar('${car.id}')"><td class="p-2"><img src="${car.image||'https://placehold.co/100x60'}" class="w-16 h-10 object-cover rounded"></td><td class="p-3"><div class="font-bold">${car.name} ${car.version}</div><div class="text-[10px] font-bold text-indigo-600">KEY: ${car.standardName||'Chưa đặt'}</div><div class="text-[10px] font-bold text-amber-700">NHÀ MÁY MAX: ${formatMoney(car.cutLimit||car.discount||0)}</div><div class="text-[10px] font-bold text-blue-700">GỢI Ý ĐẠI LÝ: ${formatMoney(car.dealerPromoSuggested||0)}</div><div class="text-[10px] font-bold text-red-600">LƯƠNG XE: ${formatMoney(car.saleSalary||0)}</div><div class="text-xs text-blue-600">${car.type==='bantai'?'Bán Tải':'Du lịch'} - ${car.year}</div></td><td class="p-3">${formatMoney(car.price)}</td><td class="p-3 text-center"><button onclick="event.stopPropagation(); deleteCar('${car.id}')" class="text-red-500 hover:text-red-700">Xóa</button></td></tr>`).join(''); }
+        function clearCarForm() { document.querySelectorAll('#form-car-id,#form-car-name,#form-car-version,#form-car-year,#form-car-img,#form-car-price,#form-car-standard-name,#form-car-cut-limit,#form-car-sale-salary,#form-car-dealer-promo-suggest,#form-car-bh-tang,#form-car-bh-mua,#form-car-specs,#form-car-ctkm2-desc,#form-car-voucher-desc,#form-car-promo-text').forEach(e=>e.value=''); document.getElementById('form-car-type').value='dulich'; }
+        function saveCar() {
+            const id=document.getElementById('form-car-id').value||'car_'+Date.now(), price=parseMoneyInput(document.getElementById('form-car-price').value), name=document.getElementById('form-car-name').value.trim();
+            if(!name||isNaN(price))return alert('Nhập Tên & Giá!');
+            const nc={id,name,standardName:document.getElementById('form-car-standard-name').value.trim() || name,version:document.getElementById('form-car-version').value.trim(),year:document.getElementById('form-car-year').value.trim(),type:document.getElementById('form-car-type').value,image:document.getElementById('form-car-img').value.trim(),price,cutLimit:parseMoneyInput(document.getElementById('form-car-cut-limit').value)||0,saleSalary:parseMoneyInput(document.getElementById('form-car-sale-salary').value)||0,dealerPromoSuggested:parseMoneyInput(document.getElementById('form-car-dealer-promo-suggest').value)||0,bhTangRate:parseFloat(document.getElementById('form-car-bh-tang').value)||0,bhMuaRate:parseFloat(document.getElementById('form-car-bh-mua').value)||0,specs:document.getElementById('form-car-specs').value.trim(), ctkm2_desc: document.getElementById('form-car-ctkm2-desc').value.trim(), voucher_desc: document.getElementById('form-car-voucher-desc').value.trim(), promoText: document.getElementById('form-car-promo-text').value.trim() };
+            const idx=carList.findIndex(c=>c.id===id); if(idx>=0)carList[idx]=nc; else carList.push(nc);
+            localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList)); renderStandardCarNameList(); renderTable(); renderDropdown(); renderPromosUI(); updateQuotationUI(); clearCarForm();
+        }
+        function editCar(id) { const c=carList.find(x=>x.id===id); if(c){document.getElementById('form-car-id').value=c.id; document.getElementById('form-car-name').value=c.name; document.getElementById('form-car-standard-name').value=c.standardName||''; document.getElementById('form-car-version').value=c.version||''; document.getElementById('form-car-year').value=c.year||''; document.getElementById('form-car-type').value=c.type||'dulich'; document.getElementById('form-car-img').value=c.image||''; document.getElementById('form-car-price').value=c.price?Number(c.price).toLocaleString('vi-VN'):''; document.getElementById('form-car-cut-limit').value=(c.cutLimit||c.discount)?Number(c.cutLimit||c.discount).toLocaleString('vi-VN'):''; document.getElementById('form-car-sale-salary').value=c.saleSalary?Number(c.saleSalary).toLocaleString('vi-VN'):''; document.getElementById('form-car-dealer-promo-suggest').value=c.dealerPromoSuggested?Number(c.dealerPromoSuggested).toLocaleString('vi-VN'):''; document.getElementById('form-car-bh-tang').value=c.bhTangRate||''; document.getElementById('form-car-bh-mua').value=c.bhMuaRate||''; document.getElementById('form-car-specs').value=c.specs||''; document.getElementById('form-car-ctkm2-desc').value=c.ctkm2_desc||''; document.getElementById('form-car-voucher-desc').value=c.voucher_desc||''; document.getElementById('form-car-promo-text').value=c.promoText||''; } }
+        function deleteCar(id) { if(confirm('Xóa?')){carList=carList.filter(c=>c.id!==id); localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList)); renderStandardCarNameList(); renderTable(); renderDropdown(); renderPromosUI(); updateQuotationUI(); clearCarForm();} }
+
+        function changePlateColor() { 
+            const e=document.getElementById('plateSelect'), w=document.getElementById('plate-wrapper'), i=document.getElementById('plate-icon'); 
+            if(e.value==='vang'){
+                w.className='relative bg-yellow-200 rounded-md border-2 border-yellow-400 h-10 flex items-center px-3 w-[150px]'; 
+                e.classList.replace('text-gray-700','text-yellow-900'); i.classList.replace('text-gray-500','text-yellow-700');
+            } else {
+                w.className='relative bg-gray-100 rounded-md border-2 border-transparent h-10 flex items-center px-3 w-[150px]'; 
+                e.classList.replace('text-yellow-900','text-gray-700'); i.classList.replace('text-yellow-700','text-gray-500');
+            } 
+        }
+
+        // ================== ƯU ĐÃI SẠC THEO ĐIỀU KIỆN ==================
+        function syncChargingUsage() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect').value);
+            if (!car) return;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            quoteAdjustments[car.id].chargingUsage = document.getElementById('usageSelect')?.value || 'family';
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+        }
+
+        function getChargingPromotion(car, adj) {
+            const plate = document.getElementById('plateSelect')?.value || 'trang';
+            const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
+            if (usage === 'xanhsm') {
+                return 'Ưu đãi sạc: Miễn phí sạc không giới hạn. VinFast tài trợ 10 lần sạc đầu/tháng; GSM chi trả toàn bộ các lần sạc phát sinh còn lại.';
+            }
+            if (plate === 'trang' && usage === 'family') {
+                return 'Ưu đãi sạc: Miễn phí 10 lần sạc đầu tiên trong tháng. Số lần sạc chưa dùng hết không được cộng dồn sang tháng sau.';
+            }
+            if (plate === 'vang' && usage === 'service') {
+                return 'Ưu đãi sạc: 10 lần sạc/tháng trong khung giờ thấp điểm — Thứ 2 đến Thứ 4: 23:00–06:00; Thứ 6, Thứ 7 và Chủ Nhật: 23:00–06:00 và 14:00–16:00.';
+            }
+            return '';
+        }
+
+        // ================== CORE CALCULATION & UI ==================
+        function changeBHVCType(t) { const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(c){if(!quoteAdjustments[c.id])quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c); quoteAdjustments[c.id].bhvcType=t; saveQuoteAdjustmentsToStorage(); updateQuotationUI();} }
+        
+        function syncVF() {
+            const c = carList.find(x => x.id === document.getElementById('carSelect').value); if(!c) return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id] = getDefaultQuoteAdjustments(c);
+            let adj = quoteAdjustments[c.id];
+            
+            let vfp = {
+                exclusiveId: document.getElementById('vf-main-policy')?.value || 'none',
+                additiveIds: [], customValues: {},
+                dealerExtra: parseMoneyInput(document.getElementById('vf-dealer-extra')?.value || ''),
+                catMau: parseMoneyInput(document.getElementById('vf-catmau').value)
+            };
+            
+            document.querySelectorAll('.promo-additive-chk').forEach(chk => {
+                if(chk.checked) vfp.additiveIds.push(chk.dataset.id);
+            });
+            
+            document.querySelectorAll('.promo-custom-input').forEach(inp => {
+                let val = parseMoneyInput(inp.value);
+                if(val > 0) vfp.customValues[inp.dataset.id] = val;
+            });
+
+            adj.vfPromos = vfp;
+            saveQuoteAdjustmentsToStorage(); updateQuotationUI();
+        }
+
+        function applyDealerSuggestion() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect').value); if(!car) return;
+            const inp = document.getElementById('vf-dealer-extra'); if(!inp) return;
+            const suggestion = Number(car.dealerPromoSuggested || 0);
+            inp.value = suggestion > 0 ? suggestion.toLocaleString('vi-VN') : '';
+            syncVF();
+        }
+
+        function getBhvcRates(car, adj, plate) {
+            const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
+            const isServiceVehicle = plate === 'vang' || usage === 'service' || usage === 'xanhsm';
+            if (isServiceVehicle) return { mua: 2.3, tang: 2.3 };
+            return {
+                mua: Number(car?.bhMuaRate || 1.3),
+                tang: Number(car?.bhTangRate || 1.2)
+            };
+        }
+
+        function calculateQuotation(car) {
+            if (!car) return null;
+            const pay = document.getElementById('paymentSelect').value, plt = document.getElementById('plateSelect').value, adj = getQuoteAdjustments(car);
+            const cityPlate = document.getElementById('cityPlateSelect').value;
+            const vfp = adj.vfPromos;
+            
+            let dMSRP = 0; let dMoney = 0; let dAfter = 0;
+            let activePromoObjs = [];
+            
+            // Add exclusive
+            if (vfp.exclusiveId && vfp.exclusiveId !== 'none') {
+                let p = promoList.find(x => x.id === vfp.exclusiveId);
+                if (p && promoAppliesToCar(p,car)) activePromoObjs.push(p);
+            }
+            // Add additives
+            if(vfp.additiveIds) {
+                vfp.additiveIds.forEach(id => {
+                    let p = promoList.find(x => x.id === id);
+                    if (p && promoAppliesToCar(p,car)) activePromoObjs.push(p);
+                });
+            }
+            // Add custom
+            if(vfp.customValues) {
+                Object.keys(vfp.customValues).forEach(id => {
+                    if (vfp.customValues[id] > 0) {
+                        let p = promoList.find(x => x.id === id);
+                        if (p && promoAppliesToCar(p,car)) activePromoObjs.push({ ...p, inputValue: vfp.customValues[id] });
+                    }
+                });
+            }
+
+            let promoDetails = [];
+            activePromoObjs.forEach(p => {
+                if (p.type === 'pct_msrp') {
+                    let val = car.price * (p.value / 100);
+                    dMSRP += val; promoDetails.push(`${p.name} (Giảm ${p.value}%): ${formatMoney(val)}`);
+                } else if (p.type === 'money') {
+                    dMoney += p.value; promoDetails.push(`${p.name}: ${formatMoney(p.value)}`);
+                } else if (p.type === 'custom') {
+                    dMoney += p.inputValue; promoDetails.push(`${p.name}: ${formatMoney(p.inputValue)}`);
+                } else if (p.type === 'pct_after') {
+                    dAfter += p.value / 100;
+                }
+            });
+
+            const dealerExtra = Number(vfp.dealerExtra || 0);
+            if(dealerExtra > 0) { dMoney += dealerExtra; promoDetails.push(`Giảm thêm riêng Đại lý: ${formatMoney(dealerExtra)}`); }
+
+            let subTotalDiscount = dMSRP + dMoney + (vfp.catMau || 0);
+            let priceAfterSub = car.price - subTotalDiscount;
+            if (priceAfterSub < 0) priceAfterSub = 0;
+            
+            let discountAfter = priceAfterSub * dAfter;
+            if (discountAfter > 0) {
+                let afterNames = activePromoObjs.filter(x=>x.type==='pct_after').map(x=>`${x.name} (${x.value}%)`).join(', ');
+                promoDetails.push(`${afterNames}: ${formatMoney(discountAfter)}`);
+            }
+            
+            let totalDiscount = subTotalDiscount + discountAfter;
+            let finalP = car.price - totalDiscount;
+
+            if(vfp.catMau > 0) promoDetails.push(`Lương cắt máu giảm: ${formatMoney(vfp.catMau)}`);
+
+            // Thuế & Đăng ký (VF Mặc định thuế 0%)
+            let taxR = 0;
+            const rf = adj.regFees || getDefaultQuoteAdjustments(car).regFees;
+            let tnds = Number(rf.civilFee || 0);
+            let dBo = Number(rf.roadFee || 0);
+            let phiDangKiem = Number(rf.inspectionFee || PHI_DANG_KIEM);
+            
+            const bhRates = getBhvcRates(car, adj, plt);
+            const rMua = bhRates.mua, rTang = bhRates.tang;
+            const bhvcType = adj.bhvcType || 'mua';
+            
+            let calculatedBhValue = 0;
+            if (bhvcType === 'mua') calculatedBhValue = finalP * (rMua / 100);
+            else if (bhvcType === 'tang') calculatedBhValue = finalP * (rTang / 100);
+            let effectiveBhValueForReg = (bhvcType === 'tang' || bhvcType === 'khong') ? 0 : calculatedBhValue;
+
+            let accTang = [], aMua = [], totAcc = 0;
+            adj.accessories.forEach(a => { const d=accList.find(x=>x.id===a.id); if(d){ if(a.type==='tang')accTang.push(d.name); else if(a.type==='mua'){aMua.push({name:d.name,price:a.finalPrice}); totAcc+=a.finalPrice;} } });
+
+            const bTax = car.price * taxR; // 0
+            let tax = adj.taxAdjust > 0 ? adj.taxAdjust : bTax;
+            let bu = adj.buTax;
+            if(pay==='BANK' && adj.loan.autoBuTax){ bu += Math.min(tax, totalDiscount)*0.10; tax = Math.max(0, tax - totalDiscount); }
+            
+            const phiDangKy = Number(rf.registrationFee || (cityPlate === 'thanhpho' ? 14000000 : 140000));
+            const totReg = tax + phiDangKy + phiDangKiem + dBo + tnds + adj.registrationService + bu + effectiveBhValueForReg + totAcc;
+
+            let loan=0, down=0, totB=0, avgM=0;
+            if(pay==='BANK'){
+                const lc=adj.loan; loan=lc.manualLoan!==null?lc.manualLoan:(finalP*lc.percent/100); if(loan>finalP)loan=finalP; if(loan<0)loan=0;
+                down=finalP-loan; totB=down+totReg;
+                if(loan>0 && lc.years>0){
+                    const tM=lc.years*12, mP=loan/tM, pr=(lc.promoRate/100)/12, ar=((lc.promoRate+lc.floatRate)/100)/12, lim=Math.min(12,tM);
+                    let tI=0, cP=loan; for(let i=0;i<lim;i++){ tI+=cP*(i<lc.promoMonths?pr:ar); cP-=mP; } avgM=mP+(tI/lim);
+                }
+            }
+            return { car, adj, tax, totalDiscount, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, totOnRoad: finalP+totReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
+        }
+
+        function updateQuotationUI() {
+            const carId = document.getElementById('carSelect').value; const car = carList.find(c => c.id === carId); if (!car) return;
+            const adj = getQuoteAdjustments(car), calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
+            const usageSelect = document.getElementById('usageSelect');
+            if (usageSelect && document.activeElement !== usageSelect) usageSelect.value = adj.chargingUsage || 'family';
+
+            // Đồng bộ các bộ chọn phí ngay trên màn hình báo giá
+            const rfQuote = adj.regFees || getDefaultQuoteAdjustments(car).regFees;
+            const quotePresetMap = {
+                quoteRegistrationPreset: rfQuote.registrationPreset,
+                quoteInspectionPreset: rfQuote.inspectionPreset,
+                quoteCivilPreset: rfQuote.civilPreset,
+                quoteRoadPreset: rfQuote.roadPreset
+            };
+            Object.entries(quotePresetMap).forEach(([id,val])=>{ const e=document.getElementById(id); if(e) e.value=val || 'custom'; });
+
+            // Fill left panel inputs from saved adjustments
+            const vfp = adj.vfPromos;
+            const mainPol = document.getElementById('vf-main-policy');
+            if(mainPol && vfp.exclusiveId) mainPol.value = vfp.exclusiveId;
+            
+            document.querySelectorAll('.promo-additive-chk').forEach(chk => {
+                chk.checked = vfp.additiveIds && vfp.additiveIds.includes(chk.dataset.id);
+            });
+            document.querySelectorAll('.promo-custom-input').forEach(inp => {
+                let val = (vfp.customValues && vfp.customValues[inp.dataset.id]) || 0;
+                inp.value = val > 0 ? Number(val).toLocaleString('vi-VN') : '';
+            });
+            
+            // XỬ LÝ GỢI Ý HÃNG MỚI THÊM:
+            // Tìm ô input CTKM 2 và Voucher bằng ID của CTKM (vòng lặp để gắn data)
+            promoList.filter(p => p.type === 'custom').forEach(p => {
+                let isVoucher = p.name.includes('CTKM 4') || p.name.includes('Voucher');
+                let targetHintId = isVoucher ? `vf-ctkm4-hint_${p.id}` : `vf-ctkm2-hint_${p.id}`;
+                let targetHintEl = document.getElementById(targetHintId);
+                
+                if (targetHintEl) {
+                    if (isVoucher && car.voucher_desc) {
+                        targetHintEl.innerText = `💡 Gợi ý Voucher: ${car.voucher_desc}`;
+                        targetHintEl.classList.remove('hidden');
+                    } else if (!isVoucher && car.ctkm2_desc) {
+                        targetHintEl.innerText = `💡 Ghi chú Đại lý: ${car.ctkm2_desc}`;
+                        targetHintEl.classList.remove('hidden');
+                    } else {
+                        targetHintEl.classList.add('hidden');
+                    }
+                }
+            });
+
+            const dealerSuggestEl = document.getElementById('vf-dealer-suggest');
+            if(dealerSuggestEl) dealerSuggestEl.innerText = Number(car.dealerPromoSuggested || 0) > 0 ? formatMoney(car.dealerPromoSuggested) : 'Chưa thiết lập';
+            const dealerExtraInp = document.getElementById('vf-dealer-extra');
+            if(dealerExtraInp && document.activeElement !== dealerExtraInp) dealerExtraInp.value = Number(vfp.dealerExtra || 0) > 0 ? Number(vfp.dealerExtra).toLocaleString('vi-VN') : '';
+
+            document.getElementById('vf-catmau').value = vfp.catMau ? Number(vfp.catMau).toLocaleString('vi-VN') : '';
+            const factoryMax = getFactoryMaxDiscount(car);
+            const salaryLimit = getSaleSalaryLimit(car);
+            const cutDisplay = document.getElementById('vf-car-cut-limit-display');
+            if(cutDisplay) cutDisplay.innerText = factoryMax > 0 ? formatMoney(factoryMax) : 'Chưa thiết lập';
+            const cutInput = document.getElementById('vf-catmau');
+            const cutLimitEl = document.getElementById('vf-catmau-limit');
+            cutLimitEl.innerText = salaryLimit > 0 ? 'Lương xe: ' + formatMoney(salaryLimit) : 'Chưa nhập lương xe bán ra';
+            const isOverCut = salaryLimit > 0 && Number(vfp.catMau||0) > salaryLimit;
+            cutInput.classList.toggle('ring-4', isOverCut); cutInput.classList.toggle('ring-red-400', isOverCut); cutInput.classList.toggle('bg-red-100', isOverCut);
+            cutLimitEl.classList.toggle('animate-pulse', isOverCut);
+            if(isOverCut) cutLimitEl.innerText = '⚠ VƯỢT LƯƠNG ' + formatMoney(Number(vfp.catMau||0)-salaryLimit) + ' | Lương xe ' + formatMoney(salaryLimit);
+
+            // Bảng trái BHVC
+            const bhRatesUi = getBhvcRates(car, adj, plt);
+            let rMua=bhRatesUi.mua, rTang=bhRatesUi.tang;
+            let vMua=calc.finalP*rMua/100, vTang=calc.finalP*rTang/100, curT=adj.bhvcType||'mua';
+            
+            document.getElementById('left-bhvc-panel').innerHTML = `
+                <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='mua'?'border-indigo-500 bg-indigo-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="mua" class="w-4 h-4 accent-indigo-600" ${curT==='mua'?'checked':''} onchange="changeBHVCType('mua')"><span class="font-bold text-[13px]">Khách mua BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-indigo-700">+ ${formatMoney(vMua)} <span class="text-[10px] font-bold text-indigo-500">(${rMua}%)</span></div></label>
+                <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='tang'?'border-green-500 bg-green-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="tang" class="w-4 h-4 accent-green-600" ${curT==='tang'?'checked':''} onchange="changeBHVCType('tang')"><span class="font-bold text-[13px]">Đại lý Tặng BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-green-700">Trị giá: ${formatMoney(vTang)} <span class="text-[10px] font-bold text-green-600">(${rTang}%)</span></div></label>
+                <label class="flex items-center p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='khong'?'border-gray-400 bg-gray-100':'border-gray-200 hover:bg-gray-50'}"><input type="radio" value="khong" class="w-4 h-4 accent-gray-600 mr-2" ${curT==='khong'?'checked':''} onchange="changeBHVCType('khong')"><span class="font-bold text-[13px]">Không lấy BHVC</span></label>`;
+
+            // Phụ kiện
+            let hAcc=''; if(calc.aTang.length>0)hAcc+=`<div class="text-xs text-green-700 bg-green-50 border border-green-200 p-2.5 rounded-lg"><span class="font-bold uppercase block mb-1">🎁 Quà tặng đại lý:</span><ul class="list-disc pl-4 space-y-0.5">${calc.aTang.map(n=>`<li>${n}</li>`).join('')}</ul></div>`;
+            if(calc.aMua.length>0)hAcc+=`<div class="text-xs text-purple-700 bg-purple-50 border border-purple-200 p-2.5 rounded-lg mt-2"><span class="font-bold uppercase block mb-1">💳 Khách mua thêm:</span><ul class="list-disc pl-4 space-y-0.5">${calc.aMua.map(a=>`<li><span class="font-medium">${a.name}</span> <b>(${formatMoney(a.price)})</b></li>`).join('')}</ul></div>`;
+            document.getElementById('left-acc-summary').innerHTML = hAcc||'<div class="text-xs text-gray-400 italic text-center">Chưa chọn phụ kiện.</div>';
+
+            const lt = document.getElementById('customize-toggle'); if(lt&&lt.checked)fillLiveCustomizePanel();
+
+            document.getElementById('quote-car-name').innerText = `${car.name} ${car.version} ${car.year}`.trim();
+            document.getElementById('quote-price-listed').innerText = formatMoney(car.price);
+            document.getElementById('quote-discount').innerText = '- ' + formatMoney(calc.totalDiscount);
+            document.getElementById('quote-price-final').innerText = formatMoney(calc.finalP);
+
+            let tL = adj.taxAdjust > 0 ? 'Lệ phí TB (Tùy chỉnh)' : 'Lệ phí TB (0%)'; if (calc.isBank && adj.loan.autoBuTax) tL += ' (Cấn trừ)';
+            document.getElementById('quote-tax-label').innerText = tL; document.getElementById('quote-tax').innerText = formatMoney(calc.tax);
+            document.getElementById('quote-phi-dang-ky').innerText = formatMoney(calc.phiDangKy);
+            document.getElementById('quote-phi-dang-kiem').innerText = formatMoney(calc.phiDangKiem);
+            document.getElementById('quote-phi-duong-bo').innerText = formatMoney(calc.dBo); 
+            document.getElementById('quote-phi-tnds').innerText = formatMoney(calc.tnds);
+            document.getElementById('quote-phi-dich-vu').innerText = formatMoney(adj.registrationService);
+
+            document.getElementById('quote-bu-thue').innerText = formatMoney(calc.bu); document.getElementById('quote-bu-thue-row').style.display = calc.bu>0?'flex':'none';
+            document.getElementById('quote-bh-vc-row').style.display = (calc.bhType==='khong'||calc.bhType==='tang')?'none':'flex'; document.getElementById('quote-bh-vc').innerText = formatMoney(calc.bhVal);
+            document.getElementById('quote-acc-cost-row').style.display = calc.totAcc>0?'flex':'none'; document.getElementById('quote-acc-cost').innerText = formatMoney(calc.totAcc);
+            document.getElementById('quote-reg-total').innerText = formatMoney(calc.totReg); document.getElementById('quote-total').innerText = formatMoney(calc.totOnRoad);
+
+            const bk = document.getElementById('bank-info-container');
+            if(calc.isBank){
+                bk.style.display='block'; const lc=adj.loan, acI=document.activeElement?.id;
+                if(acI!=='bank-auto-butax')document.getElementById('bank-auto-butax').checked=lc.autoBuTax||false;
+                if(acI!=='bank-percent')document.getElementById('bank-percent').value=lc.percent;
+                if(acI!=='bank-years')document.getElementById('bank-years').value=lc.years;
+                if(acI!=='bank-promo-months')document.getElementById('bank-promo-months').value=lc.promoMonths;
+                if(acI!=='bank-promo-rate')document.getElementById('bank-promo-rate').value=lc.promoRate;
+                if(acI!=='bank-float-rate')document.getElementById('bank-float-rate').value=lc.floatRate;
+                if(acI!=='bank-loan-amount')document.getElementById('bank-loan-amount').value=Math.round(calc.loan).toLocaleString('vi-VN');
+                if(acI!=='bank-down-payment')document.getElementById('bank-down-payment').value=Math.round(calc.down).toLocaleString('vi-VN');
+                document.getElementById('bank-total-pay').innerText=formatMoney(calc.totB); document.getElementById('bank-avg-monthly').innerText=formatMoney(calc.avgM)+' / tháng';
+            } else { bk.style.display='none'; }
+
+            document.getElementById('quote-car-img').src = car.image || 'https://placehold.co/800x600?text=No+Image';
+            document.getElementById('quote-car-specs').innerHTML = (car.specs||'').split('\n').filter(p=>p.trim()).map(s=>`<li class="w-[48%] flex items-start">${SVG_CHECK}<span class="leading-snug flex-1 pt-[1px]">${s}</span></li>`).join('');
+
+            // Chi tiết Khuyến mãi & Tri ân: nội dung người dùng nhập + ưu đãi sạc mặc định khi đủ điều kiện.
+            // Không tự đưa CTKM giảm giá, giảm thêm Đại lý, lương cắt máu, BHVC hay quà mặc định khác vào đây.
+            const pA = (car.promoText || '').split('\n').map(x => x.trim()).filter(Boolean);
+            const chargingPromo = getChargingPromotion(car, adj);
+            if (chargingPromo) pA.push(chargingPromo);
+            document.getElementById('quote-promo-list').innerHTML = pA.map((p,i)=>`<li class="flex items-stretch gap-2 bg-white p-2 rounded border border-green-200"><div class="flex items-center justify-center w-5 h-5 rounded bg-green-600 text-white font-bold text-[10px] shrink-0">${i+1}</div><div class="flex-1 text-[12px] font-medium flex items-center">${p}</div></li>`).join('');
+
+            const acC = document.getElementById('quote-accessories-container');
+            if(calc.aMua.length>0){ acC.style.display='block'; document.getElementById('quote-bought-acc-list').innerHTML=calc.aMua.map((m,i)=>`<li class="flex justify-between border-b pb-1.5"><span class="text-[13px] text-gray-700"><b class="text-purple-600 mr-1">${i+1}.</b> ${m.name}</span><span class="font-bold text-[13px] text-purple-700">${formatMoney(m.price)}</span></li>`).join(''); } 
+            else { acC.style.display='none'; }
+        }
+
+        // ================== QUOTE INFO ==================
+        function openQuoteInfo() {
+            const cId = document.getElementById('carSelect').value; const car = carList.find(c=>c.id===cId); if(!car)return;
+            const calc = calculateQuotation(car); 
+            
+            // Copy Text dùng cùng nguồn với phần “Chi tiết Khuyến mãi & Tri ân”, gồm ưu đãi sạc khi đủ điều kiện.
+            const pA = (car.promoText || '').split('\n').map(x => x.trim()).filter(Boolean);
+            const chargingPromo = getChargingPromotion(car, calc.adj);
+            if (chargingPromo) pA.push(chargingPromo);
+
+            const sum = document.getElementById('quoteInfoSummary'), txt = document.getElementById('quoteInfoText');
+            const cN=`${car.name} ${car.version} ${car.year}`, cl=document.getElementById('colorSelect').value, pl=document.getElementById('plateSelect').options[document.getElementById('plateSelect').selectedIndex].text, pa=calc.isBank?'BANK':'CASH';
+            const usageText = document.getElementById('usageSelect')?.options[document.getElementById('usageSelect').selectedIndex]?.text || 'Gia đình';
+            const ht=document.getElementById('cityPlateSelect').options[document.getElementById('cityPlateSelect').selectedIndex].text;
+            const accT = calc.aMua.length>0 ? `\nPHỤ KIỆN MUA THÊM:\n`+calc.aMua.map(a=>`• ${a.name}: ${formatMoney(a.price)}`).join('\n')+`\n=> Tổng tiền phụ kiện: ${formatMoney(calc.totAcc)}\n` : '';
+
+            sum.innerHTML = `<div class="quote-info-row"><span class="quote-info-label">Xe</span><span class="quote-info-value">${cN}</span></div><div class="quote-info-row"><span class="quote-info-label">Giá lăn bánh</span><span class="quote-info-value text-emerald-600">${formatMoney(calc.totOnRoad)}</span></div>${calc.isBank?`<div class="quote-info-row"><span class="quote-info-label">Tổng trả nhận xe</span><span class="quote-info-value text-brand-primary">${formatMoney(calc.totB)}</span></div>`:''}`;
+            txt.value = `BÁO GIÁ XE ${cN}\n\n• Màu: ${cl} | Biển: ${pl} | Hộ khẩu: ${ht} | TT: ${pa}\n• Giá niêm yết: ${formatMoney(car.price)}\n• Tổng giảm giá: - ${formatMoney(calc.totalDiscount)}\n• Giá sau giảm: ${formatMoney(calc.finalP)}\n• Giá lăn bánh: ${formatMoney(calc.totOnRoad)}\n• Lệ phí biển số: ${formatMoney(calc.phiDangKy)}\n• Dịch vụ ĐK: ${formatMoney(calc.adj.registrationService)}\n• BHVC: ${formatMoney(calc.bhVal)} (${calc.bhType==='tang'?'Đại lý tặng':(calc.bhType==='mua'?'Khách mua':'Không')})\n${accT}` + (calc.isBank?`\nTRẢ GÓP:\n• Gói vay: ${calc.adj.loan.percent}%\n• Tiền vay: ${formatMoney(calc.loan)}\n• Đối ứng: ${formatMoney(calc.down)}\n• NHẬN XE: ${formatMoney(calc.totB)}\n• Góp 1 năm đầu: ${formatMoney(calc.avgM)} /tháng\n`:'') + (pA.length ? `\nCTKM & QUÀ TẶNG:\n${pA.map((p,i)=>`${i+1}.${p}`).join('\n')}` : '');
+            toggleModal('quoteInfoModal', true);
+        }
+        function closeQuoteInfo() { toggleModal('quoteInfoModal', false); }
+        async function copyQuoteInfo() { const t=document.getElementById('quoteInfoText'); try{await navigator.clipboard.writeText(t.value); alert('Đã copy!');}catch(e){t.select(); document.execCommand('copy'); alert('Đã copy!');} }
+
+        // ================== INIT ==================
+        function renderDropdown() { const s=document.getElementById('carSelect'), v=s.value; s.innerHTML=carList.map(c=>`<option value="${c.id}">${c.name} ${c.version}</option>`).join(''); if(v&&carList.find(c=>c.id===v))s.value=v; }
+        
+        function initApp() {
+            document.getElementById('current-date').innerText = `Ngày lập: ${new Date().toLocaleDateString('vi-VN')}`;
+            
+            const sC=localStorage.getItem('vinfast_cars_v3'); if(sC)carList=JSON.parse(sC); else{carList=[...defaultCars]; localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList));}
+            carList = carList.map(c => ({ ...c, promoText: typeof c.promoText === 'string' ? c.promoText : '' }));
+            localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList));
+            carList = carList.map(c=>({...c, standardName:c.standardName || normalizeCarKey([c.name,c.version].filter(Boolean).join(' ')), cutLimit:Number(c.cutLimit ?? c.discount ?? 0), saleSalary:Number(c.saleSalary ?? 0), dealerPromoSuggested:Number(c.dealerPromoSuggested ?? 0)})); localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList));
+            const sA=localStorage.getItem('vinfast_accessories_v2'); if(sA)accList=JSON.parse(sA); else accList=[];
+            const sP=localStorage.getItem('vinfast_promos_v1'); if(sP)promoList=JSON.parse(sP); else promoList=[...initPromos]; promoList=promoList.map(({cutLimit,...p})=>p); localStorage.setItem('vinfast_promos_v1',JSON.stringify(promoList));
+            
+            try{quoteAdjustments=JSON.parse(localStorage.getItem('vinfast_quote_adj_v3')||'{}')||{};}catch(e){quoteAdjustments={};}
+            
+            renderStandardCarNameList(); renderPromoCarKeyOptions([]); renderDropdown(); renderTable(); renderAccTable(); renderPromoTable();
+            renderPromosUI(); updateQuotationUI();
+        }
+        window.onload = initApp;
+
+        // ================== PREVIEW & EXPORT ==================
+        function styleInputsForPrint(clonedContainer) {
+            const selects = clonedContainer.querySelectorAll('select');
+            selects.forEach((select) => {
+                const text = select.options[select.selectedIndex].text; const div = document.createElement('div');
+                div.className = select.className; div.style.cssText = `display:flex; align-items:center; font-weight:600; font-size:13px; color:${window.getComputedStyle(select).color};`;
+                div.innerText = text; select.parentNode.insertBefore(div, select); select.remove();
+            });
+            const inputs = clonedContainer.querySelectorAll('input');
+            inputs.forEach((input) => {
+                if(input.type === 'hidden' || input.type === 'checkbox' || input.type === 'radio') return;
+                const span = document.createElement('span'); span.className = input.className;
+                span.style.cssText = `display:inline-block; border-bottom: 1px dotted #94a3b8; min-width: 40px; text-align:right; font-weight:bold; font-size:14px;`;
+                span.innerText = input.value; input.parentNode.insertBefore(span, input); input.remove();
+            });
+        }
+        function openPreview() {
+            const clone = document.getElementById('capture-area').cloneNode(true); clone.id = "capture-area-clone";
+            clone.style.width = '1024px'; clone.style.minWidth = '1024px'; clone.style.maxWidth = '1024px'; clone.style.margin = '0'; clone.style.transform = 'none'; clone.style.transformOrigin = 'top left'; clone.style.boxSizing = 'border-box';
+            styleInputsForPrint(clone);
+            const c=document.getElementById('preview-container'); c.innerHTML=''; c.appendChild(clone); toggleModal('previewModal', true);
+        }
+        function closePreview() { toggleModal('previewModal', false); document.getElementById('preview-container').innerHTML=''; }
+        async function savePreviewImage() {
+            const tg=document.getElementById('capture-area-clone'), btn=document.getElementById('save-image-btn'); if(!tg)return;
+            const oT=btn.innerHTML; btn.innerHTML='⏳ Đang xử lý...'; btn.disabled=true;
+            try{
+                if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+                await Promise.all(Array.from(tg.querySelectorAll('img')).map(i=>new Promise(r=>{if(i.complete)r();else{i.onload=r;i.onerror=r;}})));
+                await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+                const dU=await htmlToImage.toPng(tg, {backgroundColor:'#ffffff', width:1024, height:tg.scrollHeight, pixelRatio:2});
+                const a=document.createElement('a'); a.href=dU; a.download='BaoGia_Ucar_HD.png'; a.click();
+            } catch(e){alert('Lỗi!');} finally{btn.innerHTML=oT; btn.disabled=false;}
+        }
+
+        // ================== CÁC PHÍ BỔ SUNG & BANK ==================
+        function syncBank(src) {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            let a=getQuoteAdjustments(c), lc=a.loan, calc=calculateQuotation(c), fp=calc.finalP;
+            if(src==='autobutax') lc.autoBuTax=document.getElementById('bank-auto-butax').checked;
+            else if(src==='percent'){let p=parseFloat(document.getElementById('bank-percent').value)||0; lc.percent=p>100?100:p; lc.manualLoan=null;}
+            else if(src==='loan'){let l=parseMoneyInput(document.getElementById('bank-loan-amount').value)||0; lc.manualLoan=l>fp?fp:l; lc.percent=Number((lc.manualLoan/fp*100).toFixed(2));}
+            else if(src==='down'){let d=parseMoneyInput(document.getElementById('bank-down-payment').value)||0; lc.manualLoan=fp-(d>fp?fp:d); lc.percent=Number((lc.manualLoan/fp*100).toFixed(2));}
+            else {lc.years=parseInt(document.getElementById('bank-years').value)||0; lc.promoMonths=parseInt(document.getElementById('bank-promo-months').value)||12; lc.promoRate=parseFloat(document.getElementById('bank-promo-rate').value)||0; lc.floatRate=parseFloat(document.getElementById('bank-float-rate').value)||0;}
+            quoteAdjustments[c.id]=a; saveQuoteAdjustmentsToStorage(); updateQuotationUI();
+        }
+        function syncLive(id, key) {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c);
+            quoteAdjustments[c.id][key]=parseMoneyInput(document.getElementById(id).value); saveQuoteAdjustmentsToStorage(); updateQuotationUI();
+        }
+        function syncQuoteFeePreset(kind) {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c);
+            const rf=quoteAdjustments[c.id].regFees ||= {...getDefaultQuoteAdjustments(c).regFees};
+            const map={
+                registration:{id:'quoteRegistrationPreset',preset:'registrationPreset',fee:'registrationFee',values:REG_FEE_PRESETS,live:'live-registration-fee'},
+                inspection:{id:'quoteInspectionPreset',preset:'inspectionPreset',fee:'inspectionFee',values:{'57':90000},live:'live-inspection-fee'},
+                civil:{id:'quoteCivilPreset',preset:'civilPreset',fee:'civilFee',values:CIVIL_FEE_PRESETS,live:'live-civil-fee'},
+                road:{id:'quoteRoadPreset',preset:'roadPreset',fee:'roadFee',values:ROAD_FEE_PRESETS,live:'live-road-fee'}
+            };
+            const cfg=map[kind]; if(!cfg)return;
+            const el=document.getElementById(cfg.id); if(!el)return;
+            const preset=el.value; rf[cfg.preset]=preset;
+            if(cfg.values[preset]!=null) {
+                rf[cfg.fee]=cfg.values[preset];
+                if(kind==='registration') document.getElementById('cityPlateSelect').value=preset==='metro'?'thanhpho':'tinh';
+                saveQuoteAdjustmentsToStorage(); updateQuotationUI();
+                if(document.getElementById('customize-toggle')?.checked) fillLiveCustomizePanel();
+                return;
+            }
+            saveQuoteAdjustmentsToStorage();
+            toggleLiveCustomize(true);
+            setTimeout(()=>{ const input=document.getElementById(cfg.live); if(input){ input.focus(); input.select(); } },50);
+            updateQuotationUI();
+        }
+
+        function syncRegFee(id, key) {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c);
+            if(!quoteAdjustments[c.id].regFees) quoteAdjustments[c.id].regFees={...getDefaultQuoteAdjustments(c).regFees};
+            quoteAdjustments[c.id].regFees[key]=parseMoneyInput(document.getElementById(id).value);
+            const presetKey = key.replace('Fee','Preset');
+            if(presetKey in quoteAdjustments[c.id].regFees) quoteAdjustments[c.id].regFees[presetKey]='custom';
+            saveQuoteAdjustmentsToStorage(); updateQuotationUI();
+        }
+        function applyRegistrationPreset() {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c);
+            const rf=quoteAdjustments[c.id].regFees ||= {...getDefaultQuoteAdjustments(c).regFees};
+            const preset=document.getElementById('live-registration-preset').value; rf.registrationPreset=preset;
+            if(REG_FEE_PRESETS[preset]!=null) rf.registrationFee=REG_FEE_PRESETS[preset];
+            saveQuoteAdjustmentsToStorage(); fillLiveCustomizePanel(); updateQuotationUI();
+        }
+        function applyInspectionPreset() {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c);
+            const rf=quoteAdjustments[c.id].regFees ||= {...getDefaultQuoteAdjustments(c).regFees};
+            const preset=document.getElementById('live-inspection-preset').value; rf.inspectionPreset=preset;
+            if(preset==='57') rf.inspectionFee=90000;
+            saveQuoteAdjustmentsToStorage(); fillLiveCustomizePanel(); updateQuotationUI();
+        }
+        function applyCivilPreset() {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c);
+            const rf=quoteAdjustments[c.id].regFees ||= {...getDefaultQuoteAdjustments(c).regFees};
+            const preset=document.getElementById('live-civil-preset').value; rf.civilPreset=preset;
+            if(CIVIL_FEE_PRESETS[preset]!=null) rf.civilFee=CIVIL_FEE_PRESETS[preset];
+            saveQuoteAdjustmentsToStorage(); fillLiveCustomizePanel(); updateQuotationUI();
+        }
+        function applyRoadPreset() {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c);
+            const rf=quoteAdjustments[c.id].regFees ||= {...getDefaultQuoteAdjustments(c).regFees};
+            const preset=document.getElementById('live-road-preset').value; rf.roadPreset=preset;
+            if(ROAD_FEE_PRESETS[preset]!=null) rf.roadFee=ROAD_FEE_PRESETS[preset];
+            saveQuoteAdjustmentsToStorage(); fillLiveCustomizePanel(); updateQuotationUI();
+        }
+        function syncRegistrationFromCityPlate() {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            if(!quoteAdjustments[c.id]) quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c);
+            const rf=quoteAdjustments[c.id].regFees ||= {...getDefaultQuoteAdjustments(c).regFees};
+            const city=document.getElementById('cityPlateSelect').value;
+            rf.registrationPreset = city==='thanhpho' ? 'metro' : 'ward';
+            rf.registrationFee = city==='thanhpho' ? 14000000 : 140000;
+            saveQuoteAdjustmentsToStorage();
+            if(document.getElementById('customize-toggle')?.checked) fillLiveCustomizePanel();
+        }
+        function setupLive() {
+            [['live-tax-adjust','taxAdjust'],['live-registration-service','registrationService']].forEach(([i,k])=>{
+                const e=document.getElementById(i); if(!e||e.dataset.b)return; e.dataset.b='1'; e.addEventListener('input',()=>{formatInputMoney(e); syncLive(i,k);});
+            });
+            [['live-registration-fee','registrationFee'],['live-inspection-fee','inspectionFee'],['live-civil-fee','civilFee'],['live-road-fee','roadFee']].forEach(([i,k])=>{
+                const e=document.getElementById(i); if(!e||e.dataset.b)return; e.dataset.b='1'; e.addEventListener('input',()=>{formatInputMoney(e); syncRegFee(i,k);});
+            });
+        }
+        function fillLiveCustomizePanel() {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return; const a=getQuoteAdjustments(c), rf=a.regFees;
+            document.getElementById('live-customize-car').innerText=c.name;
+            const presets={'live-registration-preset':rf.registrationPreset,'live-inspection-preset':rf.inspectionPreset,'live-civil-preset':rf.civilPreset,'live-road-preset':rf.roadPreset};
+            Object.entries(presets).forEach(([i,val])=>{const e=document.getElementById(i); if(e)e.value=val||'custom';});
+            const v={'live-registration-fee':rf.registrationFee,'live-inspection-fee':rf.inspectionFee,'live-civil-fee':rf.civilFee,'live-road-fee':rf.roadFee,'live-tax-adjust':a.taxAdjust,'live-registration-service':a.registrationService};
+            Object.entries(v).forEach(([i,val])=>{const e=document.getElementById(i); if(e)e.value=Number(val||0).toLocaleString('vi-VN');});
+        }
+        function toggleLiveCustomize(s) { const p=document.getElementById('live-customize-panel'), c=document.getElementById('customize-toggle'); if(!p||!c)return; c.checked=!!s; p.classList.toggle('hidden-panel',!s); if(s){fillLiveCustomizePanel(); setupLive();} }
+        function resetLiveCustomize() {
+            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
+            quoteAdjustments[c.id]=getQuoteAdjustments(c); const a=quoteAdjustments[c.id];
+            a.taxAdjust=0; a.registrationService=PHI_DICH_VU; a.buTax=0; a.vcInsurance=0; a.regFees={...getDefaultQuoteAdjustments(c).regFees};
+            saveQuoteAdjustmentsToStorage(); fillLiveCustomizePanel(); updateQuotationUI();
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeQuoteInfo(); closePreview(); closeCarManager(); closeAccManager(); closeAccPicker(); closePromoManager(); } });
+    </script>
+</body>
+</html>
