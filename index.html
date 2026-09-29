@@ -812,6 +812,16 @@
 
         function formatMoney(num) { return Math.round(Number(num) || 0).toLocaleString('vi-VN') + ' Đ'; }
         function parseMoneyInput(val) { const d = String(val ?? '').replace(/\D/g, ''); return d ? Number(d) : 0; }
+        function cleanAccessoryDisplayName(name) {
+            return String(name || '').replace(/^\s*\[[^\]]+\]\s*/, '').trim();
+        }
+        function pushUniquePromo(arr, text) {
+            const val = String(text || '').trim();
+            if (!val) return;
+            const norm = val.toLocaleLowerCase('vi-VN').replace(/\s+/g, ' ');
+            const exists = arr.some(x => String(x || '').trim().toLocaleLowerCase('vi-VN').replace(/\s+/g, ' ') === norm);
+            if (!exists) arr.push(val);
+        }
         function formatInputMoney(inp) { if(!inp)return; const old = inp.value||''; const caret=inp.selectionStart??old.length; const dBefore=old.slice(0,caret).replace(/\D/g,'').length; const d=old.replace(/\D/g,''); inp.value=d?Number(d).toLocaleString('vi-VN'):''; let p=0,c=0; while(p<inp.value.length&&c<dBefore){if(/\d/.test(inp.value[p]))c++; p++;} try{inp.setSelectionRange(p,p);}catch(e){} }
 
         function normalizeCarKey(v) { return String(v || '').trim().replace(/\s+/g,' ').toLocaleUpperCase('vi-VN'); }
@@ -1386,11 +1396,18 @@
             document.getElementById('quote-car-img').src = car.image || 'https://placehold.co/800x600?text=No+Image';
             document.getElementById('quote-car-specs').innerHTML = (car.specs||'').split('\n').filter(p=>p.trim()).map(s=>`<li class="w-[48%] flex items-start">${SVG_CHECK}<span class="leading-snug flex-1 pt-[1px]">${s}</span></li>`).join('');
 
-            // Chi tiết Khuyến mãi & Tri ân: nội dung người dùng nhập + ưu đãi sạc mặc định khi đủ điều kiện.
-            // Không tự đưa CTKM giảm giá, giảm thêm Đại lý, lương cắt máu, BHVC hay quà mặc định khác vào đây.
-            const pA = (car.promoText || '').split('\n').map(x => x.trim()).filter(Boolean);
+            // Chi tiết Khuyến mãi & Tri ân:
+            // - Nội dung khuyến mãi người dùng nhập theo xe
+            // - Ưu đãi sạc mặc định khi đủ điều kiện
+            // - BHVC nếu Đại lý tặng (không hiện giá tiền)
+            // - Phụ kiện nếu Đại lý tặng (chỉ hiện tên, bỏ mã sản phẩm)
+            // Không đưa các khoản giảm tiền / lương cắt máu vào danh sách này.
+            const pA = [];
+            (car.promoText || '').split('\n').map(x => x.trim()).filter(Boolean).forEach(x => pushUniquePromo(pA, x));
             const chargingPromo = getChargingPromotion(car, adj);
-            if (chargingPromo) pA.push(chargingPromo);
+            pushUniquePromo(pA, chargingPromo);
+            if (calc.bhType === 'tang') pushUniquePromo(pA, 'Tặng Bảo hiểm vật chất');
+            calc.aTang.forEach(name => pushUniquePromo(pA, cleanAccessoryDisplayName(name)));
             document.getElementById('quote-promo-list').innerHTML = pA.map((p,i)=>`<li class="flex items-stretch gap-2 bg-white p-2 rounded border border-green-200"><div class="flex items-center justify-center w-5 h-5 rounded bg-green-600 text-white font-bold text-[10px] shrink-0">${i+1}</div><div class="flex-1 text-[12px] font-medium flex items-center">${p}</div></li>`).join('');
 
             const acC = document.getElementById('quote-accessories-container');
@@ -1403,10 +1420,13 @@
             const cId = document.getElementById('carSelect').value; const car = carList.find(c=>c.id===cId); if(!car)return;
             const calc = calculateQuotation(car); 
             
-            // Copy Text dùng cùng nguồn với phần “Chi tiết Khuyến mãi & Tri ân”, gồm ưu đãi sạc khi đủ điều kiện.
-            const pA = (car.promoText || '').split('\n').map(x => x.trim()).filter(Boolean);
+            // Copy Text dùng cùng nguồn với phần “Chi tiết Khuyến mãi & Tri ân”.
+            const pA = [];
+            (car.promoText || '').split('\n').map(x => x.trim()).filter(Boolean).forEach(x => pushUniquePromo(pA, x));
             const chargingPromo = getChargingPromotion(car, calc.adj);
-            if (chargingPromo) pA.push(chargingPromo);
+            pushUniquePromo(pA, chargingPromo);
+            if (calc.bhType === 'tang') pushUniquePromo(pA, 'Tặng Bảo hiểm vật chất');
+            calc.aTang.forEach(name => pushUniquePromo(pA, cleanAccessoryDisplayName(name)));
 
             const sum = document.getElementById('quoteInfoSummary'), txt = document.getElementById('quoteInfoText');
             const cN=`${car.name} ${car.version} ${car.year}`, cl=document.getElementById('colorSelect').value, pl=document.getElementById('plateSelect').options[document.getElementById('plateSelect').selectedIndex].text, pa=calc.isBank?'BANK':'CASH';
