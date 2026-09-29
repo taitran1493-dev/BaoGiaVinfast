@@ -306,16 +306,20 @@
                     <div id="vf-dealer-extra-panel" class="mb-4 bg-blue-50 border-2 border-blue-300 rounded-xl p-4 shadow-sm">
                         <div class="flex items-center justify-between gap-3 mb-3">
                             <div>
-                                <div class="text-xs font-black text-blue-800 uppercase tracking-wide">Giảm thêm riêng của Đại lý</div>
-                                <div class="text-[10px] text-blue-600 mt-0.5">Khoản giảm riêng của Đại lý, Sale có thể tự cân đối mức thực tế.</div>
+                                <div class="text-xs font-black text-blue-800 uppercase tracking-wide">Ưu đãi riêng của Đại lý</div>
+                                <div class="text-[10px] text-blue-600 mt-0.5">Có thể gồm giảm thêm bằng tiền hoặc quà tặng / quyền lợi khác.</div>
                             </div>
                             <div class="text-right shrink-0">
                                 <div class="text-[9px] uppercase font-bold text-blue-500">Gợi ý giảm thêm</div>
                                 <div id="vf-dealer-suggest" class="text-base font-black text-blue-700">0 Đ</div>
                             </div>
                         </div>
-                        <label class="block text-[10px] font-bold text-gray-600 mb-1">Nhập giảm thêm của Đại lý</label>
-                        <input type="text" inputmode="numeric" id="vf-dealer-extra" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập mức giảm thêm của Đại lý..." class="w-full border-2 border-blue-300 rounded-lg p-3 text-lg font-black text-blue-800 text-right outline-none bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-shadow">
+                        <div id="vf-dealer-gift-wrap" class="hidden mb-3 bg-white/80 border border-blue-200 rounded-lg p-3">
+                            <div class="text-[9px] uppercase font-bold text-blue-500 mb-1">Gợi ý quà tặng / ưu đãi khác của Đại lý</div>
+                            <div id="vf-dealer-gift-suggest" class="text-[12px] font-bold text-blue-800 leading-relaxed whitespace-pre-line"></div>
+                        </div>
+                        <label class="block text-[10px] font-bold text-gray-600 mb-1">Nhập giảm thêm bằng tiền của Đại lý</label>
+                        <input type="text" inputmode="numeric" id="vf-dealer-extra" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập mức giảm thêm bằng tiền..." class="w-full border-2 border-blue-300 rounded-lg p-3 text-lg font-black text-blue-800 text-right outline-none bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-shadow">
                         <div class="flex items-center justify-between gap-2 mt-2 text-[10px]">
                             <span class="text-gray-500">Gợi ý chỉ để tham khảo, người dùng có thể nhập mức khác.</span>
                             <button type="button" onclick="applyDealerSuggestion()" class="shrink-0 px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700">Dùng mức gợi ý</button>
@@ -577,8 +581,9 @@
                             <p class="text-[10px] text-blue-600 mt-1">Chỉ là số tiền gợi ý; Sale vẫn được nhập mức giảm thực tế khác.</p>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-blue-600 mb-1">Ghi chú CTKM 2 - Đại lý</label>
-                            <input type="text" id="form-car-ctkm2-desc" class="w-full border rounded p-2 text-sm outline-none border-blue-200" placeholder="VD: Hỗ trợ riêng Đại lý / điều kiện áp dụng">
+                            <label class="block text-xs font-semibold text-blue-600 mb-1">Gợi ý quà tặng / ưu đãi khác của Đại lý</label>
+                            <textarea id="form-car-ctkm2-desc" rows="3" class="w-full border rounded p-2 text-sm outline-none border-blue-200" placeholder="VD: Tặng Bảo hiểm thân vỏ 1 năm\nTặng thảm sàn / phim cách nhiệt"></textarea>
+                            <p class="text-[10px] text-blue-600 mt-1">Dùng cho khuyến mãi không phải tiền mặt. Nội dung này sẽ hiện ở khối Gợi ý Đại lý ngoài màn hình báo giá.</p>
                         </div>
                         <div class="col-span-1 sm:col-span-2">
                             <label class="block text-xs font-semibold text-blue-600 mb-1">Gợi ý CTKM 4 Voucher (Hiển thị khi báo giá)</label>
@@ -1305,7 +1310,14 @@
             });
 
             const dealerSuggestEl = document.getElementById('vf-dealer-suggest');
-            if(dealerSuggestEl) dealerSuggestEl.innerText = Number(car.dealerPromoSuggested || 0) > 0 ? formatMoney(car.dealerPromoSuggested) : 'Chưa thiết lập';
+            if(dealerSuggestEl) dealerSuggestEl.innerText = Number(car.dealerPromoSuggested || 0) > 0 ? formatMoney(car.dealerPromoSuggested) : 'Không có giảm tiền';
+            const dealerGiftWrap = document.getElementById('vf-dealer-gift-wrap');
+            const dealerGiftEl = document.getElementById('vf-dealer-gift-suggest');
+            const dealerGiftText = String(car.ctkm2_desc || '').trim();
+            if(dealerGiftWrap && dealerGiftEl) {
+                dealerGiftEl.innerText = dealerGiftText;
+                dealerGiftWrap.classList.toggle('hidden', !dealerGiftText);
+            }
             const dealerExtraInp = document.getElementById('vf-dealer-extra');
             if(dealerExtraInp && document.activeElement !== dealerExtraInp) dealerExtraInp.value = Number(vfp.dealerExtra || 0) > 0 ? Number(vfp.dealerExtra).toLocaleString('vi-VN') : '';
 
