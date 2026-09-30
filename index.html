@@ -1485,10 +1485,56 @@
                 span.innerText = input.value; input.parentNode.insertBefore(span, input); input.remove();
             });
         }
+        // Đồng bộ trạng thái form hiện tại sang bản clone trước khi xuất ảnh.
+        // cloneNode(true) không đảm bảo giữ selectedIndex/value động của <select>,
+        // vì vậy nếu không đồng bộ sẽ có thể quay về option đầu tiên (VD: VF2).
+        function syncLiveFormStateToClone(sourceContainer, clonedContainer) {
+            const sourceControls = sourceContainer.querySelectorAll('select, input, textarea');
+            const cloneControls = clonedContainer.querySelectorAll('select, input, textarea');
+
+            sourceControls.forEach((src, index) => {
+                const dst = cloneControls[index];
+                if (!dst || src.tagName !== dst.tagName || src.type !== dst.type) return;
+
+                if (src.tagName === 'SELECT') {
+                    dst.value = src.value;
+                    dst.selectedIndex = src.selectedIndex;
+                    Array.from(dst.options).forEach((opt, i) => {
+                        const selected = i === src.selectedIndex;
+                        opt.selected = selected;
+                        if (selected) opt.setAttribute('selected', 'selected');
+                        else opt.removeAttribute('selected');
+                    });
+                } else if (src.tagName === 'TEXTAREA') {
+                    dst.value = src.value;
+                    dst.textContent = src.value;
+                } else {
+                    if (src.type === 'checkbox' || src.type === 'radio') {
+                        dst.checked = src.checked;
+                        if (src.checked) dst.setAttribute('checked', 'checked');
+                        else dst.removeAttribute('checked');
+                    } else {
+                        dst.value = src.value;
+                        dst.setAttribute('value', src.value);
+                    }
+                }
+            });
+        }
+
         function openPreview() {
-            const clone = document.getElementById('capture-area').cloneNode(true); clone.id = "capture-area-clone";
+            // Chốt lại toàn bộ nội dung theo lựa chọn hiện tại trước khi clone.
+            updateQuotationUI();
+
+            const source = document.getElementById('capture-area');
+            const clone = source.cloneNode(true);
+            clone.id = "capture-area-clone";
             clone.style.width = '1024px'; clone.style.minWidth = '1024px'; clone.style.maxWidth = '1024px'; clone.style.margin = '0'; clone.style.transform = 'none'; clone.style.transformOrigin = 'top left'; clone.style.boxSizing = 'border-box';
+
+            // QUAN TRỌNG: đồng bộ xe/màu/TT/hộ khẩu/phí và mọi input đang chọn
+            // trước khi chuyển select/input thành text để lưu hình.
+            syncLiveFormStateToClone(source, clone);
             styleInputsForPrint(clone);
+
             const c=document.getElementById('preview-container'); c.innerHTML=''; c.appendChild(clone); toggleModal('previewModal', true);
         }
         function closePreview() { toggleModal('previewModal', false); document.getElementById('preview-container').innerHTML=''; }
