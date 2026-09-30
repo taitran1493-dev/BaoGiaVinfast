@@ -213,6 +213,7 @@
         @media (max-width: 1100px) { #preview-container { transform: scale(.72) !important; } }
         @media (max-width: 800px) { #preview-container { transform: scale(.55) !important; } }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="antialiased text-gray-800 relative bg-gray-100">
 
@@ -221,6 +222,10 @@
         <div class="flex gap-2 w-auto shrink-0">
             <button onclick="exportAllDataToFile()" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2.5 px-4 sm:py-2 sm:px-3 rounded-xl shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center text-[13px] sm:text-xs whitespace-nowrap">Xuất Data</button>
             <label class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-4 sm:py-2 sm:px-3 rounded-xl shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center text-[13px] sm:text-xs cursor-pointer mb-0 whitespace-nowrap">Nhập Data<input type="file" class="hidden" accept=".json" onchange="importAllDataFromFile(event)"></label>
+        </div>
+        <div class="flex gap-2 w-auto shrink-0">
+            <button id="sync-online-btn" onclick="syncDataFromSupabase(true)" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-4 sm:py-2 sm:px-3 rounded-xl shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center text-[13px] sm:text-xs whitespace-nowrap">↻ Đồng bộ Online</button>
+            <button id="save-online-btn" onclick="saveDataToSupabase()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 sm:py-2 sm:px-3 rounded-xl shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center text-[13px] sm:text-xs whitespace-nowrap">☁ Lưu Online</button>
         </div>
         <button onclick="openPromoManager()" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">
             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 512 512"><path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM135 241c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l87 87c9.4 9.4 24.6 9.4 33.9 0L377 207c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0L205 311 135 241z"/></svg>Quản Lý CTKM
@@ -275,6 +280,11 @@
                 <div class="live-field"><label>Thuế TB tùy chỉnh</label><input type="text" id="live-tax-adjust" autocomplete="off" placeholder="VD: 1.000.000"></div>
             </div>
         </div>
+    </div>
+
+
+    <div id="online-status" class="fixed z-30 bottom-[78px] left-3 sm:left-auto sm:right-6 sm:bottom-6 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-800 text-white shadow-lg opacity-90 pointer-events-none">
+        Online: Chưa kết nối
     </div>
 
     <!-- CONTAINER CHÍNH -->
@@ -822,7 +832,7 @@
             { id: 'pr_13', name: 'Ưu đãi Xe Công Vụ', target: 'Cơ quan NN', type: 'pct_after', value: 5, group: 'additive', carKeys: 'VF8 ALL NEW' }
         ];
 
-        let carList = []; let accList = []; let promoList = []; let quoteAdjustments = {};
+        let carList = []; let accList = []; let promoList = []; let accessoryCombos = []; let quoteAdjustments = {};
 
         function getSalaryProductCode(car) {
             if (!car) return '';
@@ -909,9 +919,207 @@
         function saveQuoteAdjustmentsToStorage() { localStorage.setItem('vinfast_quote_adj_v3', JSON.stringify(quoteAdjustments)); }
         function toggleModal(id, show) { const el = document.getElementById(id); if(!el)return; if(show){el.classList.remove('hidden');el.classList.add('flex');}else{el.classList.add('hidden');el.classList.remove('flex');} }
 
+
+        // ================== SUPABASE ONLINE DATA ==================
+        const SUPABASE_URL = 'https://zoycwlmxhzfqsitenltb.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_NT6Z2-OjQcLVVZnLAqqs9Q_beULVWP7';
+        const SUPABASE_DATA_ROW_ID = 'main';
+        const ONLINE_JSON_FALLBACK = './data_da_bo_sung_phu_kien_combo.json';
+        let supabaseDb = null;
+        let onlineBusy = false;
+
+        function setOnlineStatus(message, type='neutral') {
+            const el = document.getElementById('online-status');
+            if (!el) return;
+            el.innerText = message;
+            el.classList.remove('bg-gray-800','bg-emerald-700','bg-amber-600','bg-red-700','bg-cyan-700');
+            const cls = type === 'ok' ? 'bg-emerald-700'
+                      : type === 'warn' ? 'bg-amber-600'
+                      : type === 'error' ? 'bg-red-700'
+                      : type === 'loading' ? 'bg-cyan-700'
+                      : 'bg-gray-800';
+            el.classList.add(cls);
+        }
+
+        function getSupabaseClient() {
+            if (supabaseDb) return supabaseDb;
+            if (!window.supabase || !window.supabase.createClient) {
+                throw new Error('Không tải được thư viện Supabase.');
+            }
+            supabaseDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+            return supabaseDb;
+        }
+
+        function normalizeSharedData(data) {
+            const src = data && typeof data === 'object' ? data : {};
+            const cars = Array.isArray(src.cars) ? src.cars.map(c => ({
+                ...c,
+                standardName: c.standardName || normalizeCarKey([c.name,c.version].filter(Boolean).join(' ')),
+                cutLimit: Number(c.cutLimit ?? c.discount ?? 0),
+                saleSalary: Number(c.saleSalary ?? 0),
+                dealerPromoSuggested: Number(c.dealerPromoSuggested ?? 0),
+                promoText: typeof c.promoText === 'string' ? c.promoText : ''
+            })) : [];
+            const accessories = Array.isArray(src.accessories) ? src.accessories : [];
+            const promos = Array.isArray(src.promos) ? src.promos.map(({cutLimit,...p}) => p) : [];
+            const combos = Array.isArray(src.accessoryCombos) ? src.accessoryCombos : [];
+            return { cars, accessories, promos, accessoryCombos: combos };
+        }
+
+        function hasUsableSharedData(data) {
+            return !!(data && typeof data === 'object' &&
+                ((Array.isArray(data.cars) && data.cars.length) ||
+                 (Array.isArray(data.accessories) && data.accessories.length) ||
+                 (Array.isArray(data.promos) && data.promos.length)));
+        }
+
+        function applySharedData(data, persistLocal=true) {
+            const clean = normalizeSharedData(data);
+            if (clean.cars.length) carList = clean.cars;
+            if (Array.isArray(clean.accessories)) accList = clean.accessories;
+            if (Array.isArray(clean.promos)) promoList = clean.promos;
+            accessoryCombos = clean.accessoryCombos || [];
+
+            if (persistLocal) {
+                localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList));
+                localStorage.setItem('vinfast_accessories_v2', JSON.stringify(accList));
+                localStorage.setItem('vinfast_promos_v1', JSON.stringify(promoList));
+                localStorage.setItem('vinfast_accessory_combos_v1', JSON.stringify(accessoryCombos));
+            }
+        }
+
+        function refreshSharedDataUI() {
+            const currentCarId = document.getElementById('carSelect')?.value || '';
+            renderStandardCarNameList();
+            renderPromoCarKeyOptions([]);
+            renderDropdown();
+            if (currentCarId && carList.some(c => c.id === currentCarId)) {
+                document.getElementById('carSelect').value = currentCarId;
+            }
+            renderTable();
+            renderAccTable();
+            renderPromoTable();
+            const activeCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            applyVehicleUseRules(activeCar, false);
+            renderPromosUI();
+            updateQuotationUI();
+        }
+
+        function getSharedPayloadForOnline() {
+            return {
+                cars: carList,
+                accessories: accList,
+                promos: promoList,
+                accessoryCombos: accessoryCombos,
+                schemaVersion: 1,
+                updatedFrom: 'VINFAST Bao Gia HTML'
+            };
+        }
+
+        async function loadFallbackJsonForFirstSeed() {
+            try {
+                const response = await fetch(ONLINE_JSON_FALLBACK, { cache: 'no-store' });
+                if (!response.ok) return null;
+                const data = await response.json();
+                return hasUsableSharedData(data) ? data : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function savePayloadToSupabase(payload, quiet=false) {
+            const db = getSupabaseClient();
+            const { error } = await db
+                .from('app_data')
+                .upsert({
+                    id: SUPABASE_DATA_ROW_ID,
+                    payload,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'id' });
+            if (error) throw error;
+            if (!quiet) setOnlineStatus('Online: Đã lưu dữ liệu', 'ok');
+        }
+
+        async function syncDataFromSupabase(showAlert=false, allowFirstSeed=false) {
+            if (onlineBusy) return;
+            onlineBusy = true;
+            setOnlineStatus('Online: Đang đồng bộ...', 'loading');
+            const btn = document.getElementById('sync-online-btn');
+            if (btn) btn.disabled = true;
+
+            try {
+                const db = getSupabaseClient();
+                const { data, error } = await db
+                    .from('app_data')
+                    .select('payload, updated_at')
+                    .eq('id', SUPABASE_DATA_ROW_ID)
+                    .single();
+
+                if (error) throw error;
+
+                let payload = data?.payload || {};
+                if (!hasUsableSharedData(payload) && allowFirstSeed) {
+                    const fallback = await loadFallbackJsonForFirstSeed();
+                    if (fallback) {
+                        payload = normalizeSharedData(fallback);
+                        await savePayloadToSupabase(payload, true);
+                        setOnlineStatus('Online: Đã khởi tạo từ JSON', 'ok');
+                    }
+                }
+
+                if (hasUsableSharedData(payload)) {
+                    applySharedData(payload, true);
+                    refreshSharedDataUI();
+                    const when = data?.updated_at ? new Date(data.updated_at).toLocaleString('vi-VN') : '';
+                    setOnlineStatus(when ? `Online: Đã đồng bộ ${when}` : 'Online: Đã đồng bộ', 'ok');
+                    if (showAlert) alert('Đã tải dữ liệu Online từ Supabase!');
+                } else {
+                    setOnlineStatus('Online: Chưa có dữ liệu dùng chung', 'warn');
+                    if (showAlert) {
+                        alert('Supabase hiện chưa có dữ liệu. Hãy bấm “Lưu Online” để đưa dữ liệu đang có lên Supabase.');
+                    }
+                }
+            } catch (err) {
+                console.error('Supabase sync error:', err);
+                setOnlineStatus('Online: Lỗi kết nối', 'error');
+                if (showAlert) alert('Không đồng bộ được Supabase: ' + (err?.message || err));
+            } finally {
+                onlineBusy = false;
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function saveDataToSupabase() {
+            if (onlineBusy) return;
+            const confirmed = confirm(
+                'LƯU ONLINE sẽ ghi dữ liệu Xe / CTKM / Phụ kiện hiện tại lên Supabase và các thiết bị khác sẽ dùng dữ liệu này.\n\nTiếp tục?'
+            );
+            if (!confirmed) return;
+
+            onlineBusy = true;
+            setOnlineStatus('Online: Đang lưu...', 'loading');
+            const btn = document.getElementById('save-online-btn');
+            if (btn) btn.disabled = true;
+
+            try {
+                const payload = getSharedPayloadForOnline();
+                await savePayloadToSupabase(payload, true);
+                setOnlineStatus('Online: Đã lưu thành công', 'ok');
+                alert('Đã lưu dữ liệu Online thành công!');
+            } catch (err) {
+                console.error('Supabase save error:', err);
+                setOnlineStatus('Online: Lưu thất bại', 'error');
+                alert('Không lưu được Supabase: ' + (err?.message || err));
+            } finally {
+                onlineBusy = false;
+                if (btn) btn.disabled = false;
+            }
+        }
+
+
         // ================== DATA IMPORT / EXPORT ==================
         function exportAllDataToFile() {
-            const dataToExport = { cars: carList, accessories: accList, promos: promoList };
+            const dataToExport = { cars: carList, accessories: accList, promos: promoList, accessoryCombos: accessoryCombos };
             const link = document.createElement("a");
             link.href = URL.createObjectURL(new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" }));
             link.download = "Ucar_Data_Full_Vinfast.json"; link.click();
@@ -1607,7 +1815,7 @@
         // ================== INIT ==================
         function renderDropdown() { const s=document.getElementById('carSelect'), v=s.value; s.innerHTML=carList.map(c=>`<option value="${c.id}">${c.name} ${c.version}</option>`).join(''); if(v&&carList.find(c=>c.id===v))s.value=v; }
         
-        function initApp() {
+        async function initApp() {
             document.getElementById('current-date').innerText = `Ngày lập: ${new Date().toLocaleDateString('vi-VN')}`;
             
             const sC=localStorage.getItem('vinfast_cars_v3'); if(sC)carList=JSON.parse(sC); else{carList=[...defaultCars]; localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList));}
@@ -1615,6 +1823,7 @@
             localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList));
             carList = carList.map(c=>({...c, standardName:c.standardName || normalizeCarKey([c.name,c.version].filter(Boolean).join(' ')), cutLimit:Number(c.cutLimit ?? c.discount ?? 0), saleSalary:Number(c.saleSalary ?? 0), dealerPromoSuggested:Number(c.dealerPromoSuggested ?? 0)})); localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList));
             const sA=localStorage.getItem('vinfast_accessories_v2'); if(sA)accList=JSON.parse(sA); else accList=[];
+            try { accessoryCombos = JSON.parse(localStorage.getItem('vinfast_accessory_combos_v1') || '[]') || []; } catch(e) { accessoryCombos = []; }
             const sP=localStorage.getItem('vinfast_promos_v1'); if(sP)promoList=JSON.parse(sP); else promoList=[...initPromos]; promoList=promoList.map(({cutLimit,...p})=>p); localStorage.setItem('vinfast_promos_v1',JSON.stringify(promoList));
             
             try{quoteAdjustments=JSON.parse(localStorage.getItem('vinfast_quote_adj_v3')||'{}')||{};}catch(e){quoteAdjustments={};}
@@ -1623,6 +1832,10 @@
             const initialCar = carList.find(c => c.id === document.getElementById('carSelect').value);
             applyVehicleUseRules(initialCar, true);
             renderPromosUI(); updateQuotationUI();
+
+            // Sau khi giao diện local sẵn sàng, ưu tiên tải dữ liệu dùng chung từ Supabase.
+            // Nếu payload Supabase đang rỗng, thử khởi tạo một lần từ file JSON nằm cạnh index.html.
+            await syncDataFromSupabase(false, true);
         }
         window.onload = initApp;
 
