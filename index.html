@@ -265,7 +265,13 @@
 
             <div class="live-section-title">Chi phí tùy chỉnh</div>
             <div class="live-fee-row">
-                <div class="live-field"><label>Dịch vụ ĐK xe</label><input type="text" id="live-registration-service" autocomplete="off" placeholder="VD: 5.000.000"></div>
+                <div class="live-field"><label>Dịch vụ ĐK xe</label><input type="text" id="live-registration-service" autocomplete="off" placeholder="VD: 3.000.000"></div>
+                <div class="live-field">
+                    <label>Tỷ lệ Bảo hiểm vật chất (%)</label>
+                    <input type="number" id="live-bhvc-rate" step="0.01" min="0" autocomplete="off" placeholder="Theo biểu phí">
+                    <div id="live-bhvc-rate-help" class="live-help">Tự đối chiếu theo giá xe sau giảm.</div>
+                    <button type="button" onclick="applyRecommendedBhvcRate()" class="mt-2 w-full py-2 px-3 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-black hover:bg-indigo-100">Áp dụng tỷ lệ theo biểu phí</button>
+                </div>
                 <div class="live-field"><label>Thuế TB tùy chỉnh</label><input type="text" id="live-tax-adjust" autocomplete="off" placeholder="VD: 1.000.000"></div>
             </div>
         </div>
@@ -391,7 +397,7 @@
                             <div class="quote-primary-row flex gap-3 text-sm mt-4">
                                 <div class="relative bg-gray-100 rounded-md border-2 border-transparent h-10 flex items-center px-3 w-[220px]">
                                     <svg class="w-4 h-4 text-gray-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 512 512"><path d="M135.2 117.4L109.1 192H402.9l-26.1-74.6C372.3 104.6 360.2 96 346.6 96H165.4c-13.6 0-25.7 8.6-30.2 21.4zM39.6 196.8L74.8 96.3C88.3 57.8 124.6 32 165.4 32H346.6c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2V400v48c0 17.7-14.3 32-32 32H448c-17.7 0-32-14.3-32-32V400H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V400V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
-                                    <select id="carSelect" onchange="renderPromosUI(); updateQuotationUI()" class="font-semibold text-gray-700 h-full w-full outline-none"></select>
+                                    <select id="carSelect" onchange="handleCarSelectionChange()" class="font-semibold text-gray-700 h-full w-full outline-none"></select>
                                 </div>
                                 <div id="plate-wrapper" class="relative bg-gray-100 rounded-md border-2 border-transparent h-10 flex items-center px-3 w-[150px]">
                                     <svg id="plate-icon" class="w-4 h-4 text-gray-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 576 512"><path d="M0 96l576 0c0-35.3-28.7-64-64-64H64C28.7 32 0 60.7 0 96zm0 32V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V128L0 128zm64 64H256c17.7 0 32 14.3 32 32v96c0 17.7-14.3 32-32 32H64c-17.7 0-32-14.3-32-32V224c0-17.7 14.3-32 32-32zm384-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM320 320c0-17.7 14.3-32 32-32H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H352c-17.7 0-32-14.3-32-32z"/></svg>
@@ -783,7 +789,7 @@
 
     <!-- SCRIPT CHÍNH ĐIỀU KHIỂN LOGIC -->
     <script>
-        const PHI_DANG_KY = 140000; const PHI_DANG_KIEM = 90000; const PHI_DICH_VU = 5000000;
+        const PHI_DANG_KY = 140000; const PHI_DANG_KIEM = 90000; const PHI_DICH_VU = 3000000;
         const REG_FEE_PRESETS = { ward:140000, metro:14000000 };
         const CIVIL_FEE_PRESETS = { family5:530700, family7:1013400, taxi5:1443720, taxi7:2049600, business5:861600, business7:1218000 };
         const ROAD_FEE_PRESETS = { white1:1560000, white3:4325000, yellow1:2160000 };
@@ -886,7 +892,7 @@
 
         function getDefaultQuoteAdjustments(car) {
             return { 
-                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', accessories: [], chargingUsage: 'family',
+                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, accessories: [], chargingUsage: 'family',
                 regFees: { registrationPreset:'ward', registrationFee:140000, inspectionPreset:'57', inspectionFee:90000, civilPreset:'family5', civilFee:530700, roadPreset:'white1', roadFee:1560000 },
                 loan: { autoBuTax: false, percent: 80, years: 8, promoMonths: 12, promoRate: 10.2, floatRate: 3.6, manualLoan: null },
                 vfPromos: { exclusiveId: 'none', additiveIds: [], customValues: {}, dealerExtra: 0, catMau: 0 } 
@@ -1117,7 +1123,68 @@
             } 
         }
 
-        // ================== ƯU ĐÃI SẠC THEO ĐIỀU KIỆN ==================
+        // ================== QUY TẮC BIỂN SỐ / MỤC ĐÍCH SỬ DỤNG & ƯU ĐÃI SẠC ==================
+        function compactVehicleKey(car) {
+            return normalizeCarKey(car?.standardName || car?.version || car?.name || '').replace(/\s+/g, ' ');
+        }
+
+        function getVehicleUseRule(car) {
+            const k = compactVehicleKey(car);
+            const privateOnly =
+                k.startsWith('VF2') ||
+                k.startsWith('VF3') ||
+                k.startsWith('VF7') ||
+                k.startsWith('VF8') ||
+                k.startsWith('VF9') ||
+                k === 'VF MVP 7' ||
+                k.startsWith('LẠC HỒNG');
+            if (privateOnly) return 'private-only';
+            if (k.startsWith('EC VAN')) return 'ecvan';
+            return 'flexible';
+        }
+
+        function applyVehicleUseRules(car, forceDefaults=false) {
+            if (!car) return;
+            const rule = getVehicleUseRule(car);
+            const plate = document.getElementById('plateSelect');
+            const usage = document.getElementById('usageSelect');
+            const usageWrap = document.getElementById('usage-wrapper');
+            if (!plate || !usage) return;
+
+            const yellowOpt = Array.from(plate.options).find(o => o.value === 'vang');
+            const serviceOpt = Array.from(usage.options).find(o => o.value === 'service');
+            const xanhOpt = Array.from(usage.options).find(o => o.value === 'xanhsm');
+
+            [yellowOpt, serviceOpt, xanhOpt].forEach(o => { if(o){ o.disabled=false; o.hidden=false; } });
+            if (usageWrap) usageWrap.style.display = '';
+
+            if (rule === 'private-only') {
+                if (yellowOpt) { yellowOpt.disabled = true; yellowOpt.hidden = true; }
+                if (serviceOpt) { serviceOpt.disabled = true; serviceOpt.hidden = true; }
+                if (xanhOpt) { xanhOpt.disabled = true; xanhOpt.hidden = true; }
+                if (plate.value === 'vang') plate.value = 'trang';
+                usage.value = 'family';
+                if (usageWrap) usageWrap.style.display = 'none';
+                if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+                quoteAdjustments[car.id].chargingUsage = 'family';
+            } else if (rule === 'ecvan' && forceDefaults) {
+                plate.value = 'vang';
+                usage.value = 'service';
+                if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+                quoteAdjustments[car.id].chargingUsage = 'service';
+            }
+            changePlateColor();
+        }
+
+        function handleCarSelectionChange() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect').value);
+            if (!car) return;
+            applyVehicleUseRules(car, true);
+            saveQuoteAdjustmentsToStorage();
+            renderPromosUI();
+            updateQuotationUI();
+        }
+
         function syncChargingUsage() {
             const car = carList.find(x => x.id === document.getElementById('carSelect').value);
             if (!car) return;
@@ -1128,18 +1195,37 @@
         }
 
         function getChargingPromotion(car, adj) {
+            if (!car) return '';
+            const key = compactVehicleKey(car);
             const plate = document.getElementById('plateSelect')?.value || 'trang';
-            const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
-            if (usage === 'xanhsm') {
-                return 'Ưu đãi sạc: Miễn phí sạc không giới hạn. VinFast tài trợ 10 lần sạc đầu/tháng; GSM chi trả toàn bộ các lần sạc phát sinh còn lại.';
+            const now = new Date();
+            const invoice = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const policyStart = new Date('2026-02-10T00:00:00');
+            const minioCut = new Date('2026-09-01T00:00:00');
+            const yellowRuleStart = new Date('2026-04-20T00:00:00');
+
+            if (Number.isNaN(invoice.getTime()) || invoice < policyStart) return '';
+
+            let base = '';
+            if (key.startsWith('EC VAN')) {
+                base = 'Ưu đãi sạc V-Green: Miễn phí 20 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029. Kỳ tính số lần sạc bắt đầu từ ngày 26/03/2026.';
+            } else if (key === 'MINIO GREEN') {
+                if (invoice < minioCut) {
+                    base = 'Ưu đãi sạc V-Green: Miễn phí 20 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029. Kỳ tính số lần sạc bắt đầu từ ngày 26/03/2026.';
+                } else {
+                    base = 'Ưu đãi sạc V-Green: Miễn phí 10 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029.';
+                }
+            } else if (key.startsWith('VF WILD')) {
+                base = 'Ưu đãi sạc V-Green: Miễn phí 10 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029.';
+            } else {
+                base = 'Ưu đãi sạc V-Green: Miễn phí 10 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029.';
             }
-            if (plate === 'trang' && usage === 'family') {
-                return 'Ưu đãi sạc: Miễn phí 10 lần sạc đầu tiên trong tháng. Số lần sạc chưa dùng hết không được cộng dồn sang tháng sau.';
+
+            if (plate === 'vang' && invoice >= yellowRuleStart) {
+                base += ' Thời gian áp dụng với ưu đãi sạc: Thứ Sáu, Thứ Bảy và Chủ Nhật áp dụng trong khung 23:00–06:00 và 14:00–16:00; các ngày còn lại trong tuần được áp dụng.';
             }
-            if (plate === 'vang' && usage === 'service') {
-                return 'Ưu đãi sạc: 10 lần sạc/tháng trong khung giờ thấp điểm — Thứ 2 đến Thứ 4: 23:00–06:00; Thứ 6, Thứ 7 và Chủ Nhật: 23:00–06:00 và 14:00–16:00.';
-            }
-            return '';
+            base += ' Số lần sạc được tính theo kỳ từ ngày 26 đến hết ngày 25 của kỳ kế tiếp.';
+            return base;
         }
 
         // ================== CORE CALCULATION & UI ==================
@@ -1178,14 +1264,56 @@
             syncVF();
         }
 
-        function getBhvcRates(car, adj, plate) {
+        function getRecommendedBhvcRate(finalPrice, adj, plate) {
+            const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
+            const isServiceVehicle = plate === 'vang' || usage === 'service' || usage === 'xanhsm';
+            if (isServiceVehicle) return 2.3;
+
+            const p = Math.max(0, Number(finalPrice) || 0);
+            if (p < 400000000) return 1.6;
+            if (p < 600000000) return 1.41;
+            if (p < 700000000) return 1.25;
+            if (p < 800000000) return 1.16;
+            if (p <= 1000000000) return 1.0;
+            return 0.95;
+        }
+
+        function getBhvcRates(car, adj, plate, finalPrice=null) {
             const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
             const isServiceVehicle = plate === 'vang' || usage === 'service' || usage === 'xanhsm';
             if (isServiceVehicle) return { mua: 2.3, tang: 2.3 };
+
+            const override = Number(adj?.bhvcRateOverride);
+            if (Number.isFinite(override) && override > 0) return { mua: override, tang: override };
+
             return {
                 mua: Number(car?.bhMuaRate || 1.3),
                 tang: Number(car?.bhTangRate || 1.2)
             };
+        }
+
+        function applyRecommendedBhvcRate() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect').value);
+            if (!car) return;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            const calc = calculateQuotation(car);
+            const plate = document.getElementById('plateSelect')?.value || 'trang';
+            const rate = getRecommendedBhvcRate(calc?.finalP || car.price, quoteAdjustments[car.id], plate);
+            quoteAdjustments[car.id].bhvcRateOverride = rate;
+            saveQuoteAdjustmentsToStorage();
+            fillLiveCustomizePanel();
+            updateQuotationUI();
+        }
+
+        function syncBhvcRateOverride() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect').value);
+            if (!car) return;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            const raw = parseFloat(document.getElementById('live-bhvc-rate')?.value);
+            quoteAdjustments[car.id].bhvcRateOverride = Number.isFinite(raw) && raw > 0 ? raw : null;
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+            fillLiveCustomizePanel();
         }
 
         function calculateQuotation(car) {
@@ -1249,7 +1377,7 @@
             let totalDiscount = subTotalDiscount + discountAfter;
             let finalP = car.price - totalDiscount;
 
-            if(vfp.catMau > 0) promoDetails.push(`Lương cắt máu giảm: ${formatMoney(vfp.catMau)}`);
+            if(vfp.catMau > 0) promoDetails.push(`Giảm giá bằng lương: ${formatMoney(vfp.catMau)}`);
 
             // Thuế & Đăng ký (VF Mặc định thuế 0%)
             let taxR = 0;
@@ -1258,7 +1386,7 @@
             let dBo = Number(rf.roadFee || 0);
             let phiDangKiem = Number(rf.inspectionFee || PHI_DANG_KIEM);
             
-            const bhRates = getBhvcRates(car, adj, plt);
+            const bhRates = getBhvcRates(car, adj, plt, finalP);
             const rMua = bhRates.mua, rTang = bhRates.tang;
             const bhvcType = adj.bhvcType || 'mua';
             
@@ -1292,9 +1420,11 @@
 
         function updateQuotationUI() {
             const carId = document.getElementById('carSelect').value; const car = carList.find(c => c.id === carId); if (!car) return;
-            const adj = getQuoteAdjustments(car), calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
+            applyVehicleUseRules(car, false);
+            const adj = getQuoteAdjustments(car);
             const usageSelect = document.getElementById('usageSelect');
-            if (usageSelect && document.activeElement !== usageSelect) usageSelect.value = adj.chargingUsage || 'family';
+            if (usageSelect && document.activeElement !== usageSelect) usageSelect.value = getVehicleUseRule(car)==='private-only' ? 'family' : (adj.chargingUsage || 'family');
+            const calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
 
             // Đồng bộ các bộ chọn phí ngay trên màn hình báo giá
             const rfQuote = adj.regFees || getDefaultQuoteAdjustments(car).regFees;
@@ -1365,7 +1495,7 @@
             if(isOverCut) cutLimitEl.innerText = '⚠ VƯỢT KHUNG ' + formatMoney(Number(vfp.catMau||0)-salaryLimit) + ' | MASP: ' + getSalaryProductCode(car);
 
             // Bảng trái BHVC
-            const bhRatesUi = getBhvcRates(car, adj, plt);
+            const bhRatesUi = getBhvcRates(car, adj, plt, calc.finalP);
             let rMua=bhRatesUi.mua, rTang=bhRatesUi.tang;
             let vMua=calc.finalP*rMua/100, vTang=calc.finalP*rTang/100, curT=adj.bhvcType||'mua';
             
@@ -1373,6 +1503,19 @@
                 <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='mua'?'border-indigo-500 bg-indigo-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="mua" class="w-4 h-4 accent-indigo-600" ${curT==='mua'?'checked':''} onchange="changeBHVCType('mua')"><span class="font-bold text-[13px]">Khách mua BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-indigo-700">+ ${formatMoney(vMua)} <span class="text-[10px] font-bold text-indigo-500">(${rMua}%)</span></div></label>
                 <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='tang'?'border-green-500 bg-green-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="tang" class="w-4 h-4 accent-green-600" ${curT==='tang'?'checked':''} onchange="changeBHVCType('tang')"><span class="font-bold text-[13px]">Đại lý Tặng BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-green-700">Trị giá: ${formatMoney(vTang)} <span class="text-[10px] font-bold text-green-600">(${rTang}%)</span></div></label>
                 <label class="flex items-center p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='khong'?'border-gray-400 bg-gray-100':'border-gray-200 hover:bg-gray-50'}"><input type="radio" value="khong" class="w-4 h-4 accent-gray-600 mr-2" ${curT==='khong'?'checked':''} onchange="changeBHVCType('khong')"><span class="font-bold text-[13px]">Không lấy BHVC</span></label>`;
+
+            const recommendedBhvcRate = getRecommendedBhvcRate(calc.finalP, adj, plt);
+            const currentBhvcRate = curT === 'tang' ? Number(rTang) : Number(rMua);
+            const bhvcMismatch = curT !== 'khong' && Math.abs(currentBhvcRate - recommendedBhvcRate) > 0.0001;
+            if (bhvcMismatch) {
+                document.getElementById('left-bhvc-panel').innerHTML += `
+                    <div class="p-3 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-800 text-xs leading-relaxed">
+                        <div class="font-black mb-1">⚠ Tỷ lệ BHVC đang khác biểu phí</div>
+                        <div>Giá xe sau giảm: <b>${formatMoney(calc.finalP)}</b></div>
+                        <div>Biểu phí phù hợp: <b>${recommendedBhvcRate}%</b> · Hiện đang dùng: <b>${currentBhvcRate}%</b></div>
+                        <button type="button" onclick="applyRecommendedBhvcRate()" class="mt-2 px-3 py-2 rounded-lg bg-amber-600 text-white font-black">Áp dụng ${recommendedBhvcRate}%</button>
+                    </div>`;
+            }
 
             // Phụ kiện
             let hAcc=''; if(calc.aTang.length>0)hAcc+=`<div class="text-xs text-green-700 bg-green-50 border border-green-200 p-2.5 rounded-lg"><span class="font-bold uppercase block mb-1">🎁 Quà tặng đại lý:</span><ul class="list-disc pl-4 space-y-0.5">${calc.aTang.map(n=>`<li>${n}</li>`).join('')}</ul></div>`;
@@ -1477,6 +1620,8 @@
             try{quoteAdjustments=JSON.parse(localStorage.getItem('vinfast_quote_adj_v3')||'{}')||{};}catch(e){quoteAdjustments={};}
             
             renderStandardCarNameList(); renderPromoCarKeyOptions([]); renderDropdown(); renderTable(); renderAccTable(); renderPromoTable();
+            const initialCar = carList.find(c => c.id === document.getElementById('carSelect').value);
+            applyVehicleUseRules(initialCar, true);
             renderPromosUI(); updateQuotationUI();
         }
         window.onload = initApp;
@@ -1662,6 +1807,11 @@
             [['live-registration-fee','registrationFee'],['live-inspection-fee','inspectionFee'],['live-civil-fee','civilFee'],['live-road-fee','roadFee']].forEach(([i,k])=>{
                 const e=document.getElementById(i); if(!e||e.dataset.b)return; e.dataset.b='1'; e.addEventListener('input',()=>{formatInputMoney(e); syncRegFee(i,k);});
             });
+            const bhRate = document.getElementById('live-bhvc-rate');
+            if (bhRate && !bhRate.dataset.b) {
+                bhRate.dataset.b='1';
+                bhRate.addEventListener('change', syncBhvcRateOverride);
+            }
         }
         function fillLiveCustomizePanel() {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return; const a=getQuoteAdjustments(c), rf=a.regFees;
@@ -1670,12 +1820,24 @@
             Object.entries(presets).forEach(([i,val])=>{const e=document.getElementById(i); if(e)e.value=val||'custom';});
             const v={'live-registration-fee':rf.registrationFee,'live-inspection-fee':rf.inspectionFee,'live-civil-fee':rf.civilFee,'live-road-fee':rf.roadFee,'live-tax-adjust':a.taxAdjust,'live-registration-service':a.registrationService};
             Object.entries(v).forEach(([i,val])=>{const e=document.getElementById(i); if(e)e.value=Number(val||0).toLocaleString('vi-VN');});
+            const calc = calculateQuotation(c);
+            const plate = document.getElementById('plateSelect')?.value || 'trang';
+            const recommendedRate = getRecommendedBhvcRate(calc?.finalP || c.price, a, plate);
+            const rateInput = document.getElementById('live-bhvc-rate');
+            if (rateInput) rateInput.value = a.bhvcRateOverride != null ? a.bhvcRateOverride : '';
+            const rateHelp = document.getElementById('live-bhvc-rate-help');
+            if (rateHelp) {
+                const rates = getBhvcRates(c, a, plate, calc?.finalP || c.price);
+                const currentRate = a.bhvcType === 'tang' ? rates.tang : rates.mua;
+                const mismatch = a.bhvcType !== 'khong' && Math.abs(Number(currentRate)-Number(recommendedRate)) > 0.0001;
+                rateHelp.innerHTML = `Giá sau giảm: <b>${formatMoney(calc?.finalP || 0)}</b> · Biểu phí: <b>${recommendedRate}%</b>${mismatch ? ` · <span class="text-amber-600 font-black">Hiện dùng ${currentRate}%</span>` : ' · Đang khớp'}`;
+            }
         }
         function toggleLiveCustomize(s) { const p=document.getElementById('live-customize-panel'), c=document.getElementById('customize-toggle'); if(!p||!c)return; c.checked=!!s; p.classList.toggle('hidden-panel',!s); if(s){fillLiveCustomizePanel(); setupLive();} }
         function resetLiveCustomize() {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
             quoteAdjustments[c.id]=getQuoteAdjustments(c); const a=quoteAdjustments[c.id];
-            a.taxAdjust=0; a.registrationService=PHI_DICH_VU; a.buTax=0; a.vcInsurance=0; a.regFees={...getDefaultQuoteAdjustments(c).regFees};
+            a.taxAdjust=0; a.registrationService=PHI_DICH_VU; a.buTax=0; a.vcInsurance=0; a.bhvcRateOverride=null; a.regFees={...getDefaultQuoteAdjustments(c).regFees};
             saveQuoteAdjustmentsToStorage(); fillLiveCustomizePanel(); updateQuotationUI();
         }
 
