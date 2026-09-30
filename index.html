@@ -340,13 +340,13 @@
                     <div class="bg-red-50 border-2 border-red-300 rounded-xl p-4 shadow-sm relative overflow-hidden">
                         <div class="absolute right-0 top-0 w-2 h-full bg-red-500"></div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="block text-xs font-black text-red-600 uppercase tracking-wide">Lương Cắt Máu Giảm</label>
+                            <label class="block text-xs font-black text-red-600 uppercase tracking-wide">Giảm Giá Bằng Lương</label>
                         </div>
                         <p class="text-[10px] text-red-400 font-medium mb-3 leading-tight flex justify-between">
-                            <span>Nhập phần lương Sale dùng để giảm thêm cho khách.</span>
-                            <span id="vf-catmau-limit" class="font-bold text-red-600 underline">Lương xe: 0 VNĐ</span>
+                            <span>Nhập phần lương dùng để giảm thêm cho khách.</span>
+                            <span id="vf-catmau-limit" class="font-bold text-red-600 underline">MASP: --</span>
                         </p>
-                        <input type="text" id="vf-catmau" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập lương cắt máu giảm..." class="w-full border border-red-300 rounded-lg p-3 text-lg font-black text-red-600 text-right outline-none bg-white focus:ring-2 focus:ring-red-200 transition-shadow">
+                        <input type="text" id="vf-catmau" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập giảm giá bằng lương..." class="w-full border border-red-300 rounded-lg p-3 text-lg font-black text-red-600 text-right outline-none bg-white focus:ring-2 focus:ring-red-200 transition-shadow">
                     </div>
                 </div>
             </div>
@@ -579,7 +579,7 @@
                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Loại Xe</label><select id="form-car-type" class="w-full border rounded p-2 text-sm outline-none bg-white"><option value="dulich">Du lịch</option><option value="bantai">Bán Tải</option></select></div>
                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Giá Niêm Yết</label><input type="text" inputmode="numeric" id="form-car-price" oninput="formatInputMoney(this)" class="w-full border rounded p-2 text-sm outline-none text-right font-bold" placeholder="VD: 1.290.000.000"></div>
                         <div><label class="block text-xs font-semibold text-amber-700 mb-1">Mức giảm tối đa của Nhà máy</label><input type="text" inputmode="numeric" id="form-car-cut-limit" oninput="formatInputMoney(this)" class="w-full border border-amber-300 rounded p-2 text-sm outline-none font-bold text-amber-700 text-right" placeholder="VD: 50.000.000"><p class="text-[10px] text-amber-700 mt-1">Hiển thị để Sale biết mức hỗ trợ tối đa của Nhà máy cho KEY xe này.</p></div>
-                        <div><label class="block text-xs font-semibold text-red-600 mb-1">Lương xe bán ra</label><input type="text" inputmode="numeric" id="form-car-sale-salary" oninput="formatInputMoney(this)" class="w-full border border-red-300 rounded p-2 text-sm outline-none font-bold text-red-600 text-right" placeholder="VD: 15.000.000"><p class="text-[10px] text-red-600 mt-1">Đây là khung tối đa dùng để cảnh báo khi nhập “Lương Cắt Máu Giảm”.</p></div>
+                        <div><label class="block text-xs font-semibold text-red-600 mb-1">Lương xe bán ra (Nội bộ)</label><input type="text" inputmode="numeric" id="form-car-sale-salary" oninput="formatInputMoney(this)" class="w-full border border-red-300 rounded p-2 text-sm outline-none font-bold text-red-600 text-right" placeholder="VD: 15.000.000"><p class="text-[10px] text-red-600 mt-1">Đây là khung tối đa dùng để cảnh báo khi nhập “Giảm Giá Bằng Lương”.</p></div>
                         <div class="col-span-1 sm:col-span-2"><p class="text-[11px] text-gray-500 leading-relaxed bg-blue-50 border border-blue-100 rounded p-2 w-full"><b>Tên chuẩn</b> là key dùng để đối chiếu CTKM. Khi có dòng xe mới, chỉ cần nhập key chuẩn mới tại đây.</p></div>
                         
                         <!-- 2 Ô GỢI Ý MỚI THÊM VÀO -->
@@ -817,6 +817,18 @@
         ];
 
         let carList = []; let accList = []; let promoList = []; let quoteAdjustments = {};
+
+        function getSalaryProductCode(car) {
+            if (!car) return '';
+            const rawKey = String(car.standardName || car.version || car.name || 'XE')
+                .toUpperCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/Đ/g, 'D')
+                .replace(/[^A-Z0-9]/g, '');
+            const salary = Math.max(0, Number(car.saleSalary) || 0);
+            const salaryCode = Math.round(salary / 10000);
+            return `${rawKey}${salaryCode}NTPT`;
+        }
 
         function formatMoney(num) { return Math.round(Number(num) || 0).toLocaleString('vi-VN') + ' VNĐ'; }
         function parseMoneyInput(val) { const d = String(val ?? '').replace(/\D/g, ''); return d ? Number(d) : 0; }
@@ -1346,11 +1358,11 @@
             if(cutDisplay) cutDisplay.innerText = factoryMax > 0 ? formatMoney(factoryMax) : 'Chưa thiết lập';
             const cutInput = document.getElementById('vf-catmau');
             const cutLimitEl = document.getElementById('vf-catmau-limit');
-            cutLimitEl.innerText = salaryLimit > 0 ? 'Lương xe: ' + formatMoney(salaryLimit) : 'Chưa nhập lương xe bán ra';
+            cutLimitEl.innerText = salaryLimit > 0 ? 'MASP: ' + getSalaryProductCode(car) : 'MASP: Chưa thiết lập';
             const isOverCut = salaryLimit > 0 && Number(vfp.catMau||0) > salaryLimit;
             cutInput.classList.toggle('ring-4', isOverCut); cutInput.classList.toggle('ring-red-400', isOverCut); cutInput.classList.toggle('bg-red-100', isOverCut);
             cutLimitEl.classList.toggle('animate-pulse', isOverCut);
-            if(isOverCut) cutLimitEl.innerText = '⚠ VƯỢT LƯƠNG ' + formatMoney(Number(vfp.catMau||0)-salaryLimit) + ' | Lương xe ' + formatMoney(salaryLimit);
+            if(isOverCut) cutLimitEl.innerText = '⚠ VƯỢT KHUNG ' + formatMoney(Number(vfp.catMau||0)-salaryLimit) + ' | MASP: ' + getSalaryProductCode(car);
 
             // Bảng trái BHVC
             const bhRatesUi = getBhvcRates(car, adj, plt);
