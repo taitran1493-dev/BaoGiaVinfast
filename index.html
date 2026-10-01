@@ -378,6 +378,22 @@
                 <hr class="border-gray-100 mb-4">
                 <!-- Phụ Kiện -->
                 <button onclick="openAccPicker()" class="w-full py-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold rounded-xl border border-purple-200 mb-4 transition-colors text-sm">+ Quản lý Phụ Kiện Gói Báo Giá</button>
+
+                <div class="mb-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-3">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div>
+                            <div class="text-[13px] font-black text-emerald-800 uppercase">Phụ kiện tặng linh động</div>
+                            <div class="text-[10px] text-emerald-700 mt-0.5">Mỗi dòng là 1 phụ kiện/quà tặng. Không cần có trong danh mục.</div>
+                        </div>
+                        <button type="button" onclick="clearFlexibleGifts()" class="shrink-0 text-[10px] font-bold text-red-600 bg-white border border-red-200 rounded-lg px-2 py-1 hover:bg-red-50">Xóa hết</button>
+                    </div>
+                    <textarea id="flex-gift-input" rows="4" oninput="syncFlexibleGifts()" placeholder="VD:
+Thảm sàn cao cấp
+Dán phim cách nhiệt
+Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg p-3 text-sm font-semibold text-gray-800 outline-none bg-white focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"></textarea>
+                    <div id="flex-gift-count" class="text-[10px] text-emerald-700 font-bold mt-1 text-right">0 món tặng</div>
+                </div>
+
                 <div id="left-acc-summary" class="flex flex-col gap-2"></div>
             </div>
         </div>
@@ -902,7 +918,7 @@
 
         function getDefaultQuoteAdjustments(car) {
             return { 
-                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, accessories: [], chargingUsage: 'family',
+                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, accessories: [], flexibleGifts: [], chargingUsage: 'family',
                 regFees: { registrationPreset:'ward', registrationFee:140000, inspectionPreset:'57', inspectionFee:90000, civilPreset:'family5', civilFee:530700, roadPreset:'white1', roadFee:1560000 },
                 loan: { autoBuTax: false, percent: 80, years: 8, promoMonths: 12, promoRate: 10.2, floatRate: 3.6, manualLoan: null },
                 vfPromos: { exclusiveId: 'none', additiveIds: [], customValues: {}, dealerExtra: 0, catMau: 0 } 
@@ -1270,6 +1286,45 @@
             document.getElementById('vf-additive-promos').innerHTML = addHtml || '<span class="text-xs text-gray-400 italic">Chưa có CTKM bổ sung nào.</span>';
         }
 
+        // ================== PHỤ KIỆN TẶNG LINH ĐỘNG ==================
+        function normalizeFlexibleGift(text) {
+            return String(text || '').replace(/^\s*[-•*]\s*/g, '').replace(/^\s*\d+[\.\)]\s*/g, '').replace(/\s+/g, ' ').trim();
+        }
+        function parseFlexibleGifts(value) {
+            const seen = new Set();
+            return String(value || '').split(/\r?\n/).map(normalizeFlexibleGift).filter(Boolean).filter(item => {
+                const k = item.toLocaleLowerCase('vi-VN'); if (seen.has(k)) return false; seen.add(k); return true;
+            });
+        }
+        function getFlexibleGifts(car) {
+            if (!car) return [];
+            const adj = getQuoteAdjustments(car);
+            return Array.isArray(adj.flexibleGifts) ? adj.flexibleGifts.map(normalizeFlexibleGift).filter(Boolean) : [];
+        }
+        function fillFlexibleGifts(car) {
+            const input=document.getElementById('flex-gift-input'), count=document.getElementById('flex-gift-count');
+            if(!input||!car)return; const items=getFlexibleGifts(car);
+            if(document.activeElement!==input) input.value=items.join('\n');
+            if(count) count.innerText=`${items.length} món tặng`;
+        }
+        function syncFlexibleGifts() {
+            const car=carList.find(x=>x.id===document.getElementById('carSelect')?.value); if(!car)return;
+            if(!quoteAdjustments[car.id]) quoteAdjustments[car.id]=getDefaultQuoteAdjustments(car);
+            const input=document.getElementById('flex-gift-input');
+            const items=parseFlexibleGifts(input?.value||'');
+            quoteAdjustments[car.id].flexibleGifts=items; saveQuoteAdjustmentsToStorage();
+            const count=document.getElementById('flex-gift-count'); if(count)count.innerText=`${items.length} món tặng`;
+            updateQuotationUI();
+        }
+        function clearFlexibleGifts() {
+            const car=carList.find(x=>x.id===document.getElementById('carSelect')?.value); if(!car)return;
+            if(!quoteAdjustments[car.id]) quoteAdjustments[car.id]=getDefaultQuoteAdjustments(car);
+            quoteAdjustments[car.id].flexibleGifts=[]; saveQuoteAdjustmentsToStorage();
+            const input=document.getElementById('flex-gift-input'); if(input)input.value='';
+            const count=document.getElementById('flex-gift-count'); if(count)count.innerText='0 món tặng';
+            updateQuotationUI();
+        }
+
         // ================== ACCESSORIES ==================
         function openAccManager() { renderAccTable(); toggleModal('accManagerModal', true); }
         function closeAccManager() { toggleModal('accManagerModal', false); }
@@ -1633,6 +1688,7 @@
             const usageSelect = document.getElementById('usageSelect');
             if (usageSelect && document.activeElement !== usageSelect) usageSelect.value = getVehicleUseRule(car)==='private-only' ? 'family' : (adj.chargingUsage || 'family');
             const calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
+            fillFlexibleGifts(car);
 
             // Đồng bộ các bộ chọn phí ngay trên màn hình báo giá
             const rfQuote = adj.regFees || getDefaultQuoteAdjustments(car).regFees;
@@ -1779,6 +1835,7 @@
             pushUniquePromo(pA, chargingPromo);
             if (calc.bhType === 'tang') pushUniquePromo(pA, 'Tặng Bảo hiểm vật chất');
             calc.aTang.forEach(name => pushUniquePromo(pA, cleanAccessoryDisplayName(name)));
+            getFlexibleGifts(car).forEach(name => pushUniquePromo(pA, name));
             document.getElementById('quote-promo-list').innerHTML = pA.map((p,i)=>`<li class="flex items-stretch gap-2 bg-white p-2 rounded border border-green-200"><div class="flex items-center justify-center w-5 h-5 rounded bg-green-600 text-white font-bold text-[10px] shrink-0">${i+1}</div><div class="flex-1 text-[12px] font-medium flex items-center">${p}</div></li>`).join('');
 
             const acC = document.getElementById('quote-accessories-container');
@@ -1798,6 +1855,7 @@
             pushUniquePromo(pA, chargingPromo);
             if (calc.bhType === 'tang') pushUniquePromo(pA, 'Tặng Bảo hiểm vật chất');
             calc.aTang.forEach(name => pushUniquePromo(pA, cleanAccessoryDisplayName(name)));
+            getFlexibleGifts(car).forEach(name => pushUniquePromo(pA, name));
 
             const sum = document.getElementById('quoteInfoSummary'), txt = document.getElementById('quoteInfoText');
             const cN=`${car.name} ${car.version} ${car.year}`, cl=document.getElementById('colorSelect').value, pl=document.getElementById('plateSelect').options[document.getElementById('plateSelect').selectedIndex].text, pa=calc.isBank?'BANK':'CASH';
