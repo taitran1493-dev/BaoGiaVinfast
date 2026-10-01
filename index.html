@@ -277,6 +277,12 @@
                     <div id="live-bhvc-rate-help" class="live-help">Tự đối chiếu theo giá xe sau giảm.</div>
                     <button type="button" onclick="applyRecommendedBhvcRate()" class="mt-2 w-full py-2 px-3 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-black hover:bg-indigo-100">Áp dụng tỷ lệ theo biểu phí</button>
                 </div>
+                <div class="live-field">
+                    <label>Giá BHVC nhập tay (tạm thời)</label>
+                    <input type="text" id="live-bhvc-manual-amount" autocomplete="off" placeholder="Để trống = tính theo tỷ lệ">
+                    <div id="live-bhvc-manual-help" class="live-help">Chỉ ghi đè số tiền BHVC, không thay đổi tỷ lệ.</div>
+                    <button type="button" onclick="resetBhvcManualAmount()" class="mt-2 w-full py-2 px-3 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-xs font-black hover:bg-rose-100">Reset về phí ban đầu</button>
+                </div>
                 <div class="live-field"><label>Thuế TB tùy chỉnh</label><input type="text" id="live-tax-adjust" autocomplete="off" placeholder="VD: 1.000.000"></div>
             </div>
         </div>
@@ -918,7 +924,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         function getDefaultQuoteAdjustments(car) {
             return { 
-                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, accessories: [], flexibleGifts: [], chargingUsage: 'family',
+                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, bhvcManualAmount: null, accessories: [], flexibleGifts: [], chargingUsage: 'family',
                 regFees: { registrationPreset:'ward', registrationFee:140000, inspectionPreset:'57', inspectionFee:90000, civilPreset:'family5', civilFee:530700, roadPreset:'white1', roadFee:1560000 },
                 loan: { autoBuTax: false, percent: 80, years: 8, promoMonths: 12, promoRate: 10.2, floatRate: 3.6, manualLoan: null },
                 vfPromos: { exclusiveId: 'none', additiveIds: [], customValues: {}, dealerExtra: 0, catMau: 0 } 
@@ -1579,6 +1585,34 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             fillLiveCustomizePanel();
         }
 
+        function syncBhvcManualAmount() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect').value);
+            if (!car) return;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+
+            const input = document.getElementById('live-bhvc-manual-amount');
+            const digits = String(input?.value || '').replace(/[^\d]/g, '');
+            const value = digits === '' ? null : Number(digits);
+
+            quoteAdjustments[car.id].bhvcManualAmount =
+                Number.isFinite(value) && value >= 0 ? value : null;
+
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+            fillLiveCustomizePanel();
+        }
+
+        function resetBhvcManualAmount() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect').value);
+            if (!car) return;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+
+            quoteAdjustments[car.id].bhvcManualAmount = null;
+            saveQuoteAdjustmentsToStorage();
+            fillLiveCustomizePanel();
+            updateQuotationUI();
+        }
+
         function calculateQuotation(car) {
             if (!car) return null;
             const pay = document.getElementById('paymentSelect').value, plt = document.getElementById('plateSelect').value, adj = getQuoteAdjustments(car);
@@ -1654,8 +1688,17 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const bhvcType = adj.bhvcType || 'mua';
             
             let calculatedBhValue = 0;
-            if (bhvcType === 'mua') calculatedBhValue = finalP * (rMua / 100);
-            else if (bhvcType === 'tang') calculatedBhValue = finalP * (rTang / 100);
+            const manualBhvcAmount = adj.bhvcManualAmount;
+            const hasManualBhvcAmount = manualBhvcAmount !== null && manualBhvcAmount !== '' && Number.isFinite(Number(manualBhvcAmount)) && Number(manualBhvcAmount) >= 0;
+
+            if (bhvcType === 'mua') {
+                calculatedBhValue = hasManualBhvcAmount
+                    ? Number(manualBhvcAmount)
+                    : finalP * (rMua / 100);
+            } else if (bhvcType === 'tang') {
+                calculatedBhValue = finalP * (rTang / 100);
+            }
+
             let effectiveBhValueForReg = (bhvcType === 'tang' || bhvcType === 'khong') ? 0 : calculatedBhValue;
 
             let accTang = [], aMua = [], totAcc = 0;
@@ -1770,6 +1813,14 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             const recommendedBhvcRate = getRecommendedBhvcRate(calc.finalP, adj, plt);
             const currentBhvcRate = curT === 'tang' ? Number(rTang) : Number(rMua);
+            const hasManualBhvc = adj.bhvcManualAmount !== null && adj.bhvcManualAmount !== '' && Number.isFinite(Number(adj.bhvcManualAmount)) && Number(adj.bhvcManualAmount) >= 0;
+            if (hasManualBhvc && curT === 'mua') {
+                document.getElementById('left-bhvc-panel').innerHTML += `
+                    <div class="mt-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-700 font-bold">
+                        Đang dùng giá BHVC nhập tay: ${formatMoney(Number(adj.bhvcManualAmount))}
+                    </div>`;
+            }
+
             const bhvcMismatch = curT !== 'khong' && Math.abs(currentBhvcRate - recommendedBhvcRate) > 0.0001;
             if (bhvcMismatch) {
                 document.getElementById('left-bhvc-panel').innerHTML += `
@@ -2083,6 +2134,14 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 bhRate.dataset.b='1';
                 bhRate.addEventListener('change', syncBhvcRateOverride);
             }
+
+            const bhManual = document.getElementById('live-bhvc-manual-amount');
+            if (bhManual && !bhManual.dataset.b) {
+                bhManual.dataset.b='1';
+                bhManual.addEventListener('input', () => formatInputMoney(bhManual));
+                bhManual.addEventListener('change', syncBhvcManualAmount);
+                bhManual.addEventListener('blur', syncBhvcManualAmount);
+            }
         }
         function fillLiveCustomizePanel() {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return; const a=getQuoteAdjustments(c), rf=a.regFees;
@@ -2103,12 +2162,25 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 const mismatch = a.bhvcType !== 'khong' && Math.abs(Number(currentRate)-Number(recommendedRate)) > 0.0001;
                 rateHelp.innerHTML = `Giá sau giảm: <b>${formatMoney(calc?.finalP || 0)}</b> · Biểu phí: <b>${recommendedRate}%</b>${mismatch ? ` · <span class="text-amber-600 font-black">Hiện dùng ${currentRate}%</span>` : ' · Đang khớp'}`;
             }
+
+            const manualInput = document.getElementById('live-bhvc-manual-amount');
+            const manualHelp = document.getElementById('live-bhvc-manual-help');
+            const hasManual = a.bhvcManualAmount !== null && a.bhvcManualAmount !== '' && Number.isFinite(Number(a.bhvcManualAmount)) && Number(a.bhvcManualAmount) >= 0;
+            if (manualInput) manualInput.value = hasManual ? Number(a.bhvcManualAmount).toLocaleString('vi-VN') : '';
+            if (manualHelp) {
+                const rates = getBhvcRates(c, a, plate, calc?.finalP || c.price);
+                const normalRate = a.bhvcType === 'tang' ? rates.tang : rates.mua;
+                const normalAmount = (calc?.finalP || 0) * (Number(normalRate || 0) / 100);
+                manualHelp.innerHTML = hasManual
+                    ? `Đang dùng giá nhập tay: <b class="text-rose-700">${formatMoney(Number(a.bhvcManualAmount))}</b> · Phí theo tỷ lệ hiện tại: <b>${formatMoney(normalAmount)}</b>`
+                    : `Đang dùng phí theo tỷ lệ: <b>${formatMoney(normalAmount)}</b>`;
+            }
         }
         function toggleLiveCustomize(s) { const p=document.getElementById('live-customize-panel'), c=document.getElementById('customize-toggle'); if(!p||!c)return; c.checked=!!s; p.classList.toggle('hidden-panel',!s); if(s){fillLiveCustomizePanel(); setupLive();} }
         function resetLiveCustomize() {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
             quoteAdjustments[c.id]=getQuoteAdjustments(c); const a=quoteAdjustments[c.id];
-            a.taxAdjust=0; a.registrationService=PHI_DICH_VU; a.buTax=0; a.vcInsurance=0; a.bhvcRateOverride=null; a.regFees={...getDefaultQuoteAdjustments(c).regFees};
+            a.taxAdjust=0; a.registrationService=PHI_DICH_VU; a.buTax=0; a.vcInsurance=0; a.bhvcRateOverride=null; a.bhvcManualAmount=null; a.regFees={...getDefaultQuoteAdjustments(c).regFees};
             saveQuoteAdjustmentsToStorage(); fillLiveCustomizePanel(); updateQuotationUI();
         }
 
