@@ -1540,6 +1540,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             // GIẢM TRÊN HÓA ĐƠN
             if (isGreenFuture2Promo(p)) return 'invoice';
             if (isPublicServicePromo(p)) return 'invoice';
+            if (isVinClubPromo(p)) return 'invoice';
 
             if (isTienPhongPromo(p)) {
                 const target = normalizePromoTarget(p.target);
@@ -1547,7 +1548,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 return 'payment';
             }
 
-            // VinClub, Voucher Tri Ân và tất cả CTKM còn lại
+            // Voucher Tri Ân và tất cả CTKM còn lại
             return 'payment';
         }
 
@@ -1835,9 +1836,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             }
 
             // HÓA ĐƠN: Vì Tương Lai Xanh 2; Công An/Quân Đội/VNPOST;
-            // Tiên Phong đối tượng Công Ty;
+            // Tiên Phong đối tượng Công Ty; VinClub;
             // và phần Giảm thêm người dùng nhập không vượt khung.
-            // THANH TOÁN: VinClub + tất cả CTKM còn lại + phần vượt khung.
+            // THANH TOÁN: tất cả CTKM còn lại + phần vượt khung.
             const hasGreenFuture = activePromoObjs.some(isGreenFuturePromo);
             const hasVinClubOrTriAn = activePromoObjs.some(p => isVinClubPromo(p) || isTriAnVoucherPromo(p));
             if (hasGreenFuture && hasVinClubOrTriAn) {
