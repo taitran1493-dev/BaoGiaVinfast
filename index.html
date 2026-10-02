@@ -506,7 +506,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         <div class="capture-col bg-gray-50 p-5 rounded-lg border border-gray-100 space-y-3 text-[15px]">
                             <div class="flex justify-between items-end"><span class="font-medium text-gray-600">Giá xe niêm yết</span><div class="dot-leader"></div><span id="quote-price-listed" class="font-bold">0 VNĐ</span></div>
                             <div class="flex justify-between items-end text-brand-primary"><span class="font-medium">Tổng ưu đãi</span><div class="dot-leader"></div><span id="quote-discount" class="font-bold">- 0 VNĐ</span></div>
-                            ${calc.invoiceDiscount > 0 ? `<div class="flex justify-between items-end text-emerald-700"><span class="font-medium">Giảm trên HĐ Đại lý (CTKM + khung)</span><div class="dot-leader"></div>` : ''}<span id="quote-invoice-discount" class="font-bold">- 0 VNĐ</span></div>
+                            <div id="quote-invoice-discount-row" class="hidden flex justify-between items-end text-emerald-700"><span class="font-medium">Giảm trên HĐ Đại lý (CTKM + khung)</span><div class="dot-leader"></div><span id="quote-invoice-discount" class="font-bold">- 0 VNĐ</span></div>
                             <div class="flex justify-between items-end"><span class="font-medium text-gray-700">Giá Đại lý xuất hóa đơn</span><div class="dot-leader"></div><span id="quote-invoice-price" class="font-black text-emerald-700">0 VNĐ</span></div>
                             <div class="flex justify-between items-end text-blue-700"><span class="font-medium">Giảm tại Thanh Toán</span><div class="dot-leader"></div><span id="quote-payment-discount" class="font-bold">- 0 VNĐ</span></div>
                             <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-3"><span class="font-bold text-gray-800 uppercase text-sm">Giá thanh toán xe</span><div class="dot-leader"></div><span id="quote-price-final" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
@@ -1899,18 +1899,23 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const catMauEntered = Math.max(0, Number(vfp.catMau || 0));
             const catMauLimit = Math.max(0, Number(getFactoryMaxDiscount(car) || 0));
 
-            // Khung giảm thêm tối đa của Nhà máy là phần giảm trực tiếp trên giá xuất hóa đơn.
-            // Khi xe có khung, giá hóa đơn mặc định trừ đủ khung này.
-            // Nếu nhập Giảm Giá Bằng Lương cao hơn khung, chỉ phần vượt mới chuyển sang Thanh Toán.
-            const catMauInvoice = catMauLimit;
-            const catMauOverflow = Math.max(0, catMauEntered - catMauLimit);
+            // KHUNG chỉ là mức THAM CHIẾU cho số tiền người dùng nhập.
+            // Không nhập => không tự động lấy khung để giảm trên hóa đơn.
+            // Nhập <= khung => toàn bộ số nhập giảm trên hóa đơn.
+            // Nhập > khung => phần bằng khung giảm trên hóa đơn, phần vượt chuyển sang Thanh Toán.
+            const catMauInvoice = catMauEntered > 0
+                ? (catMauLimit > 0 ? Math.min(catMauEntered, catMauLimit) : 0)
+                : 0;
+            const catMauOverflow = catMauEntered > 0
+                ? (catMauLimit > 0 ? Math.max(0, catMauEntered - catMauLimit) : catMauEntered)
+                : 0;
 
             invoiceDiscount += catMauInvoice;
             paymentDiscount += catMauOverflow;
 
-            if (catMauInvoice > 0) promoDetails.push(`Khung giảm trên hóa đơn: ${formatMoney(catMauInvoice)}`);
             if (catMauEntered > 0) {
                 promoDetails.push(`Giảm giá bằng lương nhập: ${formatMoney(catMauEntered)}`);
+                if (catMauInvoice > 0) promoDetails.push(`Phần giảm trên hóa đơn: ${formatMoney(catMauInvoice)}`);
                 if (catMauOverflow > 0) promoDetails.push(`Phần vượt khung chuyển sang Thanh toán: ${formatMoney(catMauOverflow)}`);
             }
 
@@ -2048,11 +2053,11 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if(cutDisplay) cutDisplay.innerText = factoryMax > 0 ? formatMoney(factoryMax) : 'Chưa thiết lập';
             const cutInput = document.getElementById('vf-catmau');
             const cutLimitEl = document.getElementById('vf-catmau-limit');
-            cutLimitEl.innerText = salaryLimit > 0 ? 'Khung HĐ: ' + formatMoney(salaryLimit) + ' | MASP: ' + getSalaryProductCode(car) : 'Khung HĐ: Chưa thiết lập';
+            cutLimitEl.innerText = salaryLimit > 0 ? 'Khung tham chiếu: ' + formatMoney(salaryLimit) + ' | MASP: ' + getSalaryProductCode(car) : 'Khung HĐ: Chưa thiết lập';
             const isOverCut = salaryLimit > 0 && Number(vfp.catMau||0) > salaryLimit;
             cutInput.classList.toggle('ring-4', isOverCut); cutInput.classList.toggle('ring-red-400', isOverCut); cutInput.classList.toggle('bg-red-100', isOverCut);
             cutLimitEl.classList.toggle('animate-pulse', isOverCut);
-            if(isOverCut) cutLimitEl.innerText = '⚠ VƯỢT KHUNG HĐ ' + formatMoney(Number(vfp.catMau||0)-salaryLimit) + ' | phần vượt chuyển Thanh Toán';
+            if(isOverCut) cutLimitEl.innerText = '⚠ VƯỢT KHUNG THAM CHIẾU ' + formatMoney(Number(vfp.catMau||0)-salaryLimit) + ' | phần vượt chuyển Thanh Toán';
 
             // Bảng trái BHVC
             const bhRatesUi = getBhvcRates(car, adj, plt, calc.invoicePrice);
@@ -2094,10 +2099,14 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             document.getElementById('quote-car-name').innerText = `${car.name} ${car.version} ${car.year}`.trim();
             document.getElementById('quote-price-listed').innerText = formatMoney(car.price);
-            document.getElementById('quote-discount').innerText = '- ' + formatMoney(calc.totalDiscount);
-            document.getElementById('quote-invoice-discount').innerText = '- ' + formatMoney(calc.invoiceDiscount);
+            document.getElementById('quote-discount').innerText = formatMoney(Math.max(0, Number(calc.totalDiscount || 0)));
+
+            const invoiceDiscountRow = document.getElementById('quote-invoice-discount-row');
+            if (invoiceDiscountRow) invoiceDiscountRow.classList.toggle('hidden', !(Number(calc.invoiceDiscount || 0) > 0));
+            document.getElementById('quote-invoice-discount').innerText = '- ' + formatMoney(Math.max(0, Number(calc.invoiceDiscount || 0)));
+
             document.getElementById('quote-invoice-price').innerText = formatMoney(calc.invoicePrice);
-            document.getElementById('quote-payment-discount').innerText = '- ' + formatMoney(calc.paymentDiscount);
+            document.getElementById('quote-payment-discount').innerText = '- ' + formatMoney(Math.max(0, Number(calc.paymentDiscount || 0)));
             document.getElementById('quote-price-final').innerText = formatMoney(calc.finalP);
 
             let tL = adj.taxAdjust > 0 ? 'Lệ phí TB (Tùy chỉnh)' : 'Lệ phí TB (0%)'; if (calc.isBank && adj.loan.autoBuTax) tL += ' (Cấn trừ)';
