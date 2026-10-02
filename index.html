@@ -1259,7 +1259,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 excHtml += `<option value="${p.id}">${p.name} - ${p.target} (${valStr})</option>`;
             });
             document.getElementById('vf-main-policy-container').innerHTML = `
-                <select id="vf-main-policy" onchange="syncVF()" class="w-full border-2 border-blue-100 rounded-lg p-2.5 text-[12px] font-bold text-brand-primary outline-none bg-blue-50 focus:border-blue-400 transition-colors">
+                <select id="vf-main-policy" onchange="syncVF(this)" class="w-full border-2 border-blue-100 rounded-lg p-2.5 text-[12px] font-bold text-brand-primary outline-none bg-blue-50 focus:border-blue-400 transition-colors">
                     ${excHtml}
                 </select>
             `;
@@ -1276,7 +1276,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         addHtml += `
                         <div class="mb-3">
                             <label class="block text-xs font-bold text-gray-700 mb-1">${p.name} <span class="text-gray-500 font-normal">(${p.target})</span></label>
-                            <input type="text" inputmode="numeric" id="promo_custom_${p.id}" data-id="${p.id}" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập số tiền..." class="w-full border rounded-lg p-2 text-sm font-bold text-gray-800 text-right outline-none focus:border-brand-primary promo-custom-input">
+                            <input type="text" inputmode="numeric" id="promo_custom_${p.id}" data-id="${p.id}" oninput="formatInputMoney(this); syncVF(this)" placeholder="Nhập số tiền..." class="w-full border rounded-lg p-2 text-sm font-bold text-gray-800 text-right outline-none focus:border-brand-primary promo-custom-input">
                             <p id="${hintId}_${p.id}" class="text-[10px] text-green-600 mt-1 italic font-semibold empty:hidden"></p>
                         </div>`;
                     }
@@ -1284,12 +1284,13 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     const valStr = p.type === 'pct_msrp' || p.type === 'pct_after' ? `Giảm ${p.value}%` : `Giảm ${formatMoney(p.value)}`;
                     addHtml += `
                     <label class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors mb-2">
-                        <input type="checkbox" id="promo_chk_${p.id}" data-id="${p.id}" onchange="syncVF()" class="w-5 h-5 accent-brand-primary cursor-pointer promo-additive-chk">
+                        <input type="checkbox" id="promo_chk_${p.id}" data-id="${p.id}" onchange="syncVF(this)" class="w-5 h-5 accent-brand-primary cursor-pointer promo-additive-chk">
                         <span class="text-sm font-bold text-gray-700">${p.name}<br><span class="text-[11px] text-gray-500 font-normal">${p.target} (${valStr}${p.type==='pct_after'?' sau KM':''})</span></span>
                     </label>`;
                 }
             });
-            document.getElementById('vf-additive-promos').innerHTML = addHtml || '<span class="text-xs text-gray-400 italic">Chưa có CTKM bổ sung nào.</span>';
+            const compatNote = `<div class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-800">VinClub + Voucher Tri Ân được dùng chung. Hai ưu đãi này không áp dụng cùng Vì Tương Lai Xanh.<br><span class="font-semibold">VinClub = (Giá niêm yết − Tiên Phong − Voucher Tri Ân) × % VinClub.</span></div>`;
+            document.getElementById('vf-additive-promos').innerHTML = compatNote + (addHtml || '<span class="text-xs text-gray-400 italic">Chưa có CTKM bổ sung nào.</span>');
         }
 
         // ================== PHỤ KIỆN TẶNG LINH ĐỘNG ==================
@@ -1500,7 +1501,102 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         // ================== CORE CALCULATION & UI ==================
         function changeBHVCType(t) { const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(c){if(!quoteAdjustments[c.id])quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c); quoteAdjustments[c.id].bhvcType=t; saveQuoteAdjustmentsToStorage(); updateQuotationUI();} }
         
-        function syncVF() {
+        function normalizePromoSemanticName(name) {
+            return String(name || '')
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+                .toUpperCase().replace(/\s+/g, ' ').trim();
+        }
+
+        function isGreenFuturePromo(p) {
+            const n = normalizePromoSemanticName(p?.name);
+            return n.includes('VI TUONG LAI XANH');
+        }
+
+        function isVinClubPromo(p) {
+            const n = normalizePromoSemanticName(p?.name).replace(/\s/g, '');
+            return n.includes('VINCLUB');
+        }
+
+        function isTriAnVoucherPromo(p) {
+            const n = normalizePromoSemanticName(p?.name);
+            return n.includes('VOUCHER') && n.includes('TRI AN');
+        }
+
+        function isTienPhongPromo(p) {
+            const n = normalizePromoSemanticName(p?.name);
+            return n.includes('TIEN PHONG');
+        }
+
+        function getPromoById(id) {
+            return promoList.find(x => x.id === id) || null;
+        }
+
+        function promoInputValue(p, vfp) {
+            if (!p) return 0;
+            if (p.type === 'custom') return Number(vfp?.customValues?.[p.id] || 0);
+            return Number(p.value || 0);
+        }
+
+        function getPromoDiscountAtMsrp(p, car, vfp) {
+            if (!p || !car) return 0;
+            if (p.type === 'pct_msrp') return Math.max(0, Number(car.price || 0) * Number(p.value || 0) / 100);
+            if (p.type === 'money') return Math.max(0, Number(p.value || 0));
+            if (p.type === 'custom') return Math.max(0, Number(vfp?.customValues?.[p.id] || 0));
+            return 0;
+        }
+
+        function enforcePromoCompatibility(vfp, sourceEl=null) {
+            if (!vfp) return vfp;
+            const selectedIds = [];
+            if (vfp.exclusiveId && vfp.exclusiveId !== 'none') selectedIds.push(vfp.exclusiveId);
+            (vfp.additiveIds || []).forEach(id => selectedIds.push(id));
+            Object.keys(vfp.customValues || {}).forEach(id => {
+                if (Number(vfp.customValues[id] || 0) > 0) selectedIds.push(id);
+            });
+
+            const selectedPromos = [...new Set(selectedIds)].map(getPromoById).filter(Boolean);
+            const hasGreen = selectedPromos.some(isGreenFuturePromo);
+            const hasVinOrVoucher = selectedPromos.some(p => isVinClubPromo(p) || isTriAnVoucherPromo(p));
+            if (!hasGreen || !hasVinOrVoucher) return vfp;
+
+            let sourcePromo = null;
+            if (sourceEl?.id === 'vf-main-policy') sourcePromo = getPromoById(sourceEl.value);
+            else if (sourceEl?.dataset?.id) sourcePromo = getPromoById(sourceEl.dataset.id);
+
+            // Ưu tiên thao tác vừa thực hiện của người dùng.
+            // Chọn Vì Tương Lai Xanh -> bỏ VinClub/Voucher Tri Ân.
+            // Chọn/nhập VinClub hoặc Voucher Tri Ân -> bỏ Vì Tương Lai Xanh.
+            const sourceIsGreen = isGreenFuturePromo(sourcePromo);
+            const sourceIsVinOrVoucher = isVinClubPromo(sourcePromo) || isTriAnVoucherPromo(sourcePromo);
+            const keepGreen = sourceIsGreen || (!sourceIsVinOrVoucher && hasGreen);
+
+            if (keepGreen) {
+                vfp.additiveIds = (vfp.additiveIds || []).filter(id => {
+                    const p = getPromoById(id);
+                    return !(isVinClubPromo(p) || isTriAnVoucherPromo(p));
+                });
+                Object.keys(vfp.customValues || {}).forEach(id => {
+                    const p = getPromoById(id);
+                    if (isVinClubPromo(p) || isTriAnVoucherPromo(p)) delete vfp.customValues[id];
+                });
+                if (vfp.exclusiveId && vfp.exclusiveId !== 'none') {
+                    const p = getPromoById(vfp.exclusiveId);
+                    if (isVinClubPromo(p) || isTriAnVoucherPromo(p)) vfp.exclusiveId = 'none';
+                }
+            } else {
+                if (vfp.exclusiveId && vfp.exclusiveId !== 'none' && isGreenFuturePromo(getPromoById(vfp.exclusiveId))) {
+                    vfp.exclusiveId = 'none';
+                }
+                vfp.additiveIds = (vfp.additiveIds || []).filter(id => !isGreenFuturePromo(getPromoById(id)));
+                Object.keys(vfp.customValues || {}).forEach(id => {
+                    if (isGreenFuturePromo(getPromoById(id))) delete vfp.customValues[id];
+                });
+            }
+            return vfp;
+        }
+
+        function syncVF(sourceEl=null) {
             const c = carList.find(x => x.id === document.getElementById('carSelect').value); if(!c) return;
             if(!quoteAdjustments[c.id]) quoteAdjustments[c.id] = getDefaultQuoteAdjustments(c);
             let adj = quoteAdjustments[c.id];
@@ -1521,8 +1617,11 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 if(val > 0) vfp.customValues[inp.dataset.id] = val;
             });
 
+            vfp = enforcePromoCompatibility(vfp, sourceEl);
             adj.vfPromos = vfp;
-            saveQuoteAdjustmentsToStorage(); updateQuotationUI();
+            saveQuoteAdjustmentsToStorage();
+            renderPromosUI();
+            updateQuotationUI();
         }
 
         function applyDealerSuggestion() {
@@ -1644,8 +1743,33 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 });
             }
 
+            // Quy tắc CTKM đặc biệt:
+            // - VinClub + Voucher Tri Ân được cộng chung.
+            // - VinClub/Voucher Tri Ân không áp dụng cùng Vì Tương Lai Xanh.
+            // - Mức giảm VinClub = (Giá niêm yết - Tiên Phong - Voucher Tri Ân) × % VinClub.
+            //   Chỉ Tiên Phong và Voucher Tri Ân được trừ khỏi nền tính VinClub.
             let promoDetails = [];
-            activePromoObjs.forEach(p => {
+
+            // Phòng trường hợp dữ liệu cũ/localStorage vẫn còn tổ hợp xung đột.
+            const hasGreenFuture = activePromoObjs.some(isGreenFuturePromo);
+            const hasVinClubOrTriAn = activePromoObjs.some(p => isVinClubPromo(p) || isTriAnVoucherPromo(p));
+            if (hasGreenFuture && hasVinClubOrTriAn) {
+                // Với dữ liệu cũ, ưu tiên Vì Tương Lai Xanh nếu đang tồn tại trong lựa chọn chính.
+                const mainPromo = getPromoById(vfp.exclusiveId);
+                if (isGreenFuturePromo(mainPromo)) {
+                    activePromoObjs = activePromoObjs.filter(p => !(isVinClubPromo(p) || isTriAnVoucherPromo(p)));
+                } else {
+                    activePromoObjs = activePromoObjs.filter(p => !isGreenFuturePromo(p));
+                }
+            }
+
+            const tienPhongPromos = activePromoObjs.filter(isTienPhongPromo);
+            const triAnPromos = activePromoObjs.filter(isTriAnVoucherPromo);
+            const vinClubPromos = activePromoObjs.filter(isVinClubPromo);
+            const normalPromos = activePromoObjs.filter(p => !isVinClubPromo(p));
+
+            // Tính các CTKM bình thường trước, nhưng VinClub được tách ra để dùng nền riêng.
+            normalPromos.forEach(p => {
                 if (p.type === 'pct_msrp') {
                     let val = car.price * (p.value / 100);
                     dMSRP += val; promoDetails.push(`${p.name} (Giảm ${p.value}%): ${formatMoney(val)}`);
@@ -1655,6 +1779,30 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     dMoney += p.inputValue; promoDetails.push(`${p.name}: ${formatMoney(p.inputValue)}`);
                 } else if (p.type === 'pct_after') {
                     dAfter += p.value / 100;
+                }
+            });
+
+            // Xác định đúng giá trị Tiên Phong và Voucher Tri Ân để làm nền VinClub.
+            const tienPhongDiscount = tienPhongPromos.reduce((sum, p) => sum + getPromoDiscountAtMsrp(p, car, vfp), 0);
+            const triAnDiscount = triAnPromos.reduce((sum, p) => {
+                if (p.type === 'custom' && Number(p.inputValue || 0) > 0) return sum + Number(p.inputValue || 0);
+                return sum + getPromoDiscountAtMsrp(p, car, vfp);
+            }, 0);
+            const vinClubBase = Math.max(0, Number(car.price || 0) - tienPhongDiscount - triAnDiscount);
+
+            vinClubPromos.forEach(p => {
+                if (p.type === 'pct_msrp' || p.type === 'pct_after') {
+                    const rate = Number(p.value || 0);
+                    const val = vinClubBase * rate / 100;
+                    dMSRP += val;
+                    promoDetails.push(`${p.name} (Giảm ${rate}% trên ${formatMoney(vinClubBase)}): ${formatMoney(val)}`);
+                } else if (p.type === 'money') {
+                    dMoney += Number(p.value || 0);
+                    promoDetails.push(`${p.name}: ${formatMoney(Number(p.value || 0))}`);
+                } else if (p.type === 'custom') {
+                    const val = Number(p.inputValue || 0);
+                    dMoney += val;
+                    promoDetails.push(`${p.name}: ${formatMoney(val)}`);
                 }
             });
 
