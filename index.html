@@ -320,7 +320,7 @@
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <div class="text-xs font-black text-amber-800">Mức giảm tối đa của Nhà máy</div>
-                                <div class="text-[10px] text-amber-700 mt-0.5">Tham chiếu cho mức giảm thêm người dùng nhập · Phần vượt chuyển Thanh Toán</div>
+                                <div class="text-[10px] text-amber-700 mt-0.5">Tham chiếu cho ô Nhập mức giảm thêm bằng tiền · Phần vượt chuyển Thanh Toán</div>
                             </div>
                             <div id="vf-car-cut-limit-display" class="text-base font-black text-amber-700 whitespace-nowrap">0 VNĐ</div>
                         </div>
@@ -2081,18 +2081,28 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             const dealerExtraValue = Number(vfp.dealerExtra || 0);
             const dealerExtraInpForLimit = document.getElementById('vf-dealer-extra');
-            const cutLimitEl = document.getElementById('vf-catmau-limit');
+            const salaryCodeEl = document.getElementById('vf-catmau-limit');
             const isOverCut = factoryMax > 0 && dealerExtraValue > factoryMax;
 
-            if (cutLimitEl) {
-                cutLimitEl.innerText = factoryMax > 0
-                    ? 'Khung tham chiếu cho giảm thêm: ' + formatMoney(factoryMax)
-                    : 'Khung tham chiếu: Chưa thiết lập';
-                cutLimitEl.classList.toggle('animate-pulse', isOverCut);
-                if (isOverCut) {
-                    cutLimitEl.innerText = '⚠ GIẢM THÊM VƯỢT KHUNG '
-                        + formatMoney(dealerExtraValue - factoryMax)
-                        + ' | phần vượt chuyển Thanh Toán';
+            // Khu vực "Giảm Giá Bằng Lương" chỉ hiển thị mã lương/MASP nội bộ.
+            // Không dùng khu vực này để hiển thị khung giảm thêm.
+            if (salaryCodeEl) {
+                const salaryCode = getSalaryProductCode(car);
+                salaryCodeEl.innerText = salaryCode
+                    ? 'Mã lương / MASP: ' + salaryCode
+                    : 'Mã lương / MASP: Chưa thiết lập';
+                salaryCodeEl.classList.remove('animate-pulse');
+            }
+
+            // Khung giảm tối đa chỉ áp dụng cho ô "Nhập mức giảm thêm bằng tiền".
+            const dealerFrameHint = document.getElementById('dealer-extra-frame-hint');
+            if (dealerFrameHint) {
+                if (factoryMax > 0) {
+                    dealerFrameHint.innerHTML = isOverCut
+                        ? `Khung giảm thêm: <b>${formatMoney(factoryMax)}</b> · <span class="text-red-600 font-black">Vượt ${formatMoney(dealerExtraValue - factoryMax)} → chuyển Thanh Toán</span>`
+                        : `Khung giảm thêm tối đa: <b>${formatMoney(factoryMax)}</b>`;
+                } else {
+                    dealerFrameHint.innerText = 'Xe chưa thiết lập khung giảm thêm tối đa.';
                 }
             }
 
@@ -2100,6 +2110,11 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 dealerExtraInpForLimit.classList.toggle('ring-4', isOverCut);
                 dealerExtraInpForLimit.classList.toggle('ring-red-400', isOverCut);
                 dealerExtraInpForLimit.classList.toggle('bg-red-100', isOverCut);
+                dealerExtraInpForLimit.title = factoryMax > 0
+                    ? (isOverCut
+                        ? 'Vượt khung ' + formatMoney(dealerExtraValue - factoryMax) + ' - phần vượt chuyển Thanh Toán'
+                        : 'Khung giảm thêm tối đa: ' + formatMoney(factoryMax))
+                    : 'Xe chưa thiết lập khung giảm thêm tối đa';
             }
 
             const cutInput = document.getElementById('vf-catmau');
