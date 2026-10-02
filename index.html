@@ -506,7 +506,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         <div class="capture-col bg-gray-50 p-5 rounded-lg border border-gray-100 space-y-3 text-[15px]">
                             <div class="flex justify-between items-end"><span class="font-medium text-gray-600">Giá xe niêm yết</span><div class="dot-leader"></div><span id="quote-price-listed" class="font-bold">0 VNĐ</span></div>
                             <div class="flex justify-between items-end text-brand-primary"><span class="font-medium">Tổng chương trình giảm</span><div class="dot-leader"></div><span id="quote-discount" class="font-bold">- 0 VNĐ</span></div>
-                            <div class="flex justify-between items-end text-emerald-700"><span class="font-medium">Giảm trên HĐ Đại lý</span><div class="dot-leader"></div><span id="quote-invoice-discount" class="font-bold">- 0 VNĐ</span></div>
+                            <div class="flex justify-between items-end text-emerald-700"><span class="font-medium">Giảm trên HĐ Đại lý (CTKM + khung)</span><div class="dot-leader"></div><span id="quote-invoice-discount" class="font-bold">- 0 VNĐ</span></div>
                             <div class="flex justify-between items-end"><span class="font-medium text-gray-700">Giá Đại lý xuất hóa đơn</span><div class="dot-leader"></div><span id="quote-invoice-price" class="font-black text-emerald-700">0 VNĐ</span></div>
                             <div class="flex justify-between items-end text-blue-700"><span class="font-medium">Giảm tại Thanh Toán</span><div class="dot-leader"></div><span id="quote-payment-discount" class="font-bold">- 0 VNĐ</span></div>
                             <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-3"><span class="font-bold text-gray-800 uppercase text-sm">Giá thanh toán xe</span><div class="dot-leader"></div><span id="quote-price-final" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
@@ -1748,7 +1748,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
             const calc = calculateQuotation(car);
             const plate = document.getElementById('plateSelect')?.value || 'trang';
-            const rate = getRecommendedBhvcRate(calc?.finalP || car.price, quoteAdjustments[car.id], plate);
+            const rate = getRecommendedBhvcRate(calc?.invoicePrice || car.price, quoteAdjustments[car.id], plate);
             quoteAdjustments[car.id].bhvcRateOverride = rate;
             saveQuoteAdjustmentsToStorage();
             fillLiveCustomizePanel();
@@ -1896,14 +1896,21 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 promoDetails.push(`Giảm thêm riêng Đại lý: ${formatMoney(dealerExtra)}`);
             }
 
-            const catMauTotal = Math.max(0, Number(vfp.catMau || 0));
-            const catMauLimit = Math.max(0, Number(getSaleSalaryLimit(car) || 0));
-            const catMauInvoice = catMauLimit > 0 ? Math.min(catMauTotal, catMauLimit) : 0;
-            const catMauOverflow = Math.max(0, catMauTotal - catMauInvoice);
+            const catMauEntered = Math.max(0, Number(vfp.catMau || 0));
+            const catMauLimit = Math.max(0, Number(getFactoryMaxDiscount(car) || 0));
+
+            // Khung giảm thêm tối đa của Nhà máy là phần giảm trực tiếp trên giá xuất hóa đơn.
+            // Khi xe có khung, giá hóa đơn mặc định trừ đủ khung này.
+            // Nếu nhập Giảm Giá Bằng Lương cao hơn khung, chỉ phần vượt mới chuyển sang Thanh Toán.
+            const catMauInvoice = catMauLimit;
+            const catMauOverflow = Math.max(0, catMauEntered - catMauLimit);
+
             invoiceDiscount += catMauInvoice;
             paymentDiscount += catMauOverflow;
-            if (catMauTotal > 0) {
-                promoDetails.push(`Giảm giá bằng lương: ${formatMoney(catMauTotal)}`);
+
+            if (catMauInvoice > 0) promoDetails.push(`Khung giảm trên hóa đơn: ${formatMoney(catMauInvoice)}`);
+            if (catMauEntered > 0) {
+                promoDetails.push(`Giảm giá bằng lương nhập: ${formatMoney(catMauEntered)}`);
                 if (catMauOverflow > 0) promoDetails.push(`Phần vượt khung chuyển sang Thanh toán: ${formatMoney(catMauOverflow)}`);
             }
 
@@ -1920,7 +1927,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             let dBo = Number(rf.roadFee || 0);
             let phiDangKiem = Number(rf.inspectionFee || PHI_DANG_KIEM);
             
-            const bhRates = getBhvcRates(car, adj, plt, finalP);
+            const bhRates = getBhvcRates(car, adj, plt, invoicePrice);
             const rMua = bhRates.mua, rTang = bhRates.tang;
             const bhvcType = adj.bhvcType || 'mua';
             
@@ -1931,9 +1938,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (bhvcType === 'mua') {
                 calculatedBhValue = hasManualBhvcAmount
                     ? Number(manualBhvcAmount)
-                    : finalP * (rMua / 100);
+                    : invoicePrice * (rMua / 100);
             } else if (bhvcType === 'tang') {
-                calculatedBhValue = finalP * (rTang / 100);
+                calculatedBhValue = invoicePrice * (rTang / 100);
             }
 
             let effectiveBhValueForReg = (bhvcType === 'tang' || bhvcType === 'khong') ? 0 : calculatedBhValue;
@@ -1951,14 +1958,21 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             let loan=0, down=0, totB=0, avgM=0;
             if(pay==='BANK'){
-                const lc=adj.loan; loan=lc.manualLoan!==null?lc.manualLoan:(finalP*lc.percent/100); if(loan>finalP)loan=finalP; if(loan<0)loan=0;
-                down=finalP-loan; totB=down+totReg;
+                const lc=adj.loan;
+                loan = lc.manualLoan !== null ? lc.manualLoan : (invoicePrice * lc.percent / 100);
+                if (loan > invoicePrice) loan = invoicePrice;
+                if (loan < 0) loan = 0;
+
+                // Voucher/Tiên Phong Đại lý/VinClub chỉ giảm phần khách phải thanh toán,
+                // không làm giảm giá trị cơ sở ngân hàng dùng để tính khoản vay.
+                down = Math.max(0, invoicePrice - loan - paymentDiscount);
+                totB = down + totReg;
                 if(loan>0 && lc.years>0){
                     const tM=lc.years*12, mP=loan/tM, pr=(lc.promoRate/100)/12, ar=((lc.promoRate+lc.floatRate)/100)/12, lim=Math.min(12,tM);
                     let tI=0, cP=loan; for(let i=0;i<lim;i++){ tI+=cP*(i<lc.promoMonths?pr:ar); cP-=mP; } avgM=mP+(tI/lim);
                 }
             }
-            return { car, adj, tax, totalDiscount, invoiceDiscount, paymentDiscount, invoicePrice, catMauInvoice, catMauOverflow, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, totOnRoad: finalP+totReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
+            return { car, adj, tax, totalDiscount, invoiceDiscount, paymentDiscount, invoicePrice, bhvcBase: invoicePrice, loanBase: invoicePrice, catMauInvoice, catMauOverflow, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, totOnRoad: finalP+totReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
         }
 
         function updateQuotationUI() {
@@ -2029,28 +2043,28 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             document.getElementById('vf-catmau').value = vfp.catMau ? Number(vfp.catMau).toLocaleString('vi-VN') : '';
             const factoryMax = getFactoryMaxDiscount(car);
-            const salaryLimit = getSaleSalaryLimit(car);
+            const salaryLimit = getFactoryMaxDiscount(car);
             const cutDisplay = document.getElementById('vf-car-cut-limit-display');
             if(cutDisplay) cutDisplay.innerText = factoryMax > 0 ? formatMoney(factoryMax) : 'Chưa thiết lập';
             const cutInput = document.getElementById('vf-catmau');
             const cutLimitEl = document.getElementById('vf-catmau-limit');
-            cutLimitEl.innerText = salaryLimit > 0 ? 'MASP: ' + getSalaryProductCode(car) : 'MASP: Chưa thiết lập';
+            cutLimitEl.innerText = salaryLimit > 0 ? 'Khung HĐ: ' + formatMoney(salaryLimit) + ' | MASP: ' + getSalaryProductCode(car) : 'Khung HĐ: Chưa thiết lập';
             const isOverCut = salaryLimit > 0 && Number(vfp.catMau||0) > salaryLimit;
             cutInput.classList.toggle('ring-4', isOverCut); cutInput.classList.toggle('ring-red-400', isOverCut); cutInput.classList.toggle('bg-red-100', isOverCut);
             cutLimitEl.classList.toggle('animate-pulse', isOverCut);
-            if(isOverCut) cutLimitEl.innerText = '⚠ VƯỢT KHUNG ' + formatMoney(Number(vfp.catMau||0)-salaryLimit) + ' | MASP: ' + getSalaryProductCode(car);
+            if(isOverCut) cutLimitEl.innerText = '⚠ VƯỢT KHUNG HĐ ' + formatMoney(Number(vfp.catMau||0)-salaryLimit) + ' | phần vượt chuyển Thanh Toán';
 
             // Bảng trái BHVC
-            const bhRatesUi = getBhvcRates(car, adj, plt, calc.finalP);
+            const bhRatesUi = getBhvcRates(car, adj, plt, calc.invoicePrice);
             let rMua=bhRatesUi.mua, rTang=bhRatesUi.tang;
-            let vMua=calc.finalP*rMua/100, vTang=calc.finalP*rTang/100, curT=adj.bhvcType||'mua';
+            let vMua=calc.invoicePrice*rMua/100, vTang=calc.invoicePrice*rTang/100, curT=adj.bhvcType||'mua';
             
             document.getElementById('left-bhvc-panel').innerHTML = `
                 <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='mua'?'border-indigo-500 bg-indigo-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="mua" class="w-4 h-4 accent-indigo-600" ${curT==='mua'?'checked':''} onchange="changeBHVCType('mua')"><span class="font-bold text-[13px]">Khách mua BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-indigo-700">+ ${formatMoney(vMua)} <span class="text-[10px] font-bold text-indigo-500">(${rMua}%)</span></div></label>
                 <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='tang'?'border-green-500 bg-green-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="tang" class="w-4 h-4 accent-green-600" ${curT==='tang'?'checked':''} onchange="changeBHVCType('tang')"><span class="font-bold text-[13px]">Đại lý Tặng BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-green-700">Trị giá: ${formatMoney(vTang)} <span class="text-[10px] font-bold text-green-600">(${rTang}%)</span></div></label>
                 <label class="flex items-center p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='khong'?'border-gray-400 bg-gray-100':'border-gray-200 hover:bg-gray-50'}"><input type="radio" value="khong" class="w-4 h-4 accent-gray-600 mr-2" ${curT==='khong'?'checked':''} onchange="changeBHVCType('khong')"><span class="font-bold text-[13px]">Không lấy BHVC</span></label>`;
 
-            const recommendedBhvcRate = getRecommendedBhvcRate(calc.finalP, adj, plt);
+            const recommendedBhvcRate = getRecommendedBhvcRate(calc.invoicePrice, adj, plt);
             const currentBhvcRate = curT === 'tang' ? Number(rTang) : Number(rMua);
             const hasManualBhvc = adj.bhvcManualAmount !== null && adj.bhvcManualAmount !== '' && Number.isFinite(Number(adj.bhvcManualAmount)) && Number(adj.bhvcManualAmount) >= 0;
             if (hasManualBhvc && curT === 'mua') {
@@ -2065,7 +2079,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 document.getElementById('left-bhvc-panel').innerHTML += `
                     <div class="p-3 rounded-lg border-2 border-amber-300 bg-amber-50 text-amber-800 text-xs leading-relaxed">
                         <div class="font-black mb-1">⚠ Tỷ lệ BHVC đang khác biểu phí</div>
-                        <div>Giá xe sau giảm: <b>${formatMoney(calc.finalP)}</b></div>
+                        <div>Giá xuất hóa đơn: <b>${formatMoney(calc.invoicePrice)}</b></div>
                         <div>Biểu phí phù hợp: <b>${recommendedBhvcRate}%</b> · Hiện đang dùng: <b>${currentBhvcRate}%</b></div>
                         <button type="button" onclick="applyRecommendedBhvcRate()" class="mt-2 px-3 py-2 rounded-lg bg-amber-600 text-white font-black">Áp dụng ${recommendedBhvcRate}%</button>
                     </div>`;
@@ -2274,11 +2288,22 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         // ================== CÁC PHÍ BỔ SUNG & BANK ==================
         function syncBank(src) {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
-            let a=getQuoteAdjustments(c), lc=a.loan, calc=calculateQuotation(c), fp=calc.finalP;
+            let a=getQuoteAdjustments(c), lc=a.loan, calc=calculateQuotation(c), fp=calc.invoicePrice;
             if(src==='autobutax') lc.autoBuTax=document.getElementById('bank-auto-butax').checked;
             else if(src==='percent'){let p=parseFloat(document.getElementById('bank-percent').value)||0; lc.percent=p>100?100:p; lc.manualLoan=null;}
-            else if(src==='loan'){let l=parseMoneyInput(document.getElementById('bank-loan-amount').value)||0; lc.manualLoan=l>fp?fp:l; lc.percent=Number((lc.manualLoan/fp*100).toFixed(2));}
-            else if(src==='down'){let d=parseMoneyInput(document.getElementById('bank-down-payment').value)||0; lc.manualLoan=fp-(d>fp?fp:d); lc.percent=Number((lc.manualLoan/fp*100).toFixed(2));}
+            else if(src==='loan'){
+                let l=parseMoneyInput(document.getElementById('bank-loan-amount').value)||0;
+                lc.manualLoan=l>fp?fp:l;
+                lc.percent=fp>0?Number((lc.manualLoan/fp*100).toFixed(2)):0;
+            }
+            else if(src==='down'){
+                let d=parseMoneyInput(document.getElementById('bank-down-payment').value)||0;
+                const customerCarPay = Math.max(0, calc.finalP);
+                const requestedDown = d>customerCarPay?customerCarPay:d;
+                lc.manualLoan=Math.max(0, fp - calc.paymentDiscount - requestedDown);
+                if(lc.manualLoan>fp) lc.manualLoan=fp;
+                lc.percent=fp>0?Number((lc.manualLoan/fp*100).toFixed(2)):0;
+            }
             else {lc.years=parseInt(document.getElementById('bank-years').value)||0; lc.promoMonths=parseInt(document.getElementById('bank-promo-months').value)||12; lc.promoRate=parseFloat(document.getElementById('bank-promo-rate').value)||0; lc.floatRate=parseFloat(document.getElementById('bank-float-rate').value)||0;}
             quoteAdjustments[c.id]=a; saveQuoteAdjustmentsToStorage(); updateQuotationUI();
         }
@@ -2394,15 +2419,15 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             Object.entries(v).forEach(([i,val])=>{const e=document.getElementById(i); if(e)e.value=Number(val||0).toLocaleString('vi-VN');});
             const calc = calculateQuotation(c);
             const plate = document.getElementById('plateSelect')?.value || 'trang';
-            const recommendedRate = getRecommendedBhvcRate(calc?.finalP || c.price, a, plate);
+            const recommendedRate = getRecommendedBhvcRate(calc?.invoicePrice || c.price, a, plate);
             const rateInput = document.getElementById('live-bhvc-rate');
             if (rateInput) rateInput.value = a.bhvcRateOverride != null ? a.bhvcRateOverride : '';
             const rateHelp = document.getElementById('live-bhvc-rate-help');
             if (rateHelp) {
-                const rates = getBhvcRates(c, a, plate, calc?.finalP || c.price);
+                const rates = getBhvcRates(c, a, plate, calc?.invoicePrice || c.price);
                 const currentRate = a.bhvcType === 'tang' ? rates.tang : rates.mua;
                 const mismatch = a.bhvcType !== 'khong' && Math.abs(Number(currentRate)-Number(recommendedRate)) > 0.0001;
-                rateHelp.innerHTML = `Giá sau giảm: <b>${formatMoney(calc?.finalP || 0)}</b> · Biểu phí: <b>${recommendedRate}%</b>${mismatch ? ` · <span class="text-amber-600 font-black">Hiện dùng ${currentRate}%</span>` : ' · Đang khớp'}`;
+                rateHelp.innerHTML = `Giá xuất hóa đơn: <b>${formatMoney(calc?.invoicePrice || 0)}</b> · Biểu phí: <b>${recommendedRate}%</b>${mismatch ? ` · <span class="text-amber-600 font-black">Hiện dùng ${currentRate}%</span>` : ' · Đang khớp'}`;
             }
 
             const manualInput = document.getElementById('live-bhvc-manual-amount');
@@ -2410,9 +2435,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const hasManual = a.bhvcManualAmount !== null && a.bhvcManualAmount !== '' && Number.isFinite(Number(a.bhvcManualAmount)) && Number(a.bhvcManualAmount) >= 0;
             if (manualInput) manualInput.value = hasManual ? Number(a.bhvcManualAmount).toLocaleString('vi-VN') : '';
             if (manualHelp) {
-                const rates = getBhvcRates(c, a, plate, calc?.finalP || c.price);
+                const rates = getBhvcRates(c, a, plate, calc?.invoicePrice || c.price);
                 const normalRate = a.bhvcType === 'tang' ? rates.tang : rates.mua;
-                const normalAmount = (calc?.finalP || 0) * (Number(normalRate || 0) / 100);
+                const normalAmount = (calc?.invoicePrice || 0) * (Number(normalRate || 0) / 100);
                 manualHelp.innerHTML = hasManual
                     ? `Đang dùng giá nhập tay: <b class="text-rose-700">${formatMoney(Number(a.bhvcManualAmount))}</b> · Phí theo tỷ lệ hiện tại: <b>${formatMoney(normalAmount)}</b>`
                     : `Đang dùng phí theo tỷ lệ: <b>${formatMoney(normalAmount)}</b>`;
