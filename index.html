@@ -278,6 +278,12 @@
                     <button type="button" onclick="applyRecommendedBhvcRate()" class="mt-2 w-full py-2 px-3 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-black hover:bg-indigo-100">Áp dụng tỷ lệ theo biểu phí</button>
                 </div>
                 <div class="live-field">
+                    <label>BHVC dịch vụ / biển vàng mặc định (%)</label>
+                    <input type="number" id="live-bhvc-service-default-rate" step="0.01" min="0" autocomplete="off" placeholder="VD: 2.30">
+                    <div id="live-bhvc-service-default-help" class="live-help">Dùng làm mặc định cho xe dịch vụ/biển vàng.</div>
+                    <button type="button" onclick="resetServiceBhvcDefaultRate()" class="mt-2 w-full py-2 px-3 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-black hover:bg-amber-100">Reset về 2.30%</button>
+                </div>
+                <div class="live-field">
                     <label>Giá BHVC nhập tay (tạm thời)</label>
                     <input type="text" id="live-bhvc-manual-amount" autocomplete="off" placeholder="Để trống = tính theo tỷ lệ">
                     <div id="live-bhvc-manual-help" class="live-help">Chỉ ghi đè số tiền BHVC, không thay đổi tỷ lệ.</div>
@@ -1735,10 +1741,54 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             syncVF();
         }
 
+
+        const SERVICE_BHVC_DEFAULT_RATE_FALLBACK = 2.3;
+        const SERVICE_BHVC_DEFAULT_RATE_KEY = 'vinfast_service_bhvc_default_rate_v1';
+
+        function getServiceBhvcDefaultRate() {
+            const raw = localStorage.getItem(SERVICE_BHVC_DEFAULT_RATE_KEY);
+            const n = raw === null ? NaN : Number(raw);
+            return Number.isFinite(n) && n > 0 ? n : SERVICE_BHVC_DEFAULT_RATE_FALLBACK;
+        }
+
+        function setServiceBhvcDefaultRate(value) {
+            const n = Number(value);
+            if (Number.isFinite(n) && n > 0) {
+                localStorage.setItem(SERVICE_BHVC_DEFAULT_RATE_KEY, String(n));
+                return n;
+            }
+            return getServiceBhvcDefaultRate();
+        }
+
+        function resetServiceBhvcDefaultRate() {
+            localStorage.setItem(SERVICE_BHVC_DEFAULT_RATE_KEY, String(SERVICE_BHVC_DEFAULT_RATE_FALLBACK));
+            fillLiveCustomizePanel();
+            updateQuotationUI();
+        }
+
+        function syncServiceBhvcDefaultRate() {
+            const input = document.getElementById('live-bhvc-service-default-rate');
+            const n = Number(input?.value);
+            if (Number.isFinite(n) && n > 0) {
+                setServiceBhvcDefaultRate(n);
+                updateQuotationUI();
+                fillLiveCustomizePanel();
+            }
+        }
+
+        function isServiceBhvcContext(adj, plate) {
+            const usage = String(adj?.chargingUsage || '').toLowerCase();
+            const p = String(plate || '').toLowerCase();
+            return usage === 'service'
+                || usage === 'xanhsm'
+                || p.includes('vang')
+                || p.includes('yellow');
+        }
+
         function getRecommendedBhvcRate(finalPrice, adj, plate) {
             const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
             const isServiceVehicle = plate === 'vang' || usage === 'service' || usage === 'xanhsm';
-            if (isServiceVehicle) return 2.3;
+            if (isServiceVehicle) return getServiceBhvcDefaultRate();
 
             const p = Math.max(0, Number(finalPrice) || 0);
             if (p < 400000000) return 1.6;
@@ -1752,7 +1802,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         function getBhvcRates(car, adj, plate, finalPrice=null) {
             const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
             const isServiceVehicle = plate === 'vang' || usage === 'service' || usage === 'xanhsm';
-            if (isServiceVehicle) return { mua: 2.3, tang: 2.3 };
+            if (isServiceVehicle) return { mua: getServiceBhvcDefaultRate(), tang: getServiceBhvcDefaultRate() };
 
             const override = Number(adj?.bhvcRateOverride);
             if (Number.isFinite(override) && override > 0) return { mua: override, tang: override };
@@ -2484,6 +2534,13 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 bhManual.addEventListener('change', syncBhvcManualAmount);
                 bhManual.addEventListener('blur', syncBhvcManualAmount);
             }
+
+            const serviceBhvc = document.getElementById('live-bhvc-service-default-rate');
+            if (serviceBhvc && !serviceBhvc.dataset.b) {
+                serviceBhvc.dataset.b='1';
+                serviceBhvc.addEventListener('change', syncServiceBhvcDefaultRate);
+                serviceBhvc.addEventListener('blur', syncServiceBhvcDefaultRate);
+            }
         }
         function fillLiveCustomizePanel() {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return; const a=getQuoteAdjustments(c), rf=a.regFees;
@@ -2516,6 +2573,18 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 manualHelp.innerHTML = hasManual
                     ? `Đang dùng giá nhập tay: <b class="text-rose-700">${formatMoney(Number(a.bhvcManualAmount))}</b> · Phí theo tỷ lệ hiện tại: <b>${formatMoney(normalAmount)}</b>`
                     : `Đang dùng phí theo tỷ lệ: <b>${formatMoney(normalAmount)}</b>`;
+            }
+
+            const serviceDefaultInput = document.getElementById('live-bhvc-service-default-rate');
+            const serviceDefaultHelp = document.getElementById('live-bhvc-service-default-help');
+            const serviceDefaultRate = getServiceBhvcDefaultRate();
+
+            if (serviceDefaultInput) serviceDefaultInput.value = Number(serviceDefaultRate).toFixed(2);
+
+            if (serviceDefaultHelp) {
+                serviceDefaultHelp.innerHTML = isServiceBhvcContext(a, plate)
+                    ? `Xe hiện tại đang dùng mặc định dịch vụ/biển vàng: <b>${serviceDefaultRate}%</b>`
+                    : `Mặc định hiện tại cho xe dịch vụ/biển vàng: <b>${serviceDefaultRate}%</b>`;
             }
         }
         function toggleLiveCustomize(s) { const p=document.getElementById('live-customize-panel'), c=document.getElementById('customize-toggle'); if(!p||!c)return; c.checked=!!s; p.classList.toggle('hidden-panel',!s); if(s){fillLiveCustomizePanel(); setupLive();} }
