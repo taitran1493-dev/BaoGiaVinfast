@@ -1522,9 +1522,19 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return n.includes('VI TUONG LAI XANH 2');
         }
 
-        function isPublicServicePromo(p) {
+        function isAnyGreenFuturePromo(p) {
             const n = normalizePromoSemanticName(p?.name);
-            return n.includes('CONG AN') || n.includes('QUAN DOI') || n.includes('VNPOST');
+            return n.includes('VI TUONG LAI XANH');
+        }
+
+        function isPublicServicePromo(p) {
+            const n = normalizePromoSemanticName(
+                [p?.name, p?.target, p?.description, p?.desc].filter(Boolean).join(' ')
+            );
+            return n.includes('CONG AN')
+                || n.includes('QUAN DOI')
+                || n.includes('VNPOST')
+                || n.includes('BUU DIEN');
         }
 
         function normalizePromoTarget(target) {
@@ -1538,7 +1548,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (!p) return 'payment';
 
             // GIẢM TRÊN HÓA ĐƠN
-            if (isGreenFuture2Promo(p)) return 'invoice';
+            if (isAnyGreenFuturePromo(p)) return 'invoice';
             if (isPublicServicePromo(p)) return 'invoice';
             if (isVinClubPromo(p)) return 'invoice';
 
@@ -1835,7 +1845,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 });
             }
 
-            // HÓA ĐƠN: Vì Tương Lai Xanh 2; Công An/Quân Đội/VNPOST;
+            // HÓA ĐƠN: mọi CTKM Vì Tương Lai Xanh; Công An/Quân Đội/VNPOST;
             // Tiên Phong đối tượng Công Ty; VinClub;
             // và phần Giảm thêm người dùng nhập không vượt khung.
             // THANH TOÁN: tất cả CTKM còn lại + phần vượt khung.
