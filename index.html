@@ -1274,7 +1274,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     let hintId = isVoucher ? 'vf-ctkm4-hint' : 'vf-ctkm2-hint';
                     {
                         addHtml += `
-                        <div class="mb-3">
+                        <div class="mb-3 promo-option-wrap" data-promo-id="${p.id}">
                             <label class="block text-xs font-bold text-gray-700 mb-1">${p.name} <span class="text-gray-500 font-normal">(${p.target})</span></label>
                             <input type="text" inputmode="numeric" id="promo_custom_${p.id}" data-id="${p.id}" oninput="formatInputMoney(this); syncVF(this)" placeholder="Nhập số tiền..." class="w-full border rounded-lg p-2 text-sm font-bold text-gray-800 text-right outline-none focus:border-brand-primary promo-custom-input">
                             <p id="${hintId}_${p.id}" class="text-[10px] text-green-600 mt-1 italic font-semibold empty:hidden"></p>
@@ -1283,13 +1283,14 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 } else {
                     const valStr = p.type === 'pct_msrp' || p.type === 'pct_after' ? `Giảm ${p.value}%` : `Giảm ${formatMoney(p.value)}`;
                     addHtml += `
-                    <label class="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors mb-2">
+                    <label class="promo-option-wrap flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors mb-2" data-promo-id="${p.id}">
                         <input type="checkbox" id="promo_chk_${p.id}" data-id="${p.id}" onchange="syncVF(this)" class="w-5 h-5 accent-brand-primary cursor-pointer promo-additive-chk">
                         <span class="text-sm font-bold text-gray-700">${p.name}<br><span class="text-[11px] text-gray-500 font-normal">${p.target} (${valStr}${p.type==='pct_after'?' sau KM':''})</span></span>
                     </label>`;
                 }
             });
-            const compatNote = `<div class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-800">VinClub + Voucher Tri Ân được dùng chung. Hai ưu đãi này không áp dụng cùng Vì Tương Lai Xanh.<br><span class="font-semibold">VinClub = (Giá niêm yết − Tiên Phong − Voucher Tri Ân) × % VinClub.</span></div>`;
+            const compatNote = `<div class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-800">VinClub + Voucher Tri Ân được dùng chung. Hai ưu đãi này không áp dụng cùng Vì Tương Lai Xanh.<br><span class="font-semibold">VinClub = (Giá niêm yết − Tiên Phong − Voucher Tri Ân) × % VinClub.</span></div>
+                <div id="vinclub-hidden-note" class="hidden mb-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-[10px] font-black text-green-800">Đang chọn Vì Tương Lai Xanh → các lựa chọn VinClub đã được ẩn.</div>`;
             document.getElementById('vf-additive-promos').innerHTML = compatNote + (addHtml || '<span class="text-xs text-gray-400 italic">Chưa có CTKM bổ sung nào.</span>');
         }
 
@@ -1596,6 +1597,59 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return vfp;
         }
 
+
+        function updatePromoSelectionVisibility(car=null) {
+            car = car || carList.find(x => x.id === document.getElementById('carSelect')?.value);
+            if (!car) return;
+
+            const adj = getQuoteAdjustments(car);
+            const vfp = adj?.vfPromos || {};
+            const selectedIds = [];
+
+            if (vfp.exclusiveId && vfp.exclusiveId !== 'none') selectedIds.push(vfp.exclusiveId);
+            (vfp.additiveIds || []).forEach(id => selectedIds.push(id));
+            Object.keys(vfp.customValues || {}).forEach(id => {
+                if (Number(vfp.customValues[id] || 0) > 0) selectedIds.push(id);
+            });
+
+            const greenSelected = [...new Set(selectedIds)]
+                .map(getPromoById)
+                .filter(Boolean)
+                .some(isGreenFuturePromo);
+
+            const mainSelect = document.getElementById('vf-main-policy');
+            if (mainSelect) {
+                Array.from(mainSelect.options).forEach(opt => {
+                    const promo = getPromoById(opt.value);
+                    const shouldHide = greenSelected && isVinClubPromo(promo);
+                    opt.hidden = shouldHide;
+                    opt.disabled = shouldHide;
+                    opt.style.display = shouldHide ? 'none' : '';
+                });
+            }
+
+            document.querySelectorAll('.promo-option-wrap[data-promo-id]').forEach(wrap => {
+                const promo = getPromoById(wrap.dataset.promoId);
+                const shouldHide = greenSelected && isVinClubPromo(promo);
+                wrap.classList.toggle('hidden', shouldHide);
+
+                wrap.querySelectorAll('input, select, textarea, button').forEach(el => {
+                    if (shouldHide) {
+                        if (el.dataset.vinclubPrevDisabled === undefined) {
+                            el.dataset.vinclubPrevDisabled = el.disabled ? '1' : '0';
+                        }
+                        el.disabled = true;
+                    } else if (el.dataset.vinclubPrevDisabled !== undefined) {
+                        el.disabled = el.dataset.vinclubPrevDisabled === '1';
+                        delete el.dataset.vinclubPrevDisabled;
+                    }
+                });
+            });
+
+            const note = document.getElementById('vinclub-hidden-note');
+            if (note) note.classList.toggle('hidden', !greenSelected);
+        }
+
         function syncVF(sourceEl=null) {
             const c = carList.find(x => x.id === document.getElementById('carSelect').value); if(!c) return;
             if(!quoteAdjustments[c.id]) quoteAdjustments[c.id] = getDefaultQuoteAdjustments(c);
@@ -1622,6 +1676,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             saveQuoteAdjustmentsToStorage();
             renderPromosUI();
             updateQuotationUI();
+            updatePromoSelectionVisibility(c);
         }
 
         function applyDealerSuggestion() {
@@ -1903,6 +1958,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 let val = (vfp.customValues && vfp.customValues[inp.dataset.id]) || 0;
                 inp.value = val > 0 ? Number(val).toLocaleString('vi-VN') : '';
             });
+
+            updatePromoSelectionVisibility(car);
             
             // XỬ LÝ GỢI Ý HÃNG MỚI THÊM:
             // Tìm ô input CTKM 2 và Voucher bằng ID của CTKM (vòng lặp để gắn data)
