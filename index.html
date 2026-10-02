@@ -508,8 +508,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                             <div class="flex justify-between items-end text-brand-primary"><span class="font-medium">Tổng ưu đãi</span><div class="dot-leader"></div><span id="quote-discount" class="font-bold">- 0 VNĐ</span></div>
                             <div id="quote-invoice-discount-row" class="hidden flex justify-between items-end text-emerald-700"><span class="font-medium">Giảm trên HĐ Đại lý (CTKM + khung)</span><div class="dot-leader"></div><span id="quote-invoice-discount" class="font-bold">- 0 VNĐ</span></div>
                             <div class="flex justify-between items-end"><span class="font-medium text-gray-700">Giá Đại lý xuất hóa đơn</span><div class="dot-leader"></div><span id="quote-invoice-price" class="font-black text-emerald-700">0 VNĐ</span></div>
-                            <div class="flex justify-between items-end text-blue-700"><span class="font-medium">Giảm tại Thanh Toán</span><div class="dot-leader"></div><span id="quote-payment-discount" class="font-bold">- 0 VNĐ</span></div>
-                            <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-3"><span class="font-bold text-gray-800 uppercase text-sm">Giá thanh toán xe</span><div class="dot-leader"></div><span id="quote-price-final" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
+                            <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-3"><span class="font-bold text-gray-800 uppercase text-sm">Giá xe theo hóa đơn</span><div class="dot-leader"></div><span id="quote-price-final" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
                         </div>
                     </div>
 
@@ -538,7 +537,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                 <div id="quote-bu-thue-row" class="flex justify-between items-end" style="display:none;"><span class="text-gray-600">Bù thuế</span><div class="dot-leader"></div><span id="quote-bu-thue" class="font-bold">0 VNĐ</span></div>
                                 <div id="quote-bh-vc-row" class="flex justify-between items-end" style="display:none;"><span class="text-blue-700 font-bold">Bảo hiểm vật chất</span><div class="dot-leader border-blue-200"></div><span id="quote-bh-vc" class="font-bold text-blue-700">0 VNĐ</span></div>
                                 <div id="quote-acc-cost-row" class="flex justify-between items-end" style="display:none;"><span class="text-purple-700 font-bold">Option Phụ kiện</span><div class="dot-leader border-purple-200"></div><span id="quote-acc-cost" class="font-bold text-purple-700">0 VNĐ</span></div>
-                                <div class="flex justify-between items-end pt-3 border-t mt-3"><span class="font-bold text-gray-800 uppercase text-xs">Tổng chi phí ĐK</span><div class="dot-leader"></div><span id="quote-reg-total" class="font-bold text-brand-primary text-base">0 VNĐ</span></div>
+                                <div id="quote-payment-discount-row" class="flex justify-between items-end text-blue-700" style="display:none;"><span class="font-bold">Giảm tại Thanh Toán</span><div class="dot-leader border-blue-200"></div><span id="quote-payment-discount" class="font-bold">- 0 VNĐ</span></div>
+                                <div class="flex justify-between items-end pt-3 border-t mt-3"><span class="font-bold text-gray-800 uppercase text-xs">Tổng chi phí ĐK sau giảm</span><div class="dot-leader"></div><span id="quote-reg-total" class="font-bold text-brand-primary text-base">0 VNĐ</span></div>
                             </div>
                         </div>
 
@@ -578,7 +578,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                 <div class="border border-blue-500 border-t-0 rounded-b-lg p-5 bg-blue-50 flex-1 shadow-sm flex flex-col justify-center space-y-4">
                                     <div class="flex justify-between items-center bg-white p-3 rounded shadow-sm border border-blue-200"><span class="text-gray-600 text-sm font-semibold">Số tiền vay (NH giải ngân)</span><input type="text" id="bank-loan-amount" class="w-32 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="formatInputMoney(this); syncBank('loan');"></div>
                                     <div class="flex justify-between items-center bg-white p-3 rounded shadow-sm border border-blue-200"><span class="text-gray-600 text-sm font-semibold">Số tiền đối ứng (Vốn tự có)</span><input type="text" id="bank-down-payment" class="w-32 text-right font-bold text-gray-800 outline-none border-b border-dashed border-gray-400" oninput="formatInputMoney(this); syncBank('down');"></div>
-                                    <div class="flex justify-between items-end pt-3 mt-1 border-t border-blue-200"><div><span class="font-bold text-gray-800 uppercase text-sm block">Tổng thanh toán nhận xe</span><span class="text-[11px] text-gray-500 italic block">(Vốn đối ứng + Tổng chi phí ĐK)</span></div><span id="bank-total-pay" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
+                                    <div class="flex justify-between items-end pt-3 mt-1 border-t border-blue-200"><div><span class="font-bold text-gray-800 uppercase text-sm block">Tổng thanh toán nhận xe</span><span class="text-[11px] text-gray-500 italic block">(Vốn đối ứng + Chi phí ĐK sau giảm)</span></div><span id="bank-total-pay" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
                                     <div class="flex justify-between items-end pt-3 mt-1 border-t border-blue-200"><div><span class="font-bold text-blue-800 uppercase text-sm block">Trung bình trả góp 1 năm đầu</span></div><span id="bank-avg-monthly" class="font-bold text-lg text-blue-700 bg-blue-100 px-3 py-1 rounded shadow-sm">0 VNĐ / tháng</span></div>
                                 </div>
                             </div>
@@ -1974,23 +1974,28 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const phiDangKy = Number(rf.registrationFee || (cityPlate === 'thanhpho' ? 14000000 : 140000));
             const totReg = tax + phiDangKy + phiDangKiem + dBo + tnds + adj.registrationService + bu + effectiveBhValueForReg + totAcc;
 
+            // Giảm tại Thanh Toán được cấn trừ trong bảng Chi phí ĐK.
+            const netReg = totReg - paymentDiscount;
+
             let loan=0, down=0, totB=0, avgM=0;
             if(pay==='BANK'){
                 const lc=adj.loan;
+
+                // Số tiền vay luôn tính trên GIÁ XUẤT HÓA ĐƠN.
                 loan = lc.manualLoan !== null ? lc.manualLoan : (invoicePrice * lc.percent / 100);
                 if (loan > invoicePrice) loan = invoicePrice;
                 if (loan < 0) loan = 0;
 
-                // Voucher/Tiên Phong Đại lý/VinClub chỉ giảm phần khách phải thanh toán,
-                // không làm giảm giá trị cơ sở ngân hàng dùng để tính khoản vay.
-                down = Math.max(0, invoicePrice - loan - paymentDiscount);
-                totB = down + totReg;
+                // Vốn đối ứng = Giá xuất hóa đơn - Tiền vay.
+                // Giảm Thanh Toán cấn ở phần Chi phí ĐK sau giảm.
+                down = Math.max(0, invoicePrice - loan);
+                totB = down + netReg;
                 if(loan>0 && lc.years>0){
                     const tM=lc.years*12, mP=loan/tM, pr=(lc.promoRate/100)/12, ar=((lc.promoRate+lc.floatRate)/100)/12, lim=Math.min(12,tM);
                     let tI=0, cP=loan; for(let i=0;i<lim;i++){ tI+=cP*(i<lc.promoMonths?pr:ar); cP-=mP; } avgM=mP+(tI/lim);
                 }
             }
-            return { car, adj, tax, totalDiscount, invoiceDiscount, paymentDiscount, invoicePrice, bhvcBase: invoicePrice, loanBase: invoicePrice, dealerExtraInvoice, dealerExtraOverflow, catMauInvoice, catMauOverflow, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, totOnRoad: finalP+totReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
+            return { car, adj, tax, totalDiscount, invoiceDiscount, paymentDiscount, invoicePrice, bhvcBase: invoicePrice, loanBase: invoicePrice, dealerExtraInvoice, dealerExtraOverflow, catMauInvoice, catMauOverflow, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, netReg, totOnRoad: invoicePrice+netReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
         }
 
         function updateQuotationUI() {
@@ -2139,8 +2144,12 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             document.getElementById('quote-invoice-discount').innerText = '- ' + formatMoney(Math.max(0, Number(calc.invoiceDiscount || 0)));
 
             document.getElementById('quote-invoice-price').innerText = formatMoney(calc.invoicePrice);
+
+            const paymentDiscountRow = document.getElementById('quote-payment-discount-row');
+            if (paymentDiscountRow) paymentDiscountRow.style.display = calc.paymentDiscount > 0 ? 'flex' : 'none';
             document.getElementById('quote-payment-discount').innerText = '- ' + formatMoney(Math.max(0, Number(calc.paymentDiscount || 0)));
-            document.getElementById('quote-price-final').innerText = formatMoney(calc.finalP);
+
+            document.getElementById('quote-price-final').innerText = formatMoney(calc.invoicePrice);
 
             let tL = adj.taxAdjust > 0 ? 'Lệ phí TB (Tùy chỉnh)' : 'Lệ phí TB (0%)'; if (calc.isBank && adj.loan.autoBuTax) tL += ' (Cấn trừ)';
             document.getElementById('quote-tax-label').innerText = tL; document.getElementById('quote-tax').innerText = formatMoney(calc.tax);
@@ -2153,7 +2162,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             document.getElementById('quote-bu-thue').innerText = formatMoney(calc.bu); document.getElementById('quote-bu-thue-row').style.display = calc.bu>0?'flex':'none';
             document.getElementById('quote-bh-vc-row').style.display = (calc.bhType==='khong'||calc.bhType==='tang')?'none':'flex'; document.getElementById('quote-bh-vc').innerText = formatMoney(calc.bhVal);
             document.getElementById('quote-acc-cost-row').style.display = calc.totAcc>0?'flex':'none'; document.getElementById('quote-acc-cost').innerText = formatMoney(calc.totAcc);
-            document.getElementById('quote-reg-total').innerText = formatMoney(calc.totReg); document.getElementById('quote-total').innerText = formatMoney(calc.totOnRoad);
+            document.getElementById('quote-reg-total').innerText = formatMoney(calc.netReg); document.getElementById('quote-total').innerText = formatMoney(calc.totOnRoad);
 
             const bk = document.getElementById('bank-info-container');
             if(calc.isBank){
@@ -2213,7 +2222,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const accT = calc.aMua.length>0 ? `\nPHỤ KIỆN MUA THÊM:\n`+calc.aMua.map(a=>`• ${a.name}: ${formatMoney(a.price)}`).join('\n')+`\n=> Tổng tiền phụ kiện: ${formatMoney(calc.totAcc)}\n` : '';
 
             sum.innerHTML = `<div class="quote-info-row"><span class="quote-info-label">Xe</span><span class="quote-info-value">${cN}</span></div><div class="quote-info-row"><span class="quote-info-label">Giá lăn bánh</span><span class="quote-info-value text-emerald-600">${formatMoney(calc.totOnRoad)}</span></div>${calc.isBank?`<div class="quote-info-row"><span class="quote-info-label">Tổng trả nhận xe</span><span class="quote-info-value text-brand-primary">${formatMoney(calc.totB)}</span></div>`:''}`;
-            txt.value = `BÁO GIÁ XE ${cN}\n\n• Màu: ${cl} | Biển: ${pl} | Hộ khẩu: ${ht} | TT: ${pa}\n• Giá niêm yết: ${formatMoney(car.price)}\n• Tổng ưu đãi: - ${formatMoney(calc.totalDiscount)}\n• Giảm trên HĐ Đại lý: - ${formatMoney(calc.invoiceDiscount)}\n• Giá Đại lý xuất hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giảm tại Thanh Toán: - ${formatMoney(calc.paymentDiscount)}\n• Giá thanh toán xe: ${formatMoney(calc.finalP)}\n• Giá lăn bánh: ${formatMoney(calc.totOnRoad)}\n• Lệ phí biển số: ${formatMoney(calc.phiDangKy)}\n• Dịch vụ ĐK: ${formatMoney(calc.adj.registrationService)}\n• BHVC: ${formatMoney(calc.bhVal)} (${calc.bhType==='tang'?'Đại lý tặng':(calc.bhType==='mua'?'Khách mua':'Không')})\n${accT}` + (calc.isBank?`\nTRẢ GÓP:\n• Gói vay: ${calc.adj.loan.percent}%\n• Tiền vay: ${formatMoney(calc.loan)}\n• Đối ứng: ${formatMoney(calc.down)}\n• NHẬN XE: ${formatMoney(calc.totB)}\n• Góp 1 năm đầu: ${formatMoney(calc.avgM)} /tháng\n`:'') + (pA.length ? `\nCTKM & QUÀ TẶNG:\n${pA.map((p,i)=>`${i+1}.${p}`).join('\n')}` : '');
+            txt.value = `BÁO GIÁ XE ${cN}\n\n• Màu: ${cl} | Biển: ${pl} | Hộ khẩu: ${ht} | TT: ${pa}\n• Giá niêm yết: ${formatMoney(car.price)}\n• Tổng ưu đãi: - ${formatMoney(calc.totalDiscount)}\n• Giảm trên HĐ Đại lý: - ${formatMoney(calc.invoiceDiscount)}\n• Giá Đại lý xuất hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giá xe theo hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giá lăn bánh: ${formatMoney(calc.totOnRoad)}\n• Lệ phí biển số: ${formatMoney(calc.phiDangKy)}\n• Dịch vụ ĐK: ${formatMoney(calc.adj.registrationService)}\n${calc.paymentDiscount>0?`• Giảm tại Thanh Toán: - ${formatMoney(calc.paymentDiscount)}\n• Chi phí ĐK sau giảm: ${formatMoney(calc.netReg)}\n`:`• Tổng chi phí ĐK: ${formatMoney(calc.totReg)}\n`}• BHVC: ${formatMoney(calc.bhVal)} (${calc.bhType==='tang'?'Đại lý tặng':(calc.bhType==='mua'?'Khách mua':'Không')})\n${accT}` + (calc.isBank?`\nTRẢ GÓP:\n• Gói vay: ${calc.adj.loan.percent}%\n• Tiền vay: ${formatMoney(calc.loan)}\n• Đối ứng: ${formatMoney(calc.down)}\n• NHẬN XE: ${formatMoney(calc.totB)}\n• Góp 1 năm đầu: ${formatMoney(calc.avgM)} /tháng\n`:'') + (pA.length ? `\nCTKM & QUÀ TẶNG:\n${pA.map((p,i)=>`${i+1}.${p}`).join('\n')}` : '');
             toggleModal('quoteInfoModal', true);
         }
         function closeQuoteInfo() { toggleModal('quoteInfoModal', false); }
@@ -2340,9 +2349,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             }
             else if(src==='down'){
                 let d=parseMoneyInput(document.getElementById('bank-down-payment').value)||0;
-                const customerCarPay = Math.max(0, calc.finalP);
-                const requestedDown = d>customerCarPay?customerCarPay:d;
-                lc.manualLoan=Math.max(0, fp - calc.paymentDiscount - requestedDown);
+                const requestedDown = d>fp?fp:d;
+                lc.manualLoan=Math.max(0, fp - requestedDown);
                 if(lc.manualLoan>fp) lc.manualLoan=fp;
                 lc.percent=fp>0?Number((lc.manualLoan/fp*100).toFixed(2)):0;
             }
