@@ -505,8 +505,11 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
                         <div class="capture-col bg-gray-50 p-5 rounded-lg border border-gray-100 space-y-3 text-[15px]">
                             <div class="flex justify-between items-end"><span class="font-medium text-gray-600">Giá xe niêm yết</span><div class="dot-leader"></div><span id="quote-price-listed" class="font-bold">0 VNĐ</span></div>
-                            <div class="flex justify-between items-end text-brand-primary"><span class="font-medium">Tổng Khuyến Mãi</span><div class="dot-leader"></div><span id="quote-discount" class="font-bold">- 0 VNĐ</span></div>
-                            <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-3"><span class="font-bold text-gray-800 uppercase text-sm">Giá xe sau giảm</span><div class="dot-leader"></div><span id="quote-price-final" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
+                            <div class="flex justify-between items-end text-brand-primary"><span class="font-medium">Tổng chương trình giảm</span><div class="dot-leader"></div><span id="quote-discount" class="font-bold">- 0 VNĐ</span></div>
+                            <div class="flex justify-between items-end text-emerald-700"><span class="font-medium">Giảm trên HĐ Đại lý</span><div class="dot-leader"></div><span id="quote-invoice-discount" class="font-bold">- 0 VNĐ</span></div>
+                            <div class="flex justify-between items-end"><span class="font-medium text-gray-700">Giá Đại lý xuất hóa đơn</span><div class="dot-leader"></div><span id="quote-invoice-price" class="font-black text-emerald-700">0 VNĐ</span></div>
+                            <div class="flex justify-between items-end text-blue-700"><span class="font-medium">Giảm tại Thanh Toán</span><div class="dot-leader"></div><span id="quote-payment-discount" class="font-bold">- 0 VNĐ</span></div>
+                            <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-3"><span class="font-bold text-gray-800 uppercase text-sm">Giá thanh toán xe</span><div class="dot-leader"></div><span id="quote-price-final" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
                         </div>
                     </div>
 
@@ -1514,6 +1517,30 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return n.includes('VI TUONG LAI XANH');
         }
 
+        function isGreenFuture2Promo(p) {
+            const n = normalizePromoSemanticName(p?.name);
+            return n.includes('VI TUONG LAI XANH 2');
+        }
+
+        function normalizePromoTarget(target) {
+            return String(target || '')
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toUpperCase().replace(/Đ/g, 'D')
+                .replace(/\s+/g, ' ').trim();
+        }
+
+        function getPromoSettlementBucket(p) {
+            if (!p) return 'payment';
+            if (isGreenFuture2Promo(p)) return 'invoice';
+            if (isTriAnVoucherPromo(p) || isVinClubPromo(p)) return 'payment';
+            if (isTienPhongPromo(p)) {
+                const target = normalizePromoTarget(p.target);
+                if (target.includes('CONG TY')) return 'invoice';
+                if (target.includes('DAI LY')) return 'payment';
+            }
+            return 'payment';
+        }
+
         function isVinClubPromo(p) {
             const n = normalizePromoSemanticName(p?.name).replace(/\s/g, '');
             return n.includes('VINCLUB');
@@ -1773,71 +1800,68 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const cityPlate = document.getElementById('cityPlateSelect').value;
             const vfp = adj.vfPromos;
             
-            let dMSRP = 0; let dMoney = 0; let dAfter = 0;
+            let invoiceDiscount = 0;
+            let paymentDiscount = 0;
             let activePromoObjs = [];
-            
-            // Add exclusive
+            let promoDetails = [];
+
             if (vfp.exclusiveId && vfp.exclusiveId !== 'none') {
-                let p = promoList.find(x => x.id === vfp.exclusiveId);
+                const p = promoList.find(x => x.id === vfp.exclusiveId);
                 if (p && promoAppliesToCar(p,car)) activePromoObjs.push(p);
             }
-            // Add additives
-            if(vfp.additiveIds) {
+            if (vfp.additiveIds) {
                 vfp.additiveIds.forEach(id => {
-                    let p = promoList.find(x => x.id === id);
+                    const p = promoList.find(x => x.id === id);
                     if (p && promoAppliesToCar(p,car)) activePromoObjs.push(p);
                 });
             }
-            // Add custom
-            if(vfp.customValues) {
+            if (vfp.customValues) {
                 Object.keys(vfp.customValues).forEach(id => {
                     if (vfp.customValues[id] > 0) {
-                        let p = promoList.find(x => x.id === id);
+                        const p = promoList.find(x => x.id === id);
                         if (p && promoAppliesToCar(p,car)) activePromoObjs.push({ ...p, inputValue: vfp.customValues[id] });
                     }
                 });
             }
 
-            // Quy tắc CTKM đặc biệt:
-            // - VinClub + Voucher Tri Ân được cộng chung.
-            // - VinClub/Voucher Tri Ân không áp dụng cùng Vì Tương Lai Xanh.
-            // - Mức giảm VinClub = (Giá niêm yết - Tiên Phong - Voucher Tri Ân) × % VinClub.
-            //   Chỉ Tiên Phong và Voucher Tri Ân được trừ khỏi nền tính VinClub.
-            let promoDetails = [];
-
-            // Phòng trường hợp dữ liệu cũ/localStorage vẫn còn tổ hợp xung đột.
+            // Tách nơi giảm theo nghiệp vụ:
+            // Thanh toán: Tiên Phong / Đại Lý, Voucher Tri Ân, VinClub, ưu đãi khác mặc định.
+            // Hóa đơn: Vì Tương Lai Xanh 2, Tiên Phong / Công Ty, cắt máu trong khung lương.
+            // Cắt máu vượt khung lương chuyển sang Thanh toán.
             const hasGreenFuture = activePromoObjs.some(isGreenFuturePromo);
             const hasVinClubOrTriAn = activePromoObjs.some(p => isVinClubPromo(p) || isTriAnVoucherPromo(p));
             if (hasGreenFuture && hasVinClubOrTriAn) {
-                // Với dữ liệu cũ, ưu tiên Vì Tương Lai Xanh nếu đang tồn tại trong lựa chọn chính.
                 const mainPromo = getPromoById(vfp.exclusiveId);
-                if (isGreenFuturePromo(mainPromo)) {
-                    activePromoObjs = activePromoObjs.filter(p => !(isVinClubPromo(p) || isTriAnVoucherPromo(p)));
-                } else {
-                    activePromoObjs = activePromoObjs.filter(p => !isGreenFuturePromo(p));
-                }
+                if (isGreenFuturePromo(mainPromo)) activePromoObjs = activePromoObjs.filter(p => !(isVinClubPromo(p) || isTriAnVoucherPromo(p)));
+                else activePromoObjs = activePromoObjs.filter(p => !isGreenFuturePromo(p));
             }
 
             const tienPhongPromos = activePromoObjs.filter(isTienPhongPromo);
             const triAnPromos = activePromoObjs.filter(isTriAnVoucherPromo);
             const vinClubPromos = activePromoObjs.filter(isVinClubPromo);
-            const normalPromos = activePromoObjs.filter(p => !isVinClubPromo(p));
+            const nonVinClubPromos = activePromoObjs.filter(p => !isVinClubPromo(p));
 
-            // Tính các CTKM bình thường trước, nhưng VinClub được tách ra để dùng nền riêng.
-            normalPromos.forEach(p => {
+            const addPromoAmount = (p, amount, detailText='') => {
+                amount = Math.max(0, Number(amount || 0));
+                if (!amount) return;
+                if (getPromoSettlementBucket(p) === 'invoice') invoiceDiscount += amount;
+                else paymentDiscount += amount;
+                if (detailText) promoDetails.push(detailText);
+            };
+
+            nonVinClubPromos.filter(p => p.type !== 'pct_after').forEach(p => {
                 if (p.type === 'pct_msrp') {
-                    let val = car.price * (p.value / 100);
-                    dMSRP += val; promoDetails.push(`${p.name} (Giảm ${p.value}%): ${formatMoney(val)}`);
+                    const val = Number(car.price || 0) * Number(p.value || 0) / 100;
+                    addPromoAmount(p, val, `${p.name} (Giảm ${p.value}%): ${formatMoney(val)}`);
                 } else if (p.type === 'money') {
-                    dMoney += p.value; promoDetails.push(`${p.name}: ${formatMoney(p.value)}`);
+                    const val = Number(p.value || 0);
+                    addPromoAmount(p, val, `${p.name}: ${formatMoney(val)}`);
                 } else if (p.type === 'custom') {
-                    dMoney += p.inputValue; promoDetails.push(`${p.name}: ${formatMoney(p.inputValue)}`);
-                } else if (p.type === 'pct_after') {
-                    dAfter += p.value / 100;
+                    const val = Number(p.inputValue || 0);
+                    addPromoAmount(p, val, `${p.name}: ${formatMoney(val)}`);
                 }
             });
 
-            // Xác định đúng giá trị Tiên Phong và Voucher Tri Ân để làm nền VinClub.
             const tienPhongDiscount = tienPhongPromos.reduce((sum, p) => sum + getPromoDiscountAtMsrp(p, car, vfp), 0);
             const triAnDiscount = triAnPromos.reduce((sum, p) => {
                 if (p.type === 'custom' && Number(p.inputValue || 0) > 0) return sum + Number(p.inputValue || 0);
@@ -1849,35 +1873,45 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 if (p.type === 'pct_msrp' || p.type === 'pct_after') {
                     const rate = Number(p.value || 0);
                     const val = vinClubBase * rate / 100;
-                    dMSRP += val;
-                    promoDetails.push(`${p.name} (Giảm ${rate}% trên ${formatMoney(vinClubBase)}): ${formatMoney(val)}`);
+                    addPromoAmount(p, val, `${p.name} (Giảm ${rate}% trên ${formatMoney(vinClubBase)}): ${formatMoney(val)}`);
                 } else if (p.type === 'money') {
-                    dMoney += Number(p.value || 0);
-                    promoDetails.push(`${p.name}: ${formatMoney(Number(p.value || 0))}`);
+                    const val = Number(p.value || 0);
+                    addPromoAmount(p, val, `${p.name}: ${formatMoney(val)}`);
                 } else if (p.type === 'custom') {
                     const val = Number(p.inputValue || 0);
-                    dMoney += val;
-                    promoDetails.push(`${p.name}: ${formatMoney(val)}`);
+                    addPromoAmount(p, val, `${p.name}: ${formatMoney(val)}`);
                 }
             });
 
-            const dealerExtra = Number(vfp.dealerExtra || 0);
-            if(dealerExtra > 0) { dMoney += dealerExtra; promoDetails.push(`Giảm thêm riêng Đại lý: ${formatMoney(dealerExtra)}`); }
+            const priceBeforeAfter = Math.max(0, Number(car.price || 0) - invoiceDiscount - paymentDiscount);
+            nonVinClubPromos.filter(p => p.type === 'pct_after').forEach(p => {
+                const rate = Number(p.value || 0);
+                const val = priceBeforeAfter * rate / 100;
+                addPromoAmount(p, val, `${p.name} (${rate}%): ${formatMoney(val)}`);
+            });
 
-            let subTotalDiscount = dMSRP + dMoney + (vfp.catMau || 0);
-            let priceAfterSub = car.price - subTotalDiscount;
-            if (priceAfterSub < 0) priceAfterSub = 0;
-            
-            let discountAfter = priceAfterSub * dAfter;
-            if (discountAfter > 0) {
-                let afterNames = activePromoObjs.filter(x=>x.type==='pct_after').map(x=>`${x.name} (${x.value}%)`).join(', ');
-                promoDetails.push(`${afterNames}: ${formatMoney(discountAfter)}`);
+            const dealerExtra = Math.max(0, Number(vfp.dealerExtra || 0));
+            if (dealerExtra > 0) {
+                paymentDiscount += dealerExtra;
+                promoDetails.push(`Giảm thêm riêng Đại lý: ${formatMoney(dealerExtra)}`);
             }
-            
-            let totalDiscount = subTotalDiscount + discountAfter;
-            let finalP = car.price - totalDiscount;
 
-            if(vfp.catMau > 0) promoDetails.push(`Giảm giá bằng lương: ${formatMoney(vfp.catMau)}`);
+            const catMauTotal = Math.max(0, Number(vfp.catMau || 0));
+            const catMauLimit = Math.max(0, Number(getSaleSalaryLimit(car) || 0));
+            const catMauInvoice = catMauLimit > 0 ? Math.min(catMauTotal, catMauLimit) : 0;
+            const catMauOverflow = Math.max(0, catMauTotal - catMauInvoice);
+            invoiceDiscount += catMauInvoice;
+            paymentDiscount += catMauOverflow;
+            if (catMauTotal > 0) {
+                promoDetails.push(`Giảm giá bằng lương: ${formatMoney(catMauTotal)}`);
+                if (catMauOverflow > 0) promoDetails.push(`Phần vượt khung chuyển sang Thanh toán: ${formatMoney(catMauOverflow)}`);
+            }
+
+            invoiceDiscount = Math.min(Number(car.price || 0), invoiceDiscount);
+            const invoicePrice = Math.max(0, Number(car.price || 0) - invoiceDiscount);
+            paymentDiscount = Math.min(invoicePrice, paymentDiscount);
+            const totalDiscount = invoiceDiscount + paymentDiscount;
+            const finalP = Math.max(0, invoicePrice - paymentDiscount);
 
             // Thuế & Đăng ký (VF Mặc định thuế 0%)
             let taxR = 0;
@@ -1907,7 +1941,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             let accTang = [], aMua = [], totAcc = 0;
             adj.accessories.forEach(a => { const d=accList.find(x=>x.id===a.id); if(d){ if(a.type==='tang')accTang.push(d.name); else if(a.type==='mua'){aMua.push({name:d.name,price:a.finalPrice}); totAcc+=a.finalPrice;} } });
 
-            const bTax = car.price * taxR; // 0
+            const bTax = invoicePrice * taxR; // cơ sở theo giá Đại lý xuất hóa đơn
             let tax = adj.taxAdjust > 0 ? adj.taxAdjust : bTax;
             let bu = adj.buTax;
             if(pay==='BANK' && adj.loan.autoBuTax){ bu += Math.min(tax, totalDiscount)*0.10; tax = Math.max(0, tax - totalDiscount); }
@@ -1924,7 +1958,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     let tI=0, cP=loan; for(let i=0;i<lim;i++){ tI+=cP*(i<lc.promoMonths?pr:ar); cP-=mP; } avgM=mP+(tI/lim);
                 }
             }
-            return { car, adj, tax, totalDiscount, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, totOnRoad: finalP+totReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
+            return { car, adj, tax, totalDiscount, invoiceDiscount, paymentDiscount, invoicePrice, catMauInvoice, catMauOverflow, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, totOnRoad: finalP+totReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
         }
 
         function updateQuotationUI() {
@@ -2047,6 +2081,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             document.getElementById('quote-car-name').innerText = `${car.name} ${car.version} ${car.year}`.trim();
             document.getElementById('quote-price-listed').innerText = formatMoney(car.price);
             document.getElementById('quote-discount').innerText = '- ' + formatMoney(calc.totalDiscount);
+            document.getElementById('quote-invoice-discount').innerText = '- ' + formatMoney(calc.invoiceDiscount);
+            document.getElementById('quote-invoice-price').innerText = formatMoney(calc.invoicePrice);
+            document.getElementById('quote-payment-discount').innerText = '- ' + formatMoney(calc.paymentDiscount);
             document.getElementById('quote-price-final').innerText = formatMoney(calc.finalP);
 
             let tL = adj.taxAdjust > 0 ? 'Lệ phí TB (Tùy chỉnh)' : 'Lệ phí TB (0%)'; if (calc.isBank && adj.loan.autoBuTax) tL += ' (Cấn trừ)';
@@ -2120,7 +2157,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const accT = calc.aMua.length>0 ? `\nPHỤ KIỆN MUA THÊM:\n`+calc.aMua.map(a=>`• ${a.name}: ${formatMoney(a.price)}`).join('\n')+`\n=> Tổng tiền phụ kiện: ${formatMoney(calc.totAcc)}\n` : '';
 
             sum.innerHTML = `<div class="quote-info-row"><span class="quote-info-label">Xe</span><span class="quote-info-value">${cN}</span></div><div class="quote-info-row"><span class="quote-info-label">Giá lăn bánh</span><span class="quote-info-value text-emerald-600">${formatMoney(calc.totOnRoad)}</span></div>${calc.isBank?`<div class="quote-info-row"><span class="quote-info-label">Tổng trả nhận xe</span><span class="quote-info-value text-brand-primary">${formatMoney(calc.totB)}</span></div>`:''}`;
-            txt.value = `BÁO GIÁ XE ${cN}\n\n• Màu: ${cl} | Biển: ${pl} | Hộ khẩu: ${ht} | TT: ${pa}\n• Giá niêm yết: ${formatMoney(car.price)}\n• Tổng giảm giá: - ${formatMoney(calc.totalDiscount)}\n• Giá sau giảm: ${formatMoney(calc.finalP)}\n• Giá lăn bánh: ${formatMoney(calc.totOnRoad)}\n• Lệ phí biển số: ${formatMoney(calc.phiDangKy)}\n• Dịch vụ ĐK: ${formatMoney(calc.adj.registrationService)}\n• BHVC: ${formatMoney(calc.bhVal)} (${calc.bhType==='tang'?'Đại lý tặng':(calc.bhType==='mua'?'Khách mua':'Không')})\n${accT}` + (calc.isBank?`\nTRẢ GÓP:\n• Gói vay: ${calc.adj.loan.percent}%\n• Tiền vay: ${formatMoney(calc.loan)}\n• Đối ứng: ${formatMoney(calc.down)}\n• NHẬN XE: ${formatMoney(calc.totB)}\n• Góp 1 năm đầu: ${formatMoney(calc.avgM)} /tháng\n`:'') + (pA.length ? `\nCTKM & QUÀ TẶNG:\n${pA.map((p,i)=>`${i+1}.${p}`).join('\n')}` : '');
+            txt.value = `BÁO GIÁ XE ${cN}\n\n• Màu: ${cl} | Biển: ${pl} | Hộ khẩu: ${ht} | TT: ${pa}\n• Giá niêm yết: ${formatMoney(car.price)}\n• Tổng chương trình giảm: - ${formatMoney(calc.totalDiscount)}\n• Giảm trên HĐ Đại lý: - ${formatMoney(calc.invoiceDiscount)}\n• Giá Đại lý xuất hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giảm tại Thanh Toán: - ${formatMoney(calc.paymentDiscount)}\n• Giá thanh toán xe: ${formatMoney(calc.finalP)}\n• Giá lăn bánh: ${formatMoney(calc.totOnRoad)}\n• Lệ phí biển số: ${formatMoney(calc.phiDangKy)}\n• Dịch vụ ĐK: ${formatMoney(calc.adj.registrationService)}\n• BHVC: ${formatMoney(calc.bhVal)} (${calc.bhType==='tang'?'Đại lý tặng':(calc.bhType==='mua'?'Khách mua':'Không')})\n${accT}` + (calc.isBank?`\nTRẢ GÓP:\n• Gói vay: ${calc.adj.loan.percent}%\n• Tiền vay: ${formatMoney(calc.loan)}\n• Đối ứng: ${formatMoney(calc.down)}\n• NHẬN XE: ${formatMoney(calc.totB)}\n• Góp 1 năm đầu: ${formatMoney(calc.avgM)} /tháng\n`:'') + (pA.length ? `\nCTKM & QUÀ TẶNG:\n${pA.map((p,i)=>`${i+1}.${p}`).join('\n')}` : '');
             toggleModal('quoteInfoModal', true);
         }
         function closeQuoteInfo() { toggleModal('quoteInfoModal', false); }
