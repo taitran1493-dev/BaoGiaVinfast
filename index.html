@@ -462,7 +462,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                             <div class="quote-option-grid">
                                 <div class="quote-option" id="color-wrapper">
                                     <label>Màu</label>
-                                    <select id="colorSelect" onchange="updateQuotationUI()"><option value="Trắng" selected>Trắng</option><option value="Đen">Đen</option><option value="Đỏ">Đỏ</option><option value="Xanh">Xanh</option><option value="Bạc">Bạc</option></select>
+                                    <select id="colorSelect" onchange="syncCarColor()"></select>
+                                    <div id="color-surcharge-hint" class="hidden basis-full w-full text-[9px] font-black text-amber-700 mt-1"></div>
                                 </div>
                                 <div class="quote-option" id="payment-wrapper">
                                     <label>TT</label>
@@ -946,9 +947,235 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const shouldCheck=boxes.some(x=>!x.checked); boxes.forEach(x=>x.checked=shouldCheck); syncPromoCarKeysFromChecks();
         }
 
+
+        // ================== MÀU XE & PHỤ PHÍ MÀU NÂNG CAO ==================
+        // Nguồn: file "Mau SAC VF.xlsx" do người dùng cung cấp.
+        const VEHICLE_COLOR_CONFIGS = {
+            'VF2': {
+                basic: ['Trắng','Đỏ','Xám'],
+                premium: ['Xanh Lá','Vàng','Xanh Da Trời','Hồng','Vàng Thạch Anh'],
+                surcharge: 8000000
+            },
+            'VF3 ECO': {
+                basic: ['Trắng','Đỏ','Xám'],
+                premium: ['Vàng Nóc Trắng','Xanh Nóc Trắng','Hồng Nóc Trắng','Xanh Lá'],
+                surcharge: 8000000
+            },
+            'VF3 PLUS': {
+                basic: ['Trắng','Đỏ','Xám'],
+                premium: ['Vàng Nóc Trắng','Xanh Nóc Trắng','Hồng Nóc Trắng','Xanh Lá'],
+                surcharge: 8000000
+            },
+            'VF5': {
+                basic: ['Trắng','Đỏ','Xám'],
+                premium: ['Vàng Nóc Đen','Xanh Nóc Trắng','Xanh Lá'],
+                surcharge: 8000000
+            },
+            'VF6 ECO': {
+                basic: ['Trắng','Đỏ','Xám','Đen'],
+                premium: ['Xanh Lá'],
+                surcharge: 8000000
+            },
+            'VF6 PLUS': {
+                basic: ['Trắng','Đỏ','Xám','Đen'],
+                premium: ['Xanh Lá'],
+                surcharge: 8000000
+            },
+            'VF MVP 7': {
+                basic: ['Trắng','Đỏ','Xám','Đen'],
+                premium: ['Xanh Đại Dương','Nâu'],
+                surcharge: 10000000
+            },
+            'VF7 ECO': {
+                basic: ['Trắng','Đỏ','Xám','Đen'],
+                premium: ['Xanh Lá'],
+                surcharge: 12000000
+            },
+            'VF7 PLUS TIÊU CHUẨN 2 - TRẦN THÉP': {
+                basic: ['Trắng','Đỏ','Xám','Đen'],
+                premium: ['Xanh Lá'],
+                surcharge: 12000000
+            },
+            'VF7 PLUS NC TIÊU CHUẨN 3 - TRẦN THÉP': {
+                basic: ['Trắng','Đỏ','Xám','Đen'],
+                premium: ['Xanh Lá'],
+                surcharge: 12000000
+            },
+            'VF8 LEGACY': {
+                basic: ['Trắng','Đen','Đỏ','Xanh Lá'],
+                premium: ['Nâu Nóc Gold','Xám Viền Gold','Trắng Xám','Đen Gold'],
+                surcharge: 12000000
+            },
+            'VF8 ALL NEW': {
+                basic: ['Trắng','Đỏ','Xanh','Đen'],
+                premium: ['Đỏ Nóc Đen','Cam Nóc Đen','Xanh Nóc Trắng','Tím Nóc Xám','Đen Nóc Trắng','Cam Nóc Trắng','Cam','Tím'],
+                surcharge: 12000000
+            },
+            'VF WILD COMFORT': {
+                basic: ['Đỏ','Trắng','Đen'],
+                premium: ['Xám'],
+                surcharge: 12000000
+            },
+            'VF9 ECO': {
+                basic: ['Trắng','Đỏ','Xám','Đen','Xanh Lá'],
+                premium: ['Bạc','Xám Đậm'],
+                surcharge: 12000000
+            },
+            'VF9 PLUS': {
+                basic: ['Trắng','Đỏ','Xám','Đen','Xanh Lá'],
+                premium: ['Bạc','Xám Đậm'],
+                surcharge: 12000000
+            },
+            'LẠC HỒNG': {
+                basic: ['Vàng Gold'],
+                premium: [],
+                surcharge: 0
+            },
+            'LẠC HỒNG (CHỐNG ĐẠN)': {
+                basic: ['Vàng Gold'],
+                premium: [],
+                surcharge: 0
+            },
+            'MINIO GREEN': {
+                basic: ['Trắng','Đỏ','Xám','Đen'],
+                premium: [],
+                surcharge: 0
+            },
+            'EC VAN TIÊU CHUẨN': {
+                basic: ['Xanh Lá','Trắng','Vàng','Đỏ'],
+                premium: [],
+                surcharge: 0
+            },
+            'EC VAN NÂNG CAO': {
+                basic: ['Xanh Lá','Trắng','Vàng','Đỏ'],
+                premium: [],
+                surcharge: 0
+            },
+            'EC VAN NÂNG CAO (CỬA TRƯỢT)': {
+                basic: ['Xanh Lá','Trắng','Vàng','Đỏ'],
+                premium: [],
+                surcharge: 0
+            },
+            'HERIO GREEN': {
+                basic: ['Đen','Xám','Đỏ','Trắng'],
+                premium: [],
+                surcharge: 0
+            },
+            'LIMO GREEN': {
+                basic: ['Xám','Đen','Trắng','Đỏ'],
+                premium: [],
+                surcharge: 0
+            }
+        };
+
+        function getVehicleColorConfig(car) {
+            if (!car) return null;
+            const key = normalizeCarKey(car.standardName || [car.name, car.version].filter(Boolean).join(' '));
+
+            if (VEHICLE_COLOR_CONFIGS[key]) return VEHICLE_COLOR_CONFIGS[key];
+
+            // Bảng Excel dùng một dòng "VF8" cho các phiên bản VF8 đời trước.
+            if (key.startsWith('VF8 ') && key !== 'VF8 ALL NEW') {
+                return VEHICLE_COLOR_CONFIGS['VF8 LEGACY'];
+            }
+
+            // Nếu model không có trong file màu, giữ một nhóm màu cơ bản dự phòng
+            // để không làm gián đoạn báo giá; không áp phụ phí.
+            return {
+                basic: ['Trắng','Đen','Đỏ','Xám','Xanh','Bạc'],
+                premium: [],
+                surcharge: 0,
+                fallback: true
+            };
+        }
+
+        function getSelectedColorInfo(car) {
+            const cfg = getVehicleColorConfig(car);
+            if (!cfg) return { name: '', isPremium: false, surcharge: 0 };
+
+            const select = document.getElementById('colorSelect');
+            const adj = getQuoteAdjustments(car);
+            const selected = (select?.dataset.carId === car.id && select.value)
+                ? select.value
+                : (adj.selectedColor || cfg.basic[0] || cfg.premium[0] || '');
+
+            const isPremium = (cfg.premium || []).includes(selected);
+            return {
+                name: selected,
+                isPremium,
+                surcharge: isPremium ? Number(cfg.surcharge || 0) : 0,
+                config: cfg
+            };
+        }
+
+        function renderColorOptions(car, force=false) {
+            const select = document.getElementById('colorSelect');
+            if (!select || !car) return;
+
+            if (!force && select.dataset.carId === car.id && select.options.length) {
+                updateColorSurchargeHint(car);
+                return;
+            }
+
+            const cfg = getVehicleColorConfig(car);
+            const adj = getQuoteAdjustments(car);
+            const options = [];
+
+            (cfg.basic || []).forEach(name => {
+                options.push({ name, premium: false, surcharge: 0 });
+            });
+            (cfg.premium || []).forEach(name => {
+                options.push({ name, premium: true, surcharge: Number(cfg.surcharge || 0) });
+            });
+
+            let selected = adj.selectedColor || '';
+            if (!options.some(x => x.name === selected)) {
+                selected = options[0]?.name || '';
+            }
+
+            select.innerHTML = options.map(item => {
+                const suffix = item.premium && item.surcharge > 0
+                    ? ` — Nâng cao +${formatMoney(item.surcharge)}`
+                    : '';
+                return `<option value="${item.name.replace(/"/g,'&quot;')}" ${item.name===selected?'selected':''}>${item.name}${suffix}</option>`;
+            }).join('');
+
+            select.dataset.carId = car.id;
+
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            quoteAdjustments[car.id].selectedColor = selected;
+
+            updateColorSurchargeHint(car);
+        }
+
+        function updateColorSurchargeHint(car) {
+            const hint = document.getElementById('color-surcharge-hint');
+            if (!hint || !car) return;
+
+            const info = getSelectedColorInfo(car);
+            if (info.isPremium && info.surcharge > 0) {
+                hint.innerHTML = `Màu nâng cao: +${formatMoney(info.surcharge)} vào giá niêm yết`;
+                hint.classList.remove('hidden');
+            } else {
+                hint.innerHTML = '';
+                hint.classList.add('hidden');
+            }
+        }
+
+        function syncCarColor() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
+            if (!car) return;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+
+            quoteAdjustments[car.id].selectedColor = document.getElementById('colorSelect')?.value || '';
+            saveQuoteAdjustmentsToStorage();
+            updateColorSurchargeHint(car);
+            updateQuotationUI();
+        }
+
         function getDefaultQuoteAdjustments(car) {
             return { 
-                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, bhvcManualAmount: null, bhvcInsurer: 'PJICO', bhvcVehicleClass: 'auto', accessories: [], flexibleGifts: [], chargingUsage: 'family',
+                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, bhvcManualAmount: null, bhvcInsurer: 'PJICO', bhvcVehicleClass: 'auto', selectedColor: '', accessories: [], flexibleGifts: [], chargingUsage: 'family',
                 regFees: { registrationPreset:'ward', registrationFee:140000, inspectionPreset:'57', inspectionFee:90000, civilPreset:'family5', civilFee:530700, roadPreset:'white1', roadFee:1560000 },
                 loan: { autoBuTax: false, percent: 80, years: 8, promoMonths: 12, promoRate: 10.2, floatRate: 3.6, manualLoan: null },
                 vfPromos: { exclusiveId: 'none', additiveIds: [], customValues: {}, dealerExtra: 0, catMau: 0 } 
@@ -1046,6 +1273,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             renderAccTable();
             renderPromoTable();
             const activeCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            renderColorOptions(activeCar, true);
             applyVehicleUseRules(activeCar, false);
             renderPromosUI();
             updateQuotationUI();
@@ -1475,6 +1703,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const car = carList.find(x => x.id === document.getElementById('carSelect').value);
             if (!car) return;
             applyVehicleUseRules(car, true);
+            renderColorOptions(car, true);
             saveQuoteAdjustmentsToStorage();
             renderPromosUI();
             updateQuotationUI();
@@ -1982,6 +2211,12 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         function calculateQuotation(car) {
             if (!car) return null;
             const pay = document.getElementById('paymentSelect').value, plt = document.getElementById('plateSelect').value, adj = getQuoteAdjustments(car);
+
+            const colorInfo = getSelectedColorInfo(car);
+            const baseListPrice = Math.max(0, Number(car.price || 0));
+            const colorSurcharge = Math.max(0, Number(colorInfo.surcharge || 0));
+            const listPrice = baseListPrice + colorSurcharge;
+            const pricingCar = { ...car, price: listPrice };
             const cityPlate = document.getElementById('cityPlateSelect').value;
             const vfp = adj.vfPromos;
             
@@ -2036,7 +2271,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             nonVinClubPromos.filter(p => p.type !== 'pct_after').forEach(p => {
                 if (p.type === 'pct_msrp') {
-                    const val = Number(car.price || 0) * Number(p.value || 0) / 100;
+                    const val = listPrice * Number(p.value || 0) / 100;
                     addPromoAmount(p, val, `${p.name} (Giảm ${p.value}%): ${formatMoney(val)}`);
                 } else if (p.type === 'money') {
                     const val = Number(p.value || 0);
@@ -2047,12 +2282,12 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 }
             });
 
-            const tienPhongDiscount = tienPhongPromos.reduce((sum, p) => sum + getPromoDiscountAtMsrp(p, car, vfp), 0);
+            const tienPhongDiscount = tienPhongPromos.reduce((sum, p) => sum + getPromoDiscountAtMsrp(p, pricingCar, vfp), 0);
             const triAnDiscount = triAnPromos.reduce((sum, p) => {
                 if (p.type === 'custom' && Number(p.inputValue || 0) > 0) return sum + Number(p.inputValue || 0);
-                return sum + getPromoDiscountAtMsrp(p, car, vfp);
+                return sum + getPromoDiscountAtMsrp(p, pricingCar, vfp);
             }, 0);
-            const vinClubBase = Math.max(0, Number(car.price || 0) - tienPhongDiscount - triAnDiscount);
+            const vinClubBase = Math.max(0, listPrice - tienPhongDiscount - triAnDiscount);
 
             vinClubPromos.forEach(p => {
                 if (p.type === 'pct_msrp' || p.type === 'pct_after') {
@@ -2068,7 +2303,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 }
             });
 
-            const priceBeforeAfter = Math.max(0, Number(car.price || 0) - invoiceDiscount - paymentDiscount);
+            const priceBeforeAfter = Math.max(0, listPrice - invoiceDiscount - paymentDiscount);
             nonVinClubPromos.filter(p => p.type === 'pct_after').forEach(p => {
                 const rate = Number(p.value || 0);
                 const val = priceBeforeAfter * rate / 100;
@@ -2106,8 +2341,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 promoDetails.push(`Giảm Giá Bằng Lương (Thanh Toán): ${formatMoney(catMauEntered)}`);
             }
 
-            invoiceDiscount = Math.min(Number(car.price || 0), invoiceDiscount);
-            const invoicePrice = Math.max(0, Number(car.price || 0) - invoiceDiscount);
+            invoiceDiscount = Math.min(listPrice, invoiceDiscount);
+            const invoicePrice = Math.max(0, listPrice - invoiceDiscount);
             paymentDiscount = Math.min(invoicePrice, paymentDiscount);
             const totalDiscount = invoiceDiscount + paymentDiscount;
             const finalP = Math.max(0, invoicePrice - paymentDiscount);
@@ -2169,7 +2404,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     let tI=0, cP=loan; for(let i=0;i<lim;i++){ tI+=cP*(i<lc.promoMonths?pr:ar); cP-=mP; } avgM=mP+(tI/lim);
                 }
             }
-            return { car, adj, tax, totalDiscount, invoiceDiscount, paymentDiscount, invoicePrice, bhvcBase: invoicePrice, loanBase: invoicePrice, dealerExtraInvoice, dealerExtraOverflow, catMauInvoice, catMauOverflow, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, netReg, totOnRoad: invoicePrice+netReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
+            return { car, adj, baseListPrice, colorInfo, colorSurcharge, listPrice, tax, totalDiscount, invoiceDiscount, paymentDiscount, invoicePrice, bhvcBase: invoicePrice, loanBase: invoicePrice, dealerExtraInvoice, dealerExtraOverflow, catMauInvoice, catMauOverflow, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, netReg, totOnRoad: invoicePrice+netReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc };
         }
 
         function updateQuotationUI() {
@@ -2178,6 +2413,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const adj = getQuoteAdjustments(car);
             const usageSelect = document.getElementById('usageSelect');
             if (usageSelect && document.activeElement !== usageSelect) usageSelect.value = getVehicleUseRule(car)==='private-only' ? 'family' : (adj.chargingUsage || 'family');
+            renderColorOptions(car, false);
             const calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
             fillFlexibleGifts(car);
 
@@ -2337,7 +2573,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const lt = document.getElementById('customize-toggle'); if(lt&&lt.checked)fillLiveCustomizePanel();
 
             document.getElementById('quote-car-name').innerText = `${car.name} ${car.version} ${car.year}`.trim();
-            document.getElementById('quote-price-listed').innerText = formatMoney(car.price);
+            document.getElementById('quote-price-listed').innerText = formatMoney(calc.listPrice);
             document.getElementById('quote-discount').innerText = formatMoney(Math.max(0, Number(calc.totalDiscount || 0)));
 
             const invoiceDiscountRow = document.getElementById('quote-invoice-discount-row');
@@ -2423,7 +2659,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const accT = calc.aMua.length>0 ? `\nPHỤ KIỆN MUA THÊM:\n`+calc.aMua.map(a=>`• ${a.name}: ${formatMoney(a.price)}`).join('\n')+`\n=> Tổng tiền phụ kiện: ${formatMoney(calc.totAcc)}\n` : '';
 
             sum.innerHTML = `<div class="quote-info-row"><span class="quote-info-label">Xe</span><span class="quote-info-value">${cN}</span></div><div class="quote-info-row"><span class="quote-info-label">Giá lăn bánh</span><span class="quote-info-value text-emerald-600">${formatMoney(calc.totOnRoad)}</span></div>${calc.isBank?`<div class="quote-info-row"><span class="quote-info-label">Tổng trả nhận xe</span><span class="quote-info-value text-brand-primary">${formatMoney(calc.totB)}</span></div>`:''}`;
-            txt.value = `BÁO GIÁ XE ${cN}\n\n• Màu: ${cl} | Biển: ${pl} | Hộ khẩu: ${ht} | TT: ${pa}\n• Giá niêm yết: ${formatMoney(car.price)}\n• Tổng ưu đãi: - ${formatMoney(calc.totalDiscount)}\n• Giảm trên HĐ Đại lý: - ${formatMoney(calc.invoiceDiscount)}\n• Giá Đại lý xuất hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giá xe theo hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giá lăn bánh: ${formatMoney(calc.totOnRoad)}\n• Lệ phí biển số: ${formatMoney(calc.phiDangKy)}\n• Dịch vụ ĐK: ${formatMoney(calc.adj.registrationService)}\n${calc.paymentDiscount>0?`• Giảm tại Thanh Toán: - ${formatMoney(calc.paymentDiscount)}\n• Chi phí ĐK sau giảm: ${formatMoney(calc.netReg)}\n`:`• Tổng chi phí ĐK: ${formatMoney(calc.totReg)}\n`}• BHVC: ${formatMoney(calc.bhVal)} (${calc.bhType==='tang'?'Đại lý tặng':(calc.bhType==='mua'?'Khách mua':'Không')})\n${accT}` + (calc.isBank?`\nTRẢ GÓP:\n• Gói vay: ${calc.adj.loan.percent}%\n• Tiền vay: ${formatMoney(calc.loan)}\n• Đối ứng: ${formatMoney(calc.down)}\n• NHẬN XE: ${formatMoney(calc.totB)}\n• Góp 1 năm đầu: ${formatMoney(calc.avgM)} /tháng\n`:'') + (pA.length ? `\nCTKM & QUÀ TẶNG:\n${pA.map((p,i)=>`${i+1}.${p}`).join('\n')}` : '');
+            txt.value = `BÁO GIÁ XE ${cN}\n\n• Màu: ${cl} | Biển: ${pl} | Hộ khẩu: ${ht} | TT: ${pa}\n• Giá niêm yết: ${formatMoney(calc.listPrice)}${calc.colorSurcharge>0?` (gồm +${formatMoney(calc.colorSurcharge)} màu nâng cao)`:''}\n• Tổng ưu đãi: - ${formatMoney(calc.totalDiscount)}\n• Giảm trên HĐ Đại lý: - ${formatMoney(calc.invoiceDiscount)}\n• Giá Đại lý xuất hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giá xe theo hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giá lăn bánh: ${formatMoney(calc.totOnRoad)}\n• Lệ phí biển số: ${formatMoney(calc.phiDangKy)}\n• Dịch vụ ĐK: ${formatMoney(calc.adj.registrationService)}\n${calc.paymentDiscount>0?`• Giảm tại Thanh Toán: - ${formatMoney(calc.paymentDiscount)}\n• Chi phí ĐK sau giảm: ${formatMoney(calc.netReg)}\n`:`• Tổng chi phí ĐK: ${formatMoney(calc.totReg)}\n`}• BHVC: ${formatMoney(calc.bhVal)} (${calc.bhType==='tang'?'Đại lý tặng':(calc.bhType==='mua'?'Khách mua':'Không')})\n${accT}` + (calc.isBank?`\nTRẢ GÓP:\n• Gói vay: ${calc.adj.loan.percent}%\n• Tiền vay: ${formatMoney(calc.loan)}\n• Đối ứng: ${formatMoney(calc.down)}\n• NHẬN XE: ${formatMoney(calc.totB)}\n• Góp 1 năm đầu: ${formatMoney(calc.avgM)} /tháng\n`:'') + (pA.length ? `\nCTKM & QUÀ TẶNG:\n${pA.map((p,i)=>`${i+1}.${p}`).join('\n')}` : '');
             toggleModal('quoteInfoModal', true);
         }
         function closeQuoteInfo() { toggleModal('quoteInfoModal', false); }
@@ -2447,6 +2683,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             
             renderStandardCarNameList(); renderPromoCarKeyOptions([]); renderDropdown(); renderTable(); renderAccTable(); renderPromoTable();
             const initialCar = carList.find(c => c.id === document.getElementById('carSelect').value);
+            renderColorOptions(initialCar, true);
             applyVehicleUseRules(initialCar, true);
             renderPromosUI(); updateQuotationUI();
 
