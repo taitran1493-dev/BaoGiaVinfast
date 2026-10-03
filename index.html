@@ -278,10 +278,25 @@
                     <button type="button" onclick="applyRecommendedBhvcRate()" class="mt-2 w-full py-2 px-3 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-black hover:bg-indigo-100">Áp dụng tỷ lệ theo biểu phí</button>
                 </div>
                 <div class="live-field">
-                    <label>BHVC dịch vụ / biển vàng mặc định (%)</label>
-                    <input type="number" id="live-bhvc-service-default-rate" step="0.01" min="0" autocomplete="off" placeholder="VD: 2.30">
-                    <div id="live-bhvc-service-default-help" class="live-help">Dùng làm mặc định cho xe dịch vụ/biển vàng.</div>
-                    <button type="button" onclick="resetServiceBhvcDefaultRate()" class="mt-2 w-full py-2 px-3 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-xs font-black hover:bg-amber-100">Reset về 2.30%</button>
+                    <label>Hãng Bảo hiểm vật chất</label>
+                    <select id="live-bhvc-insurer" class="w-full border rounded-lg px-3 py-2 bg-white">
+                        <option value="PJICO">PJICO</option>
+                        <option value="DBV">DBV (BT)</option>
+                        <option value="MIC">MIC</option>
+                        <option value="BIC">BIC</option>
+                    </select>
+                    <div class="live-help">Biểu phí xe mới VINFAST năm 2026 theo bảng bạn cung cấp.</div>
+                </div>
+
+                <div class="live-field">
+                    <label>Loại hình áp dụng BHVC</label>
+                    <select id="live-bhvc-vehicle-class" class="w-full border rounded-lg px-3 py-2 bg-white">
+                        <option value="auto">Tự động theo mục đích sử dụng</option>
+                        <option value="nonbusiness">Xe không kinh doanh</option>
+                        <option value="business">Xe chở người kinh doanh</option>
+                        <option value="taxi">Xe Taxi</option>
+                    </select>
+                    <div id="live-bhvc-table-help" class="live-help">Tự động: Gia đình = không KD; Dịch vụ = chở người KD; Xanh SM = Taxi.</div>
                 </div>
                 <div class="live-field">
                     <label>Giá BHVC nhập tay (tạm thời)</label>
@@ -933,7 +948,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         function getDefaultQuoteAdjustments(car) {
             return { 
-                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, bhvcManualAmount: null, accessories: [], flexibleGifts: [], chargingUsage: 'family',
+                taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, bhvcManualAmount: null, bhvcInsurer: 'PJICO', bhvcVehicleClass: 'auto', accessories: [], flexibleGifts: [], chargingUsage: 'family',
                 regFees: { registrationPreset:'ward', registrationFee:140000, inspectionPreset:'57', inspectionFee:90000, civilPreset:'family5', civilFee:530700, roadPreset:'white1', roadFee:1560000 },
                 loan: { autoBuTax: false, percent: 80, years: 8, promoMonths: 12, promoRate: 10.2, floatRate: 3.6, manualLoan: null },
                 vfPromos: { exclusiveId: 'none', additiveIds: [], customValues: {}, dealerExtra: 0, catMau: 0 } 
@@ -1742,74 +1757,158 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         }
 
 
-        const SERVICE_BHVC_DEFAULT_RATE_FALLBACK = 2.3;
-        const SERVICE_BHVC_DEFAULT_RATE_KEY = 'vinfast_service_bhvc_default_rate_v1';
-
-        function getServiceBhvcDefaultRate() {
-            const raw = localStorage.getItem(SERVICE_BHVC_DEFAULT_RATE_KEY);
-            const n = raw === null ? NaN : Number(raw);
-            return Number.isFinite(n) && n > 0 ? n : SERVICE_BHVC_DEFAULT_RATE_FALLBACK;
+        function normalizeBhvcInsurer(v) {
+            const x = String(v || 'PJICO').toUpperCase();
+            return ['PJICO','DBV','MIC','BIC'].includes(x) ? x : 'PJICO';
         }
 
-        function setServiceBhvcDefaultRate(value) {
-            const n = Number(value);
-            if (Number.isFinite(n) && n > 0) {
-                localStorage.setItem(SERVICE_BHVC_DEFAULT_RATE_KEY, String(n));
-                return n;
-            }
-            return getServiceBhvcDefaultRate();
-        }
+        function getBhvcVehicleClass(adj, plate) {
+            const manual = String(adj?.bhvcVehicleClass || 'auto');
+            if (manual !== 'auto') return manual;
 
-        function resetServiceBhvcDefaultRate() {
-            localStorage.setItem(SERVICE_BHVC_DEFAULT_RATE_KEY, String(SERVICE_BHVC_DEFAULT_RATE_FALLBACK));
-            fillLiveCustomizePanel();
-            updateQuotationUI();
-        }
+            const usage = String(adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family').toLowerCase();
+            if (usage === 'xanhsm') return 'taxi';
+            if (usage === 'service') return 'business';
 
-        function syncServiceBhvcDefaultRate() {
-            const input = document.getElementById('live-bhvc-service-default-rate');
-            const n = Number(input?.value);
-            if (Number.isFinite(n) && n > 0) {
-                setServiceBhvcDefaultRate(n);
-                updateQuotationUI();
-                fillLiveCustomizePanel();
-            }
-        }
-
-        function isServiceBhvcContext(adj, plate) {
-            const usage = String(adj?.chargingUsage || '').toLowerCase();
+            // Biển vàng mà chưa chọn rõ mục đích thì coi là xe chở người kinh doanh.
             const p = String(plate || '').toLowerCase();
-            return usage === 'service'
-                || usage === 'xanhsm'
-                || p.includes('vang')
-                || p.includes('yellow');
+            if (p.includes('vang') || p.includes('yellow')) return 'business';
+            return 'nonbusiness';
         }
 
-        function getRecommendedBhvcRate(finalPrice, adj, plate) {
-            const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
-            const isServiceVehicle = plate === 'vang' || usage === 'service' || usage === 'xanhsm';
-            if (isServiceVehicle) return getServiceBhvcDefaultRate();
+        function getCarBhvcModelKey(car) {
+            return normalizePromoSemanticName(
+                [car?.standardName, car?.name, car?.version].filter(Boolean).join(' ')
+            );
+        }
 
-            const p = Math.max(0, Number(finalPrice) || 0);
-            if (p < 400000000) return 1.6;
-            if (p < 600000000) return 1.41;
-            if (p < 700000000) return 1.25;
-            if (p < 800000000) return 1.16;
-            if (p <= 1000000000) return 1.0;
-            return 0.95;
+        // Biểu phí BHVC theo bảng "Xe mới VINFAST Năm 2026" do người dùng cung cấp.
+        // price = Giá Đại lý xuất hóa đơn.
+        function getBhvcTableQuote(car, adj, plate, price) {
+            const insurer = normalizeBhvcInsurer(adj?.bhvcInsurer);
+            const vehicleClass = getBhvcVehicleClass(adj, plate);
+            const p = Math.max(0, Number(price) || 0);
+            const model = getCarBhvcModelKey(car);
+
+            let rate = null;
+            let minimumFee = 0;
+            let available = true;
+            let note = '';
+
+            if (vehicleClass === 'taxi') {
+                if (insurer === 'PJICO') {
+                    rate = 2.30;
+                } else {
+                    available = false;
+                    note = 'Bảng không thể hiện biểu phí Taxi cho hãng này.';
+                }
+            } else if (vehicleClass === 'business') {
+                if (insurer === 'PJICO' || insurer === 'MIC') {
+                    rate = p < 500000000 ? 1.70 : 1.60;
+                } else if (insurer === 'BIC') {
+                    rate = 2.75;
+                } else {
+                    available = false;
+                    note = 'Bảng không thể hiện biểu phí xe chở người kinh doanh của DBV.';
+                }
+            } else {
+                // Xe không kinh doanh
+                if (p < 400000000) {
+                    if (insurer === 'PJICO') {
+                        if (model.includes('VF2') || model.includes('MINIO GREEN')) {
+                            minimumFee = 4000000;
+                            note = 'Phí tối thiểu PJICO: 4.000.000 VNĐ cho VF2/Minio Green.';
+                        } else if (model.includes('EC VAN') || model.includes('ECVAN') || model.includes('VF3')) {
+                            minimumFee = 5000000;
+                            note = 'Phí tối thiểu PJICO: 5.000.000 VNĐ cho EC VAN/VF3.';
+                        } else {
+                            available = false;
+                            note = 'Bảng PJICO dưới 400 triệu chỉ nêu VF2/Minio Green và EC VAN/VF3.';
+                        }
+                    } else if (insurer === 'DBV') {
+                        rate = 1.90;
+                    } else if (insurer === 'MIC') {
+                        available = false;
+                        note = 'MIC: Không bán ở nhóm dưới 400 triệu.';
+                    } else if (insurer === 'BIC') {
+                        minimumFee = 5500000;
+                        note = 'Phí tối thiểu BIC: 5.500.000 VNĐ.';
+                    }
+                } else if (p < 600000000) {
+                    if (insurer === 'PJICO') rate = 1.41;
+                    if (insurer === 'DBV') rate = 1.40;
+                    if (insurer === 'MIC') rate = 1.50;
+                    if (insurer === 'BIC') rate = 1.50;
+                } else if (p < 700000000) {
+                    if (insurer === 'PJICO') rate = 1.16;
+                    if (insurer === 'DBV') rate = 1.25;
+                    if (insurer === 'MIC') rate = 1.35;
+                    if (insurer === 'BIC') rate = 1.21;
+                } else if (p < 800000000) {
+                    if (insurer === 'PJICO') rate = 1.16;
+                    if (insurer === 'DBV') rate = 1.25;
+                    if (insurer === 'MIC') rate = 1.35;
+                    if (insurer === 'BIC') rate = 1.19;
+                } else if (p <= 1000000000) {
+                    if (insurer === 'PJICO') rate = 1.00;
+                    if (insurer === 'DBV') rate = 1.00;
+                    if (insurer === 'MIC') rate = 1.10;
+                    if (insurer === 'BIC') rate = 1.08;
+                } else {
+                    if (insurer === 'PJICO') rate = 1.00;
+                    if (insurer === 'DBV') rate = 0.95;
+                    if (insurer === 'MIC') rate = 1.10;
+                    if (insurer === 'BIC') rate = 1.10;
+                }
+            }
+
+            let fee = 0;
+            let effectiveRate = 0;
+
+            if (available) {
+                if (rate !== null) fee = p * rate / 100;
+                if (minimumFee > 0) fee = Math.max(fee, minimumFee);
+                effectiveRate = p > 0 ? fee / p * 100 : (rate || 0);
+            }
+
+            return {
+                insurer,
+                vehicleClass,
+                price: p,
+                rate,
+                minimumFee,
+                fee,
+                effectiveRate,
+                available,
+                note
+            };
+        }
+
+        function getRecommendedBhvcRate(finalPrice, adj, plate, car=null) {
+            const currentCar = car || carList.find(x => x.id === document.getElementById('carSelect')?.value);
+            const quote = getBhvcTableQuote(currentCar, adj, plate, finalPrice);
+            return quote.available ? quote.effectiveRate : 0;
         }
 
         function getBhvcRates(car, adj, plate, finalPrice=null) {
-            const usage = adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family';
-            const isServiceVehicle = plate === 'vang' || usage === 'service' || usage === 'xanhsm';
-            if (isServiceVehicle) return { mua: getServiceBhvcDefaultRate(), tang: getServiceBhvcDefaultRate() };
+            const p = finalPrice ?? car?.price ?? 0;
 
+            // Tỷ lệ nhập tay tạm thời luôn ưu tiên cao nhất.
             const override = Number(adj?.bhvcRateOverride);
-            if (Number.isFinite(override) && override > 0) return { mua: override, tang: override };
+            if (Number.isFinite(override) && override > 0) {
+                return { mua: override, tang: override, source: 'override', tableQuote: null };
+            }
+
+            const q = getBhvcTableQuote(car, adj, plate, p);
+            if (!q.available) {
+                return { mua: 0, tang: 0, source: 'unavailable', tableQuote: q };
+            }
 
             return {
-                mua: Number(car?.bhMuaRate || 1.3),
-                tang: Number(car?.bhTangRate || 1.2)
+                mua: q.effectiveRate,
+                tang: q.effectiveRate,
+                source: 'table',
+                tableQuote: q
             };
         }
 
@@ -1819,11 +1918,26 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
             const calc = calculateQuotation(car);
             const plate = document.getElementById('plateSelect')?.value || 'trang';
-            const rate = getRecommendedBhvcRate(calc?.invoicePrice || car.price, quoteAdjustments[car.id], plate);
+            const rate = getRecommendedBhvcRate(calc?.invoicePrice || car.price, quoteAdjustments[car.id], plate, car);
             quoteAdjustments[car.id].bhvcRateOverride = rate;
             saveQuoteAdjustmentsToStorage();
             fillLiveCustomizePanel();
             updateQuotationUI();
+        }
+
+        function syncBhvcTableSettings() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
+            if (!car) return;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+
+            const insurer = document.getElementById('live-bhvc-insurer')?.value || 'PJICO';
+            const vehicleClass = document.getElementById('live-bhvc-vehicle-class')?.value || 'auto';
+
+            quoteAdjustments[car.id].bhvcInsurer = normalizeBhvcInsurer(insurer);
+            quoteAdjustments[car.id].bhvcVehicleClass = vehicleClass;
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+            fillLiveCustomizePanel();
         }
 
         function syncBhvcRateOverride() {
@@ -2182,7 +2296,19 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='tang'?'border-green-500 bg-green-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="tang" class="w-4 h-4 accent-green-600" ${curT==='tang'?'checked':''} onchange="changeBHVCType('tang')"><span class="font-bold text-[13px]">Đại lý Tặng BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-green-700">Trị giá: ${formatMoney(vTang)} <span class="text-[10px] font-bold text-green-600">(${rTang}%)</span></div></label>
                 <label class="flex items-center p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='khong'?'border-gray-400 bg-gray-100':'border-gray-200 hover:bg-gray-50'}"><input type="radio" value="khong" class="w-4 h-4 accent-gray-600 mr-2" ${curT==='khong'?'checked':''} onchange="changeBHVCType('khong')"><span class="font-bold text-[13px]">Không lấy BHVC</span></label>`;
 
-            const recommendedBhvcRate = getRecommendedBhvcRate(calc.invoicePrice, adj, plt);
+            const bhvcTableQuoteUi = getBhvcTableQuote(car, adj, plt, calc.invoicePrice);
+            document.getElementById('left-bhvc-panel').innerHTML += `
+                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] text-slate-700">
+                    <b>${bhvcTableQuoteUi.insurer}</b> · ${bhvcTableQuoteUi.vehicleClass === 'taxi' ? 'Taxi' : (bhvcTableQuoteUi.vehicleClass === 'business' ? 'Xe chở người KD' : 'Xe không KD')}
+                    · Giá HĐ ${formatMoney(calc.invoicePrice)}
+                    ${bhvcTableQuoteUi.available
+                        ? (bhvcTableQuoteUi.minimumFee > 0 && bhvcTableQuoteUi.rate === null
+                            ? `· ${bhvcTableQuoteUi.note}`
+                            : `· ${bhvcTableQuoteUi.rate}%${bhvcTableQuoteUi.minimumFee > 0 ? ` · tối thiểu ${formatMoney(bhvcTableQuoteUi.minimumFee)}` : ''}`)
+                        : `· <span class="text-red-600 font-black">Không có biểu phí</span>`}
+                </div>`;
+
+            const recommendedBhvcRate = getRecommendedBhvcRate(calc.invoicePrice, adj, plt, car);
             const currentBhvcRate = curT === 'tang' ? Number(rTang) : Number(rMua);
             const hasManualBhvc = adj.bhvcManualAmount !== null && adj.bhvcManualAmount !== '' && Number.isFinite(Number(adj.bhvcManualAmount)) && Number(adj.bhvcManualAmount) >= 0;
             if (hasManualBhvc && curT === 'mua') {
@@ -2535,11 +2661,16 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 bhManual.addEventListener('blur', syncBhvcManualAmount);
             }
 
-            const serviceBhvc = document.getElementById('live-bhvc-service-default-rate');
-            if (serviceBhvc && !serviceBhvc.dataset.b) {
-                serviceBhvc.dataset.b='1';
-                serviceBhvc.addEventListener('change', syncServiceBhvcDefaultRate);
-                serviceBhvc.addEventListener('blur', syncServiceBhvcDefaultRate);
+            const bhInsurer = document.getElementById('live-bhvc-insurer');
+            if (bhInsurer && !bhInsurer.dataset.b) {
+                bhInsurer.dataset.b='1';
+                bhInsurer.addEventListener('change', syncBhvcTableSettings);
+            }
+
+            const bhClass = document.getElementById('live-bhvc-vehicle-class');
+            if (bhClass && !bhClass.dataset.b) {
+                bhClass.dataset.b='1';
+                bhClass.addEventListener('change', syncBhvcTableSettings);
             }
         }
         function fillLiveCustomizePanel() {
@@ -2551,15 +2682,22 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             Object.entries(v).forEach(([i,val])=>{const e=document.getElementById(i); if(e)e.value=Number(val||0).toLocaleString('vi-VN');});
             const calc = calculateQuotation(c);
             const plate = document.getElementById('plateSelect')?.value || 'trang';
-            const recommendedRate = getRecommendedBhvcRate(calc?.invoicePrice || c.price, a, plate);
+            const recommendedRate = getRecommendedBhvcRate(calc?.invoicePrice || c.price, a, plate, c);
             const rateInput = document.getElementById('live-bhvc-rate');
             if (rateInput) rateInput.value = a.bhvcRateOverride != null ? a.bhvcRateOverride : '';
             const rateHelp = document.getElementById('live-bhvc-rate-help');
             if (rateHelp) {
                 const rates = getBhvcRates(c, a, plate, calc?.invoicePrice || c.price);
                 const currentRate = a.bhvcType === 'tang' ? rates.tang : rates.mua;
-                const mismatch = a.bhvcType !== 'khong' && Math.abs(Number(currentRate)-Number(recommendedRate)) > 0.0001;
-                rateHelp.innerHTML = `Giá xuất hóa đơn: <b>${formatMoney(calc?.invoicePrice || 0)}</b> · Biểu phí: <b>${recommendedRate}%</b>${mismatch ? ` · <span class="text-amber-600 font-black">Hiện dùng ${currentRate}%</span>` : ' · Đang khớp'}`;
+                const mismatch = a.bhvcType !== 'khong' && recommendedRate > 0 && Math.abs(Number(currentRate)-Number(recommendedRate)) > 0.0001;
+                const tq = rates.tableQuote || getBhvcTableQuote(c, a, plate, calc?.invoicePrice || c.price);
+
+                if (!tq.available && !a.bhvcRateOverride) {
+                    rateHelp.innerHTML = `Giá xuất hóa đơn: <b>${formatMoney(calc?.invoicePrice || 0)}</b> · <span class="text-red-600 font-black">Không có biểu phí trong bảng cho lựa chọn này.</span>`;
+                } else {
+                    const minText = tq?.minimumFee > 0 ? ` · Tối thiểu <b>${formatMoney(tq.minimumFee)}</b>` : '';
+                    rateHelp.innerHTML = `Giá xuất hóa đơn: <b>${formatMoney(calc?.invoicePrice || 0)}</b> · Biểu phí hiệu lực: <b>${Number(currentRate||0).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}%</b>${minText}${mismatch ? ` · <span class="text-amber-600 font-black">Khác biểu phí bảng</span>` : ''}`;
+                }
             }
 
             const manualInput = document.getElementById('live-bhvc-manual-amount');
@@ -2575,23 +2713,35 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     : `Đang dùng phí theo tỷ lệ: <b>${formatMoney(normalAmount)}</b>`;
             }
 
-            const serviceDefaultInput = document.getElementById('live-bhvc-service-default-rate');
-            const serviceDefaultHelp = document.getElementById('live-bhvc-service-default-help');
-            const serviceDefaultRate = getServiceBhvcDefaultRate();
+            const insurerSelect = document.getElementById('live-bhvc-insurer');
+            const classSelect = document.getElementById('live-bhvc-vehicle-class');
+            const tableHelp = document.getElementById('live-bhvc-table-help');
 
-            if (serviceDefaultInput) serviceDefaultInput.value = Number(serviceDefaultRate).toFixed(2);
+            if (insurerSelect) insurerSelect.value = normalizeBhvcInsurer(a.bhvcInsurer || 'PJICO');
+            if (classSelect) classSelect.value = a.bhvcVehicleClass || 'auto';
 
-            if (serviceDefaultHelp) {
-                serviceDefaultHelp.innerHTML = isServiceBhvcContext(a, plate)
-                    ? `Xe hiện tại đang dùng mặc định dịch vụ/biển vàng: <b>${serviceDefaultRate}%</b>`
-                    : `Mặc định hiện tại cho xe dịch vụ/biển vàng: <b>${serviceDefaultRate}%</b>`;
+            const tableQuote = getBhvcTableQuote(c, a, plate, calc?.invoicePrice || c.price);
+            if (tableHelp) {
+                const clsLabel = tableQuote.vehicleClass === 'taxi'
+                    ? 'Taxi'
+                    : tableQuote.vehicleClass === 'business'
+                        ? 'Xe chở người kinh doanh'
+                        : 'Xe không kinh doanh';
+
+                if (!tableQuote.available) {
+                    tableHelp.innerHTML = `<span class="text-red-600 font-black">${tableQuote.insurer} · ${clsLabel}: không có biểu phí trong bảng.</span> ${tableQuote.note || ''}`;
+                } else if (tableQuote.minimumFee > 0 && tableQuote.rate === null) {
+                    tableHelp.innerHTML = `${tableQuote.insurer} · ${clsLabel} · Giá HĐ <b>${formatMoney(tableQuote.price)}</b> · <b>${tableQuote.note}</b>`;
+                } else {
+                    tableHelp.innerHTML = `${tableQuote.insurer} · ${clsLabel} · Giá HĐ <b>${formatMoney(tableQuote.price)}</b> · Biểu phí <b>${tableQuote.rate}%</b>${tableQuote.minimumFee>0?` · Tối thiểu <b>${formatMoney(tableQuote.minimumFee)}</b>`:''}`;
+                }
             }
         }
         function toggleLiveCustomize(s) { const p=document.getElementById('live-customize-panel'), c=document.getElementById('customize-toggle'); if(!p||!c)return; c.checked=!!s; p.classList.toggle('hidden-panel',!s); if(s){fillLiveCustomizePanel(); setupLive();} }
         function resetLiveCustomize() {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
             quoteAdjustments[c.id]=getQuoteAdjustments(c); const a=quoteAdjustments[c.id];
-            a.taxAdjust=0; a.registrationService=PHI_DICH_VU; a.buTax=0; a.vcInsurance=0; a.bhvcRateOverride=null; a.bhvcManualAmount=null; a.regFees={...getDefaultQuoteAdjustments(c).regFees};
+            a.taxAdjust=0; a.registrationService=PHI_DICH_VU; a.buTax=0; a.vcInsurance=0; a.bhvcRateOverride=null; a.bhvcManualAmount=null; a.bhvcInsurer='PJICO'; a.bhvcVehicleClass='auto'; a.regFees={...getDefaultQuoteAdjustments(c).regFees};
             saveQuoteAdjustmentsToStorage(); fillLiveCustomizePanel(); updateQuotationUI();
         }
 
