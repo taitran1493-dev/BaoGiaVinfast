@@ -609,7 +609,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
                     <!-- Section 3 -->
                     <div class="capture-grid-cost">
-                        <div class="capture-col flex flex-col min-w-0">
+                        <div class="capture-col flex flex-col min-w-0 export-hide-running-cost">
                             <h3 class="text-sm font-bold text-white bg-brand-dark py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Chi phí lăn bánh</h3>
                             <div class="border border-brand-dark border-t-0 rounded-b-lg p-5 space-y-3.5 text-sm bg-white shadow-sm flex-1">
                                 <div class="flex justify-between items-end"><span id="quote-tax-label" class="text-gray-600">Lệ phí trước bạ (0%)</span><div class="dot-leader"></div><span id="quote-tax" class="font-bold">0 VNĐ</span></div>
@@ -635,7 +635,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     </div>
 
                     <!-- BẢNG PHỤ KIỆN MUA THÊM -->
-                    <div id="quote-accessories-container" class="mt-6" style="display: none;">
+                    <div id="quote-accessories-container" class="mt-6 export-hide-accessory-purchase" style="display: none;">
                         <h3 class="text-sm font-bold text-white bg-purple-600 py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Danh Sách Phụ Kiện Mua Thêm</h3>
                         <div class="border border-purple-600 border-t-0 rounded-b-lg p-5 bg-purple-50/50 shadow-sm">
                             <ul id="quote-bought-acc-list" class="space-y-1.5 columns-2 gap-8"></ul>
@@ -648,7 +648,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                             <div class="capture-col flex flex-col min-w-0">
                                 <h3 class="text-sm font-bold text-white bg-blue-700 py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Chính Sách Vay Ngân Hàng</h3>
                                 <div class="border border-blue-700 border-t-0 rounded-b-lg p-5 space-y-3.5 text-sm bg-white shadow-sm flex-1">
-                                    <div class="flex justify-between items-end bg-blue-100 -mx-2 px-2 py-1 rounded transition-colors duration-200"><span class="text-blue-900 font-bold">Cấn trừ Bù thuế tự động</span><div class="dot-leader border-blue-300"></div><input type="checkbox" id="bank-auto-butax" class="w-4 h-4 cursor-pointer accent-blue-700" onchange="syncBank('autobutax')"></div>
+
                                     <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Tỷ lệ vay (%)</span><div class="dot-leader"></div><input type="number" id="bank-percent" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('percent')"></div>
                                     <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Thời gian vay (Năm)</span><div class="dot-leader"></div><input type="number" id="bank-years" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('other')"></div>
                                     <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Ưu đãi cố định</span><div class="dot-leader"></div><select id="bank-promo-months" class="font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" onchange="syncBank('other')"><option value="6">6 Tháng</option><option value="12">12 Tháng</option><option value="24">24 Tháng</option></select></div>
@@ -3306,6 +3306,75 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         }
 
 
+
+        function getExportPromoExtraItems(car, calc) {
+            if (!car || !calc) return [];
+            const adj = calc.adj || getQuoteAdjustments(car);
+            const result = [];
+            const seen = new Set();
+
+            const push = (text) => {
+                const t = String(text || '').trim();
+                if (!t) return;
+                const key = t.toLocaleLowerCase('vi-VN');
+                if (seen.has(key)) return;
+                seen.add(key);
+                result.push(t);
+            };
+
+            // BHVC mua chuyển vào Chi tiết Khuyến mãi khi xuất hình.
+            if (adj.bhvcType === 'mua') push('Bảo hiểm vật chất');
+
+            // Phụ kiện mua chuyển vào Chi tiết Khuyến mãi.
+            // Combo: bung từng hạng mục bên trong.
+            const selected = Array.isArray(adj.accessories) ? adj.accessories : [];
+            selected.forEach(sel => {
+                if (sel.type !== 'mua') return;
+                const acc = accList.find(a => a.id === sel.id);
+                if (!acc) return;
+
+                const combo = getComboDetail(acc);
+                if (combo && Array.isArray(combo.itemNames) && combo.itemNames.length) {
+                    combo.itemNames.forEach(name => push(cleanAccessoryDisplayName(name)));
+                } else {
+                    push(cleanAccessoryDisplayName(acc.name));
+                }
+            });
+
+            return result;
+        }
+
+        function injectExportPromoDetails(clone, car, calc) {
+            const list = clone.querySelector('#quote-promo-list');
+            if (!list) return;
+
+            const existing = new Set(
+                Array.from(list.querySelectorAll('li'))
+                    .map(li => li.textContent.trim().toLocaleLowerCase('vi-VN'))
+            );
+
+            getExportPromoExtraItems(car, calc).forEach(text => {
+                const key = text.toLocaleLowerCase('vi-VN');
+                if (existing.has(key)) return;
+                existing.add(key);
+
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-2 bg-white p-2 rounded border border-green-200';
+
+                const num = document.createElement('div');
+                num.className = 'flex items-center justify-center w-5 h-5 rounded bg-green-600 text-white font-bold text-[10px] shrink-0';
+                num.textContent = String(list.querySelectorAll('li').length + 1);
+
+                const content = document.createElement('div');
+                content.className = 'flex-1 text-[12px] font-medium';
+                content.textContent = text;
+
+                li.appendChild(num);
+                li.appendChild(content);
+                list.appendChild(li);
+            });
+        }
+
         function getSelectedComboItemNames(car) {
             if (!car) return [];
             const adj = getQuoteAdjustments(car);
@@ -3584,6 +3653,21 @@ ${optionText}
             clone.id = "capture-area-clone";
             clone.style.width = '1024px'; clone.style.minWidth = '1024px'; clone.style.maxWidth = '1024px'; clone.style.margin = '0'; clone.style.transform = 'none'; clone.style.transformOrigin = 'top left'; clone.style.boxSizing = 'border-box';
 
+            // Riêng ảnh xuất: bỏ Chi phí lăn bánh và bảng PK mua riêng.
+            clone.querySelectorAll('.export-hide-running-cost').forEach(el => el.remove());
+            clone.querySelectorAll('.export-hide-accessory-purchase').forEach(el => el.remove());
+
+            // Cột Khuyến mãi còn lại chiếm toàn bộ chiều ngang.
+            clone.querySelectorAll('.capture-grid-cost').forEach(grid => {
+                grid.style.gridTemplateColumns = '1fr';
+            });
+
+            // BHVC mua + phụ kiện mua chuyển sang Chi tiết Khuyến mãi & Tri ân.
+            const exportCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            if (exportCar) {
+                injectExportPromoDetails(clone, exportCar, calculateQuotation(exportCar));
+            }
+
             // QUAN TRỌNG: đồng bộ xe/màu/TT/hộ khẩu/phí và mọi input đang chọn
             // trước khi chuyển select/input thành text để lưu hình.
             syncLiveFormStateToClone(source, clone);
@@ -3608,8 +3692,7 @@ ${optionText}
         function syncBank(src) {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
             let a=getQuoteAdjustments(c), lc=a.loan, calc=calculateQuotation(c), fp=calc.invoicePrice;
-            if(src==='autobutax') lc.autoBuTax=document.getElementById('bank-auto-butax').checked;
-            else if(src==='percent'){let p=parseFloat(document.getElementById('bank-percent').value)||0; lc.percent=p>100?100:p; lc.manualLoan=null;}
+            if(src==='percent'){let p=parseFloat(document.getElementById('bank-percent').value)||0; lc.percent=p>100?100:p; lc.manualLoan=null;}
             else if(src==='loan'){
                 let l=parseMoneyInput(document.getElementById('bank-loan-amount').value)||0;
                 lc.manualLoan=l>fp?fp:l;
