@@ -3182,17 +3182,31 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             const bk = document.getElementById('bank-info-container');
             if(calc.isBank){
-                bk.style.display='block'; const lc=adj.loan, acI=document.activeElement?.id;
-                if(acI!=='bank-auto-butax')document.getElementById('bank-auto-butax').checked=lc.autoBuTax||false;
-                if(acI!=='bank-percent')document.getElementById('bank-percent').value=lc.percent;
-                if(acI!=='bank-years')document.getElementById('bank-years').value=lc.years;
-                if(acI!=='bank-promo-months')document.getElementById('bank-promo-months').value=lc.promoMonths;
-                if(acI!=='bank-promo-rate')document.getElementById('bank-promo-rate').value=lc.promoRate;
-                if(acI!=='bank-float-rate')document.getElementById('bank-float-rate').value=lc.floatRate;
-                if(acI!=='bank-loan-amount')document.getElementById('bank-loan-amount').value=Math.round(calc.loan).toLocaleString('vi-VN');
-                if(acI!=='bank-down-payment')document.getElementById('bank-down-payment').value=Math.round(calc.down).toLocaleString('vi-VN');
-                document.getElementById('bank-total-pay').innerText=formatMoney(calc.totB); document.getElementById('bank-avg-monthly').innerText=formatMoney(calc.avgM)+' / tháng';
-            } else { bk.style.display='none'; }
+                bk.style.display = 'block';
+                const lc = adj.loan;
+                const acI = document.activeElement?.id;
+
+                const setValue = (id, value) => {
+                    const el = document.getElementById(id);
+                    if (el && acI !== id) el.value = value;
+                };
+
+                setValue('bank-percent', lc.percent);
+                setValue('bank-years', lc.years);
+                setValue('bank-promo-months', lc.promoMonths);
+                setValue('bank-promo-rate', lc.promoRate);
+                setValue('bank-float-rate', lc.floatRate);
+                setValue('bank-loan-amount', Math.round(calc.loan).toLocaleString('vi-VN'));
+                setValue('bank-down-payment', Math.round(calc.down).toLocaleString('vi-VN'));
+
+                const totalPayEl = document.getElementById('bank-total-pay');
+                if (totalPayEl) totalPayEl.innerText = formatMoney(calc.totB);
+
+                const avgEl = document.getElementById('bank-avg-monthly');
+                if (avgEl) avgEl.innerText = formatMoney(calc.avgM) + ' / tháng';
+            } else {
+                bk.style.display='none';
+            }
 
             document.getElementById('quote-car-img').src = car.image || 'https://placehold.co/800x600?text=No+Image';
             document.getElementById('quote-car-specs').innerHTML = (car.specs||'').split('\n').filter(p=>p.trim()).map(s=>`<li class="w-[48%] flex items-start">${SVG_CHECK}<span class="leading-snug flex-1 pt-[1px]">${s}</span></li>`).join('');
@@ -3613,10 +3627,19 @@ ${optionText}
         // vì vậy nếu không đồng bộ sẽ có thể quay về option đầu tiên (VD: VF2).
         function syncLiveFormStateToClone(sourceContainer, clonedContainer) {
             const sourceControls = sourceContainer.querySelectorAll('select, input, textarea');
-            const cloneControls = clonedContainer.querySelectorAll('select, input, textarea');
 
-            sourceControls.forEach((src, index) => {
-                const dst = cloneControls[index];
+            sourceControls.forEach((src) => {
+                let dst = null;
+
+                // Ưu tiên tìm theo ID để không phụ thuộc thứ tự DOM.
+                if (src.id) {
+                    try {
+                        dst = clonedContainer.querySelector('#' + CSS.escape(src.id));
+                    } catch(e) {
+                        dst = clonedContainer.querySelector(`[id="${src.id.replace(/"/g, '\\"')}"]`);
+                    }
+                }
+
                 if (!dst || src.tagName !== dst.tagName || src.type !== dst.type) return;
 
                 if (src.tagName === 'SELECT') {
@@ -3631,49 +3654,70 @@ ${optionText}
                 } else if (src.tagName === 'TEXTAREA') {
                     dst.value = src.value;
                     dst.textContent = src.value;
+                } else if (src.type === 'checkbox' || src.type === 'radio') {
+                    dst.checked = src.checked;
+                    if (src.checked) dst.setAttribute('checked', 'checked');
+                    else dst.removeAttribute('checked');
                 } else {
-                    if (src.type === 'checkbox' || src.type === 'radio') {
-                        dst.checked = src.checked;
-                        if (src.checked) dst.setAttribute('checked', 'checked');
-                        else dst.removeAttribute('checked');
-                    } else {
-                        dst.value = src.value;
-                        dst.setAttribute('value', src.value);
-                    }
+                    dst.value = src.value;
+                    dst.setAttribute('value', src.value);
                 }
             });
         }
 
         function openPreview() {
-            // Chốt lại toàn bộ nội dung theo lựa chọn hiện tại trước khi clone.
-            updateQuotationUI();
+            try {
+                // Chốt toàn bộ phép tính trước khi clone, đặc biệt khi đang chọn BANK.
+                updateQuotationUI();
 
-            const source = document.getElementById('capture-area');
-            const clone = source.cloneNode(true);
-            clone.id = "capture-area-clone";
-            clone.style.width = '1024px'; clone.style.minWidth = '1024px'; clone.style.maxWidth = '1024px'; clone.style.margin = '0'; clone.style.transform = 'none'; clone.style.transformOrigin = 'top left'; clone.style.boxSizing = 'border-box';
+                const source = document.getElementById('capture-area');
+                if (!source) throw new Error('Không tìm thấy vùng báo giá.');
 
-            // Riêng ảnh xuất: bỏ Chi phí lăn bánh và bảng PK mua riêng.
-            clone.querySelectorAll('.export-hide-running-cost').forEach(el => el.remove());
-            clone.querySelectorAll('.export-hide-accessory-purchase').forEach(el => el.remove());
+                const clone = source.cloneNode(true);
+                clone.id = "capture-area-clone";
+                clone.style.width = '1024px';
+                clone.style.minWidth = '1024px';
+                clone.style.maxWidth = '1024px';
+                clone.style.margin = '0';
+                clone.style.transform = 'none';
+                clone.style.transformOrigin = 'top left';
+                clone.style.boxSizing = 'border-box';
 
-            // Cột Khuyến mãi còn lại chiếm toàn bộ chiều ngang.
-            clone.querySelectorAll('.capture-grid-cost').forEach(grid => {
-                grid.style.gridTemplateColumns = '1fr';
-            });
+                // PHẢI đồng bộ form trước khi xóa bất kỳ phần tử nào khỏi clone.
+                // Nếu xóa trước, thứ tự select/input giữa source và clone bị lệch,
+                // đặc biệt ở chế độ Bank.
+                syncLiveFormStateToClone(source, clone);
 
-            // BHVC mua + phụ kiện mua chuyển sang Chi tiết Khuyến mãi & Tri ân.
-            const exportCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
-            if (exportCar) {
-                injectExportPromoDetails(clone, exportCar, calculateQuotation(exportCar));
+                // Đưa BHVC mua + phụ kiện mua vào Chi tiết Khuyến mãi & Tri ân.
+                const exportCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+                if (exportCar) {
+                    injectExportPromoDetails(clone, exportCar, calculateQuotation(exportCar));
+                }
+
+                // Riêng ảnh xuất: bỏ phần Chi phí lăn bánh.
+                const runningCostCol = clone.querySelector('.export-hide-running-cost');
+                if (runningCostCol) {
+                    const promoGrid = runningCostCol.parentElement;
+                    runningCostCol.remove();
+
+                    // Chỉ grid của Chi phí/KM được đổi thành 1 cột.
+                    // Không đụng vào grid 2 cột của Bank.
+                    if (promoGrid) promoGrid.style.gridTemplateColumns = '1fr';
+                }
+
+                // PK mua đã được chuyển vào khuyến mãi nên bỏ bảng riêng trên ảnh.
+                clone.querySelectorAll('.export-hide-accessory-purchase').forEach(el => el.remove());
+
+                styleInputsForPrint(clone);
+
+                const preview = document.getElementById('preview-container');
+                preview.innerHTML = '';
+                preview.appendChild(clone);
+                toggleModal('previewModal', true);
+            } catch (e) {
+                console.error('Preview error:', e);
+                alert('Không thể tạo bản xem trước. Vui lòng thử lại.');
             }
-
-            // QUAN TRỌNG: đồng bộ xe/màu/TT/hộ khẩu/phí và mọi input đang chọn
-            // trước khi chuyển select/input thành text để lưu hình.
-            syncLiveFormStateToClone(source, clone);
-            styleInputsForPrint(clone);
-
-            const c=document.getElementById('preview-container'); c.innerHTML=''; c.appendChild(clone); toggleModal('previewModal', true);
         }
         function closePreview() { toggleModal('previewModal', false); document.getElementById('preview-container').innerHTML=''; }
         async function savePreviewImage() {
@@ -3690,23 +3734,54 @@ ${optionText}
 
         // ================== CÁC PHÍ BỔ SUNG & BANK ==================
         function syncBank(src) {
-            const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
-            let a=getQuoteAdjustments(c), lc=a.loan, calc=calculateQuotation(c), fp=calc.invoicePrice;
-            if(src==='percent'){let p=parseFloat(document.getElementById('bank-percent').value)||0; lc.percent=p>100?100:p; lc.manualLoan=null;}
-            else if(src==='loan'){
-                let l=parseMoneyInput(document.getElementById('bank-loan-amount').value)||0;
-                lc.manualLoan=l>fp?fp:l;
-                lc.percent=fp>0?Number((lc.manualLoan/fp*100).toFixed(2)):0;
+            const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
+            if (!car) return;
+
+            const adj = getQuoteAdjustments(car);
+            const loanCfg = adj.loan;
+            const calc = calculateQuotation(car);
+            const invoicePrice = Math.max(0, Number(calc.invoicePrice || 0));
+
+            if (src === 'percent') {
+                let percent = parseFloat(document.getElementById('bank-percent')?.value);
+                if (!Number.isFinite(percent)) percent = 0;
+                percent = Math.max(0, Math.min(100, percent));
+
+                loanCfg.percent = percent;
+                // % vay là nguồn nhập => xóa manualLoan để hệ thống tự tính tiền vay.
+                loanCfg.manualLoan = null;
             }
-            else if(src==='down'){
-                let d=parseMoneyInput(document.getElementById('bank-down-payment').value)||0;
-                const requestedDown = d>fp?fp:d;
-                lc.manualLoan=Math.max(0, fp - requestedDown);
-                if(lc.manualLoan>fp) lc.manualLoan=fp;
-                lc.percent=fp>0?Number((lc.manualLoan/fp*100).toFixed(2)):0;
+            else if (src === 'loan') {
+                let loanAmount = parseMoneyInput(document.getElementById('bank-loan-amount')?.value || 0) || 0;
+                loanAmount = Math.max(0, Math.min(invoicePrice, loanAmount));
+
+                loanCfg.manualLoan = loanAmount;
+                loanCfg.percent = invoicePrice > 0
+                    ? Number((loanAmount / invoicePrice * 100).toFixed(2))
+                    : 0;
             }
-            else {lc.years=parseInt(document.getElementById('bank-years').value)||0; lc.promoMonths=parseInt(document.getElementById('bank-promo-months').value)||12; lc.promoRate=parseFloat(document.getElementById('bank-promo-rate').value)||0; lc.floatRate=parseFloat(document.getElementById('bank-float-rate').value)||0;}
-            quoteAdjustments[c.id]=a; saveQuoteAdjustmentsToStorage(); updateQuotationUI();
+            else if (src === 'down') {
+                let downAmount = parseMoneyInput(document.getElementById('bank-down-payment')?.value || 0) || 0;
+                downAmount = Math.max(0, Math.min(invoicePrice, downAmount));
+
+                const loanAmount = Math.max(0, invoicePrice - downAmount);
+                loanCfg.manualLoan = loanAmount;
+                loanCfg.percent = invoicePrice > 0
+                    ? Number((loanAmount / invoicePrice * 100).toFixed(2))
+                    : 0;
+            }
+            else {
+                loanCfg.years = parseInt(document.getElementById('bank-years')?.value) || 0;
+                loanCfg.promoMonths = parseInt(document.getElementById('bank-promo-months')?.value) || 12;
+                loanCfg.promoRate = parseFloat(document.getElementById('bank-promo-rate')?.value) || 0;
+                loanCfg.floatRate = parseFloat(document.getElementById('bank-float-rate')?.value) || 0;
+            }
+
+            quoteAdjustments[car.id] = adj;
+            saveQuoteAdjustmentsToStorage();
+
+            // Tính lại ngay để cập nhật các ô liên quan theo chiều ngược lại.
+            updateQuotationUI();
         }
         function syncLive(id, key) {
             const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(!c)return;
