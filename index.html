@@ -551,6 +551,46 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         </div>
                     </div>
 
+                    <!-- BẢO HÀNH THEO DÒNG XE -->
+                    <div id="warranty-panel" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 overflow-hidden">
+                        <div class="px-4 py-3 bg-emerald-100/80 border-b border-emerald-200 flex items-center justify-between gap-3">
+                            <div>
+                                <div class="text-sm font-black text-emerald-900 uppercase">🛡️ Thông tin bảo hành</div>
+                                <div id="warranty-subtitle" class="text-[10px] text-emerald-700 font-bold mt-0.5"></div>
+                            </div>
+                            <button type="button" onclick="toggleWarrantyDetails()" class="text-[10px] font-black text-emerald-800 bg-white border border-emerald-300 rounded-lg px-3 py-1.5">Xem chi tiết</button>
+                        </div>
+                        <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="rounded-xl bg-white border border-emerald-200 p-3">
+                                <div class="text-[10px] uppercase font-black text-gray-500">Bảo hành xe mới</div>
+                                <div id="warranty-vehicle-main" class="text-base font-black text-emerald-800 mt-1">—</div>
+                                <div id="warranty-vehicle-note" class="text-[10px] text-gray-500 mt-1"></div>
+                            </div>
+                            <div class="rounded-xl bg-white border border-emerald-200 p-3">
+                                <div class="text-[10px] uppercase font-black text-gray-500">Pin cao áp</div>
+                                <div id="warranty-battery-main" class="text-base font-black text-emerald-800 mt-1">—</div>
+                                <div id="warranty-battery-note" class="text-[10px] text-gray-500 mt-1"></div>
+                            </div>
+                        </div>
+                        <div id="warranty-details" class="hidden px-4 pb-4">
+                            <div class="rounded-xl border border-emerald-200 bg-white overflow-hidden">
+                                <div class="grid grid-cols-[1.3fr_1fr] text-[11px] font-bold">
+                                    <div class="px-3 py-2 border-b bg-gray-50">Hạng mục</div><div class="px-3 py-2 border-b bg-gray-50">Thời hạn</div>
+                                    <div class="px-3 py-2 border-b">Ắc quy 12V</div><div id="warranty-12v" class="px-3 py-2 border-b">—</div>
+                                    <div class="px-3 py-2 border-b">Ghế xe</div><div id="warranty-seat" class="px-3 py-2 border-b">—</div>
+                                    <div class="px-3 py-2 border-b">Sơn ngoại thất</div><div id="warranty-paint" class="px-3 py-2 border-b">—</div>
+                                    <div class="px-3 py-2 border-b">Hệ thống treo*</div><div id="warranty-suspension" class="px-3 py-2 border-b">—</div>
+                                    <div class="px-3 py-2 border-b">Lốp xe</div><div class="px-3 py-2 border-b">Theo chính sách NSX lốp</div>
+                                    <div class="px-3 py-2">Phụ tùng hao mòn**</div><div class="px-3 py-2">6 tháng / 10.000 km</div>
+                                </div>
+                            </div>
+                            <div class="text-[9px] text-gray-500 mt-2 leading-relaxed">
+                                * Bộ giảm xóc, thanh ổn định, cụm liên kết trên, cánh tay điều khiển dưới, khớp bi, giá đỡ phía trên giảm xóc.<br>
+                                ** Má phanh, đĩa phanh, cao su gạt mưa, pin điều khiển, cầu chì 12V, bóng đèn sợi đốt và các chi tiết hao mòn tương đương.
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Section 2 -->
                     <div class="quote-spec-card border border-gray-200 rounded-lg flex bg-white shadow-sm items-stretch overflow-hidden">
                         <div class="w-[55%] p-6 z-10 bg-white border-r border-gray-100">
@@ -1116,6 +1156,100 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const shouldCheck=boxes.some(x=>!x.checked); boxes.forEach(x=>x.checked=shouldCheck); syncPromoCarKeysFromChecks();
         }
 
+
+
+        // ================== BẢO HÀNH THEO DÒNG XE ==================
+        function isCommercialWarrantyUse(adj) {
+            const usage = String(adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family').toLowerCase();
+            return usage === 'service' || usage === 'xanhsm';
+        }
+
+        function getWarrantyGroup(car) {
+            const key = normalizeCarKey(car?.standardName || [car?.name, car?.version].filter(Boolean).join(' '));
+            if (key.includes('LAC HONG')) return 'lac_hong';
+            if (key === 'VF2' || key.includes('EC VAN')) return 'ec_vf2';
+            if (key.startsWith('VF3') || key.startsWith('VF7') || key === 'VF8 ALL NEW' || key.includes('VF8 NEW') || key.includes('VF9 NEW')) return 'vf3_vf7_new';
+            if (key.startsWith('VF8') || key.startsWith('VF9')) return 'vf8_vf9';
+            return 'green_group';
+        }
+
+        function getWarrantyPolicy(car, adj) {
+            const g = getWarrantyGroup(car);
+            const commercial = isCommercialWarrantyUse(adj);
+            const common = { battery12v:'1 năm / không giới hạn km' };
+
+            if (g === 'vf8_vf9') return {
+                vehicle: commercial ? '3 năm / 100.000 km' : '10 năm / 200.000 km',
+                vehicleNote: commercial ? 'Sử dụng mục đích DVTM' : 'Điều kiện sử dụng tiêu chuẩn',
+                battery: commercial ? '3 năm / 100.000 km' : '10 năm / 200.000 km',
+                batteryNote: commercial ? 'Sử dụng mục đích DVTM' : 'Điều kiện sử dụng tiêu chuẩn',
+                seat: commercial ? '3 năm / 100.000 km' : '10 năm / không giới hạn km',
+                paint: commercial ? '3 năm / 100.000 km' : '10 năm / không giới hạn km',
+                suspension: commercial ? '3 năm / 100.000 km' : '5 năm / 130.000 km',
+                ...common
+            };
+
+            if (g === 'green_group') return {
+                vehicle:'7 năm / 160.000 km',
+                vehicleNote:'Nhóm Minio/Herio/Nerio/VF5/VF6/Limo Green/VF MVP7/VF Wild',
+                battery:'8 năm / 160.000 km',
+                batteryNote:'Không phân biệt mục đích sử dụng theo bảng pin',
+                seat:'7 năm / không giới hạn km',
+                paint:'7 năm / không giới hạn km',
+                suspension:'5 năm / 130.000 km',
+                ...common
+            };
+
+            if (g === 'vf3_vf7_new') return {
+                vehicle: commercial ? '3 năm / 100.000 km' : '7 năm / 160.000 km',
+                vehicleNote: commercial ? 'Sử dụng mục đích DVTM' : 'Điều kiện sử dụng tiêu chuẩn',
+                battery: commercial ? '3 năm / 100.000 km' : '8 năm / 160.000 km',
+                batteryNote: commercial ? 'Sử dụng mục đích DVTM' : 'Điều kiện sử dụng tiêu chuẩn',
+                seat: commercial ? '3 năm / 100.000 km' : '7 năm / không giới hạn km',
+                paint: commercial ? '3 năm / 100.000 km' : '7 năm / không giới hạn km',
+                suspension: commercial ? '3 năm / 100.000 km' : '5 năm / 130.000 km',
+                ...common
+            };
+
+            if (g === 'ec_vf2') return {
+                vehicle:'5 năm / 130.000 km', vehicleNote:'',
+                battery:'7 năm / 160.000 km', batteryNote:'',
+                seat:'5 năm / không giới hạn km',
+                paint:'5 năm / không giới hạn km',
+                suspension:'5 năm / 130.000 km',
+                ...common
+            };
+
+            return {
+                vehicle:'10 năm / 200.000 km', vehicleNote:'',
+                battery:'10 năm / 200.000 km', batteryNote:'',
+                seat:'10 năm / không giới hạn km',
+                paint:'10 năm / không giới hạn km',
+                suspension:'5 năm / 130.000 km',
+                ...common
+            };
+        }
+
+        function renderWarrantyInfo(car) {
+            if (!car) return;
+            const p = getWarrantyPolicy(car, getQuoteAdjustments(car));
+            const commercial = isCommercialWarrantyUse(getQuoteAdjustments(car));
+            const set = (id,v) => { const el=document.getElementById(id); if(el) el.innerText=v || '—'; };
+
+            set('warranty-subtitle', commercial ? 'Chế độ sử dụng: Dịch vụ / DVTM' : 'Chế độ sử dụng: Tiêu chuẩn / Gia đình');
+            set('warranty-vehicle-main', p.vehicle);
+            set('warranty-vehicle-note', p.vehicleNote);
+            set('warranty-battery-main', p.battery);
+            set('warranty-battery-note', p.batteryNote);
+            set('warranty-12v', p.battery12v);
+            set('warranty-seat', p.seat);
+            set('warranty-paint', p.paint);
+            set('warranty-suspension', p.suspension);
+        }
+
+        function toggleWarrantyDetails() {
+            document.getElementById('warranty-details')?.classList.toggle('hidden');
+        }
 
         // ================== MÀU XE & PHỤ PHÍ MÀU NÂNG CAO ==================
         // Nguồn: file "Mau SAC VF.xlsx" do người dùng cung cấp.
@@ -2817,6 +2951,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const usageSelect = document.getElementById('usageSelect');
             if (usageSelect && document.activeElement !== usageSelect) usageSelect.value = getVehicleUseRule(car)==='private-only' ? 'family' : (adj.chargingUsage || 'family');
             renderColorOptions(car, false);
+            renderWarrantyInfo(car);
             const calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
             fillFlexibleGifts(car);
 
