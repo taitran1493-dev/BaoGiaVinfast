@@ -3212,28 +3212,140 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         // ================== QUOTE INFO ==================
         function openQuoteInfo() {
-            const cId = document.getElementById('carSelect').value; const car = carList.find(c=>c.id===cId); if(!car)return;
-            const calc = calculateQuotation(car); 
-            
-            // Copy Text dùng cùng nguồn với phần “Chi tiết Khuyến mãi & Tri ân”.
-            const pA = [];
-            (car.promoText || '').split('\n').map(x => x.trim()).filter(Boolean).forEach(x => pushUniquePromo(pA, x));
-            const chargingPromo = getChargingPromotion(car, calc.adj);
-            pushUniquePromo(pA, chargingPromo);
-            if (calc.bhType === 'tang') pushUniquePromo(pA, 'Tặng Bảo hiểm vật chất');
-            calc.aTang.forEach(name => pushUniquePromo(pA, cleanAccessoryDisplayName(name)));
-            getFlexibleGifts(car).forEach(name => pushUniquePromo(pA, name));
+            const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            if (!car) return;
 
-            const sum = document.getElementById('quoteInfoSummary'), txt = document.getElementById('quoteInfoText');
-            const cN=`${car.name} ${car.version} ${car.year}`, cl=document.getElementById('colorSelect').value, pl=document.getElementById('plateSelect').options[document.getElementById('plateSelect').selectedIndex].text, pa=calc.isBank?'BANK':'CASH';
-            const usageText = document.getElementById('usageSelect')?.options[document.getElementById('usageSelect').selectedIndex]?.text || 'Gia đình';
-            const ht=document.getElementById('cityPlateSelect').options[document.getElementById('cityPlateSelect').selectedIndex].text;
-            const accT = calc.aMua.length>0 ? `\nPHỤ KIỆN MUA THÊM:\n`+calc.aMua.map(a=>`• ${a.name}: ${formatMoney(a.price)}`).join('\n')+`\n=> Tổng tiền phụ kiện: ${formatMoney(calc.totAcc)}\n` : '';
+            const calc = calculateQuotation(car);
+            const adj = calc.adj || getQuoteAdjustments(car);
 
-            sum.innerHTML = `<div class="quote-info-row"><span class="quote-info-label">Xe</span><span class="quote-info-value">${cN}</span></div><div class="quote-info-row"><span class="quote-info-label">Giá lăn bánh</span><span class="quote-info-value text-emerald-600">${formatMoney(calc.totOnRoad)}</span></div>${calc.isBank?`<div class="quote-info-row"><span class="quote-info-label">Tổng trả nhận xe</span><span class="quote-info-value text-brand-primary">${formatMoney(calc.totB)}</span></div>`:''}`;
-            txt.value = `BÁO GIÁ XE ${cN}\n\n• Màu: ${cl} | Biển: ${pl} | Hộ khẩu: ${ht} | TT: ${pa}\n• Giá niêm yết: ${formatMoney(calc.listPrice)}${calc.colorSurcharge>0?` (gồm +${formatMoney(calc.colorSurcharge)} màu nâng cao)`:''}\n• Tổng ưu đãi: - ${formatMoney(calc.totalDiscount)}\n• Giảm trên HĐ Đại lý: - ${formatMoney(calc.invoiceDiscount)}\n• Giá Đại lý xuất hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giá xe theo hóa đơn: ${formatMoney(calc.invoicePrice)}\n• Giá lăn bánh: ${formatMoney(calc.totOnRoad)}\n• Lệ phí biển số: ${formatMoney(calc.phiDangKy)}\n• Dịch vụ ĐK: ${formatMoney(calc.adj.registrationService)}\n${calc.paymentDiscount>0?`• Giảm tại Thanh Toán: - ${formatMoney(calc.paymentDiscount)}\n• Chi phí ĐK sau giảm: ${formatMoney(calc.netReg)}\n`:`• Tổng chi phí ĐK: ${formatMoney(calc.totReg)}\n`}• BHVC: ${formatMoney(calc.bhVal)} (${calc.bhType==='tang'?'Đại lý tặng':(calc.bhType==='mua'?'Khách mua':'Không')})\n${accT}` + (calc.isBank?`\nTRẢ GÓP:\n• Gói vay: ${calc.adj.loan.percent}%\n• Tiền vay: ${formatMoney(calc.loan)}\n• Đối ứng: ${formatMoney(calc.down)}\n• NHẬN XE: ${formatMoney(calc.totB)}\n• Góp 1 năm đầu: ${formatMoney(calc.avgM)} /tháng\n`:'') + (pA.length ? `\nCTKM & QUÀ TẶNG:\n${pA.map((p,i)=>`${i+1}.${p}`).join('\n')}` : '');
+            const colorInfo = getSelectedColorInfo(car);
+            const colorName = colorInfo?.name || document.getElementById('colorSelect')?.value || '';
+
+            const plateEl = document.getElementById('plateSelect');
+            const plateText = plateEl?.options?.[plateEl.selectedIndex]?.text || plateEl?.value || '';
+
+            const provinceEl = document.getElementById('provinceSelect');
+            const provinceText = provinceEl?.options?.[provinceEl.selectedIndex]?.text
+                || provinceEl?.value
+                || document.getElementById('residenceSelect')?.options?.[document.getElementById('residenceSelect')?.selectedIndex]?.text
+                || '';
+
+            const payEl = document.getElementById('paymentSelect');
+            const payRaw = payEl?.value || '';
+            const paymentText = payRaw === 'BANK'
+                ? 'Ngân Hàng'
+                : (payEl?.options?.[payEl.selectedIndex]?.text || 'Trả Thẳng');
+
+            const warranty = getWarrantyPolicy(car, adj);
+
+            // ----- Options / Phụ kiện / Quà tặng -----
+            const optionLines = [];
+            const optionSeen = new Set();
+
+            const pushOption = (text) => {
+                const clean = String(text || '').trim();
+                if (!clean) return;
+                const key = clean.toLocaleLowerCase('vi-VN');
+                if (optionSeen.has(key)) return;
+                optionSeen.add(key);
+                optionLines.push(clean);
+            };
+
+            // BHVC: mua hay tặng đều đưa vào Options.
+            if (adj.bhvcType === 'tang') {
+                pushOption('Tặng Bảo hiểm vật chất');
+            } else if (adj.bhvcType === 'mua') {
+                pushOption(`Bảo hiểm vật chất: ${formatMoney(calc.bhVal || calc.effBh || 0)}`);
+            }
+
+            // Phụ kiện mua / tặng.
+            const selectedAccessories = Array.isArray(adj.accessories) ? adj.accessories : [];
+            selectedAccessories.forEach(sel => {
+                const acc = accList.find(a => a.id === sel.id);
+                if (!acc) return;
+
+                const combo = getComboDetail(acc);
+                if (combo && Array.isArray(combo.itemNames) && combo.itemNames.length) {
+                    // Combo: bung từng món phụ kiện vào Options.
+                    combo.itemNames.forEach(itemName => {
+                        pushOption(cleanAccessoryDisplayName(itemName));
+                    });
+                } else {
+                    const cleanName = cleanAccessoryDisplayName(acc.name);
+                    if (sel.type === 'mua') {
+                        pushOption(`${cleanName}: ${formatMoney(Number(sel.finalPrice || acc.priceMua || 0))}`);
+                    } else if (sel.type === 'tang') {
+                        pushOption(cleanName);
+                    }
+                }
+            });
+
+            // Phụ kiện tặng linh động.
+            getFlexibleGifts(car).forEach(pushOption);
+
+            // Quà tặng / promoText trên xe.
+            String(car.promoText || '')
+                .split(/\r?\n/)
+                .map(x => x.trim())
+                .filter(Boolean)
+                .forEach(pushOption);
+
+            // Các promo dạng quà/tặng đang hiển thị, loại trừ các dòng giảm tiền.
+            const promoItemsForCopy = [];
+            try {
+                const pA = [];
+                const activePromos = getActivePromosForCar ? getActivePromosForCar(car) : [];
+                activePromos.forEach(p => {
+                    const name = String(p?.name || '');
+                    const desc = String(p?.description || p?.desc || '');
+                    const combined = `${name} ${desc}`.trim();
+                    if (/tặng|mien phi|miễn phí|quà|qua tang/i.test(combined)) {
+                        pA.push(desc || name);
+                    }
+                });
+                pA.forEach(x => promoItemsForCopy.push(x));
+            } catch(e) {}
+            promoItemsForCopy.forEach(pushOption);
+
+            const optionText = optionLines.length
+                ? optionLines.map(x => `🔸 ${x}`).join('\n')
+                : '🔸 Không có';
+
+            const titleParts = [
+                `🚗BÁO GIÁ XE ${[car.name, car.version].filter(Boolean).join(' ').trim()}`,
+                colorName,
+                plateText,
+                provinceText,
+                paymentText
+            ].filter(Boolean);
+
+            const text = `${titleParts.join(' - ')}
+
+🔹Giá Niêm Yết : ${formatMoney(calc.listPrice || car.price || 0)}
+🔹Giá Lăn Bánh (dự kiến) : ${formatMoney(calc.totOnRoad || 0)}
+
+🎉 Options, Phụ Kiện & Quà Tặng :
+${optionText}
+
+🔰 Chính Sách Bảo Hành
+🔺 Bảo hành xe: ${warranty.vehicle || '—'}
+🔺 Bảo hành pin cao áp: ${warranty.battery || '—'}`;
+
+            const sum = document.getElementById('quoteInfoSummary');
+            const txt = document.getElementById('quoteInfoText');
+
+            if (sum) {
+                sum.innerHTML = `
+                    <div class="text-sm font-black text-gray-900">${titleParts.join(' - ')}</div>
+                    <div class="mt-2 text-xs text-gray-600">Giá lăn bánh dự kiến: <b class="text-brand-primary">${formatMoney(calc.totOnRoad || 0)}</b></div>
+                `;
+            }
+
+            if (txt) txt.value = text;
+
             toggleModal('quoteInfoModal', true);
         }
+
         function closeQuoteInfo() { toggleModal('quoteInfoModal', false); }
         async function copyQuoteInfo() { const t=document.getElementById('quoteInfoText'); try{await navigator.clipboard.writeText(t.value); alert('Đã copy!');}catch(e){t.select(); document.execCommand('copy'); alert('Đã copy!');} }
 
