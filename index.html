@@ -3356,6 +3356,30 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 ? 'Ngân Hàng'
                 : (payEl?.options?.[payEl.selectedIndex]?.text || 'Trả Thẳng');
 
+            let bankCopyText = '';
+            if (payRaw === 'BANK') {
+                const loanCfg = adj?.loan || {};
+                const loanPercent = Number(loanCfg.percent || 0);
+                const promoMonths = Number(loanCfg.promoMonths || 0);
+                const promoRate = Number(loanCfg.promoRate || 0);
+                const floatRate = Number(loanCfg.floatRate || 0);
+
+                const fixedPeriodText = promoMonths > 0
+                    ? `${promoMonths} tháng đầu`
+                    : 'giai đoạn đầu';
+
+                const afterMonth = promoMonths > 0 ? promoMonths + 1 : 13;
+
+                bankCopyText = `
+
+🏦 Gói Vay Ngân Hàng
+🔹 Tỷ lệ vay: ${loanPercent.toFixed(2).replace(/\.00$/,'')}%
+🔹 Số tiền vay: ${formatMoney(calc.loan || 0)}
+🔹 Số tiền trả trước: ${formatMoney(calc.down || 0)}
+🔹 Lãi suất cố định ${fixedPeriodText}: ${promoRate.toFixed(2).replace(/\.00$/,'')}%/năm
+🔹 Biên độ từ tháng ${afterMonth} trở đi: ${floatRate.toFixed(2).replace(/\.00$/,'')}%/năm`;
+            }
+
             const warranty = getWarrantyPolicy(car, adj);
 
             // ----- Options / Phụ kiện / Quà tặng -----
@@ -3442,7 +3466,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const text = `${titleParts.join(' - ')}
 
 🔹Giá Niêm Yết : ${formatMoney(calc.listPrice || car.price || 0)}
-🔹Giá Lăn Bánh (dự kiến) : ${formatMoney(calc.totOnRoad || 0)}
+🔹Giá Lăn Bánh (dự kiến) : ${formatMoney(calc.totOnRoad || 0)}${bankCopyText}
 
 🎉 Options, Phụ Kiện & Quà Tặng :
 ${optionText}
