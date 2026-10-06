@@ -415,8 +415,9 @@
                 <div id="left-bhvc-panel" class="flex flex-col gap-2 mb-4"></div>
                 <hr class="border-gray-100 mb-4">
                 <!-- Phụ Kiện -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-                    <button onclick="openAccPicker()" class="w-full py-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold rounded-xl border border-purple-200 transition-colors text-sm">+ Quản lý Phụ Kiện</button>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+                    <button onclick="openAccPicker()" class="w-full py-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold rounded-xl border border-purple-200 transition-colors text-sm">+ Phụ Kiện Lẻ</button>
+                    <button onclick="openComboPicker()" class="w-full py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold rounded-xl border border-indigo-200 transition-colors text-sm">📦 Chọn Combo Phụ Kiện</button>
                     <button onclick="clearPurchasedAccessories()" class="w-full py-2.5 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold rounded-xl border border-rose-200 transition-colors text-sm">✕ Xóa nhanh PK mua</button>
                 </div>
 
@@ -805,7 +806,29 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
     </div>
 
     <!-- 4. MODAL CHỌN PHỤ KIỆN -->
-    <div id="accPickerModal" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 hidden justify-center items-end sm:items-center sm:p-4">
+    
+    <div id="comboPickerModal" class="fixed inset-0 bg-black/60 z-[100] hidden items-center justify-center p-3">
+        <div class="bg-white w-full max-w-3xl max-h-[92vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-4 border-b bg-indigo-50 flex items-start justify-between gap-3">
+                <div>
+                    <div class="text-lg font-black text-indigo-800">📦 CHỌN COMBO PHỤ KIỆN</div>
+                    <div id="combo-picker-subtitle" class="text-xs text-indigo-600 font-bold mt-1"></div>
+                </div>
+                <button onclick="closeComboPicker()" class="w-9 h-9 rounded-full bg-white border border-indigo-200 text-indigo-700 font-black">✕</button>
+            </div>
+
+            <div id="combo-picker-list" class="p-4 overflow-y-auto flex-1 space-y-3"></div>
+
+            <div class="p-4 border-t bg-white flex flex-wrap justify-between gap-3">
+                <button onclick="removeSelectedCombos()" class="px-4 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl">Xóa Combo đang chọn</button>
+                <div class="flex gap-2">
+                    <button onclick="closeComboPicker()" class="px-5 py-2.5 bg-gray-200 text-gray-800 font-bold rounded-xl">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div id="accPickerModal" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 hidden justify-center items-end sm:items-center sm:p-4">
         <!-- Nội dung như cũ -->
         <div class="bg-white w-full sm:rounded-2xl shadow-2xl max-w-4xl flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh]">
             <div class="bg-purple-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between sm:rounded-t-2xl shrink-0">
@@ -1757,6 +1780,156 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         function editAcc(id) { const a=accList.find(c=>c.id===id); if(a){document.getElementById('form-acc-id').value=a.id; document.getElementById('form-acc-category').value=a.category||''; document.getElementById('form-acc-name').value=a.name; document.getElementById('form-acc-price-tang').value=a.priceTang?Number(a.priceTang).toLocaleString('vi-VN'):''; document.getElementById('form-acc-price-mua').value=a.priceMua?Number(a.priceMua).toLocaleString('vi-VN'):'';} }
         function deleteAcc(id) { if(confirm('Xóa?')){accList=accList.filter(c=>c.id!==id); localStorage.setItem('vinfast_accessories_v2',JSON.stringify(accList)); renderAccTable(); clearAccForm(); updateQuotationUI();} }
 
+
+        function openComboPicker() {
+            const carId = document.getElementById('carSelect')?.value;
+            const car = carList.find(c => c.id === carId);
+            if (!car) return alert('Chọn xe trước.');
+
+            ensureReferenceComboAccessories();
+
+            const adj = getQuoteAdjustments(car);
+            const selected = Array.isArray(adj.accessories) ? adj.accessories : [];
+            const combos = accList.filter(acc => isComboAccessory(acc) && isComboApplicableToCar(acc, car));
+
+            document.getElementById('combo-picker-subtitle').innerText =
+                `Xe: ${car.name || ''} ${car.version || ''}`.trim();
+
+            const list = document.getElementById('combo-picker-list');
+
+            if (!combos.length) {
+                list.innerHTML = `<div class="p-6 text-center text-gray-500 italic">
+                    Chưa có Combo phù hợp với xe này.
+                </div>`;
+                toggleModal('comboPickerModal', true);
+                return;
+            }
+
+            list.innerHTML = combos.map(acc => {
+                const combo = getComboDetail(acc);
+                const sav = selected.find(x => x.id === acc.id);
+                const selectedType = sav?.type || 'khong';
+                const selectedPrice = Number(sav?.finalPrice ?? acc.priceMua ?? combo.comboPrice ?? 0);
+
+                const items = (combo.itemNames || []).map((name, i) =>
+                    `<li>${i+1}. ${cleanAccessoryDisplayName(name)}</li>`
+                ).join('');
+
+                return `<div class="rounded-2xl border-2 ${sav ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-white'} p-4">
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <div class="font-black text-indigo-800 text-base">${acc.name}</div>
+                                <span class="text-[10px] font-black text-white bg-indigo-600 px-2 py-0.5 rounded">COMBO 5 MÓN</span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Dòng xe: <b>${combo.vehicleGroup || ''}</b>
+                            </div>
+
+                            <div class="mt-3 rounded-xl bg-white border border-indigo-200 p-3">
+                                <div class="text-xs font-black text-indigo-700 mb-1">Danh sách phụ kiện:</div>
+                                <ul class="text-xs text-gray-700 space-y-1">${items}</ul>
+                            </div>
+
+                            <div class="mt-3 text-xs">
+                                <span class="text-gray-500">Tổng giá lẻ:</span>
+                                <b class="ml-1">${formatMoney(combo.retailTotal)}</b>
+                                <span class="mx-2">•</span>
+                                <span class="text-gray-500">Giá combo:</span>
+                                <b class="ml-1 text-indigo-700">${formatMoney(combo.comboPrice)}</b>
+                                ${combo.discountPercent ? `<span class="ml-2 text-emerald-700 font-black">(-${combo.discountPercent}%)</span>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="w-full sm:w-[190px] shrink-0">
+                            <label class="block text-[10px] font-black text-gray-500 mb-1">ÁP DỤNG</label>
+                            <select id="combo_type_${acc.id}" onchange="updateComboPriceVisibility('${acc.id}')" class="w-full border rounded-lg p-2.5 font-bold">
+                                <option value="khong" ${selectedType==='khong'?'selected':''}>Không chọn</option>
+                                <option value="mua" ${selectedType==='mua'?'selected':''}>Khách Mua</option>
+                                <option value="tang" ${selectedType==='tang'?'selected':''}>Đại lý Tặng</option>
+                            </select>
+
+                            <div id="combo_price_wrap_${acc.id}" class="mt-2" style="display:${selectedType==='mua'?'block':'none'}">
+                                <label class="block text-[10px] font-black text-gray-500 mb-1">GIÁ BÁN COMBO</label>
+                                <input id="combo_price_${acc.id}" type="text"
+                                    value="${selectedPrice.toLocaleString('vi-VN')}"
+                                    oninput="formatInputMoney(this)"
+                                    class="w-full border rounded-lg p-2.5 text-right font-black text-indigo-700">
+                            </div>
+
+                            <button onclick="applyComboSelection('${acc.id}')" class="w-full mt-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl">
+                                Áp dụng Combo
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            toggleModal('comboPickerModal', true);
+        }
+
+        function closeComboPicker() {
+            toggleModal('comboPickerModal', false);
+        }
+
+        function updateComboPriceVisibility(id) {
+            const type = document.getElementById(`combo_type_${id}`)?.value || 'khong';
+            const wrap = document.getElementById(`combo_price_wrap_${id}`);
+            if (wrap) wrap.style.display = type === 'mua' ? 'block' : 'none';
+        }
+
+        function applyComboSelection(id) {
+            const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            const acc = accList.find(a => a.id === id);
+            if (!car || !acc) return;
+
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+
+            const type = document.getElementById(`combo_type_${id}`)?.value || 'khong';
+            const current = Array.isArray(quoteAdjustments[car.id].accessories)
+                ? [...quoteAdjustments[car.id].accessories]
+                : [];
+
+            const filtered = current.filter(x => x.id !== id);
+
+            if (type === 'mua') {
+                const price = parseMoneyInput(
+                    document.getElementById(`combo_price_${id}`)?.value || acc.priceMua || 0
+                );
+                filtered.push({ id, type:'mua', finalPrice: price });
+            } else if (type === 'tang') {
+                filtered.push({ id, type:'tang', finalPrice:0 });
+            }
+
+            quoteAdjustments[car.id].accessories = filtered;
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+            openComboPicker();
+        }
+
+        function removeSelectedCombos() {
+            const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            if (!car) return;
+
+            const current = Array.isArray(getQuoteAdjustments(car).accessories)
+                ? getQuoteAdjustments(car).accessories
+                : [];
+
+            const comboIds = new Set(
+                accList.filter(a => isComboAccessory(a)).map(a => a.id)
+            );
+
+            const count = current.filter(x => comboIds.has(x.id)).length;
+            if (!count) return alert('Xe hiện tại chưa chọn Combo nào.');
+
+            if (!confirm(`Xóa ${count} Combo đang chọn khỏi báo giá?`)) return;
+
+            quoteAdjustments[car.id].accessories = current.filter(x => !comboIds.has(x.id));
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+            openComboPicker();
+        }
+
         function openAccPicker() {
             const carId = document.getElementById('carSelect').value;
             const car = carList.find(c => c.id === carId);
@@ -1767,7 +1940,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             document.getElementById('acc-picker-subtitle').innerText = `Xe: ${car.name} ${car.version}`;
             const savedAccs = getQuoteAdjustments(car).accessories || [];
 
-            const visibleAccs = accList.filter(acc => !isComboAccessory(acc) || isComboApplicableToCar(acc, car));
+            const visibleAccs = accList.filter(acc => !isComboAccessory(acc));
 
             document.getElementById('acc-picker-list').innerHTML = visibleAccs.map(acc => {
                 const sav = savedAccs.find(x => x.id === acc.id);
