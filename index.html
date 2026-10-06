@@ -3374,8 +3374,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
 🏦 Gói Vay Ngân Hàng
 🔹 Tỷ lệ vay: ${loanPercent.toFixed(2).replace(/\.00$/,'')}%
-🔹 Số tiền vay: ${formatMoney(calc.loan || 0)}
-🔹 Số tiền trả trước: ${formatMoney(calc.down || 0)}
+🔹 Tổng thanh toán nhận xe: ${formatMoney(calc.totB || 0)}
 🔹 Lãi suất cố định ${fixedPeriodText}: ${promoRate.toFixed(2).replace(/\.00$/,'')}%/năm
 🔹 Biên độ từ tháng ${afterMonth} trở đi: ${floatRate.toFixed(2).replace(/\.00$/,'')}%/năm`;
             }
