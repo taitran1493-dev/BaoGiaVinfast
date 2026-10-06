@@ -551,6 +551,11 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         </div>
                     </div>
 
+                    <div id="charging-promo-panel" class="mb-4 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3">
+                        <div class="text-[11px] font-black text-cyan-800 uppercase mb-1">⚡ Ưu đãi sạc</div>
+                        <div id="charging-promo-summary" class="text-xs text-cyan-900 font-semibold leading-relaxed">—</div>
+                    </div>
+
                     <!-- BẢO HÀNH THEO DÒNG XE -->
                     <div id="warranty-panel" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 overflow-hidden">
                         <div class="px-4 py-3 bg-emerald-100/80 border-b border-emerald-200 flex items-center justify-between gap-3">
@@ -2952,6 +2957,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (usageSelect && document.activeElement !== usageSelect) usageSelect.value = getVehicleUseRule(car)==='private-only' ? 'family' : (adj.chargingUsage || 'family');
             renderColorOptions(car, false);
             renderWarrantyInfo(car);
+            const chargingSummaryEl = document.getElementById('charging-promo-summary');
+            if (chargingSummaryEl) chargingSummaryEl.innerText = getChargingPromoSummary(car, getQuoteAdjustments(car));
             const calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
             fillFlexibleGifts(car);
 
@@ -3211,6 +3218,65 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         }
 
         // ================== QUOTE INFO ==================
+
+        function getChargingPromoSummary(car, adj) {
+            if (!car) return '';
+
+            const key = normalizeCarKey(car.standardName || [car.name, car.version].filter(Boolean).join(' '));
+            const usage = String(adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family').toLowerCase();
+
+            // Theo chính sách đang dùng trong tool:
+            // EC VAN: 20 lượt đầu/xe/tháng đến 10/02/2029.
+            // MINIO GREEN: dùng 10 lượt/tháng theo chính sách hiện hành trong tool.
+            // VF WILD và các dòng còn lại: 10 lượt/tháng.
+            // Dịch vụ/biển vàng: áp dụng theo khung giờ thấp điểm.
+            // Xanh SM độc quyền: miễn phí không giới hạn, 10 lượt đầu do VinFast, phần còn lại do GSM.
+
+            if (usage === 'xanhsm') {
+                return 'Ưu đãi sạc: Miễn phí sạc không giới hạn theo chính sách Xanh SM độc quyền (10 lượt đầu/tháng do VinFast hỗ trợ, phần còn lại do GSM hỗ trợ).';
+            }
+
+            let sessions = 10;
+            let extraNote = '';
+
+            if (key.includes('EC VAN')) {
+                sessions = 20;
+                extraNote = ' đến 10/02/2029';
+            }
+
+            if (usage === 'service') {
+                return `Ưu đãi sạc: ${sessions} lượt sạc/tháng${extraNote}, áp dụng khung giờ thấp điểm dành cho xe dịch vụ/biển vàng.`;
+            }
+
+            return `Ưu đãi sạc: ${sessions} lượt sạc đầu tiên/tháng${extraNote}; lượt không sử dụng không cộng dồn sang tháng sau.`;
+        }
+
+
+        function getSelectedComboItemNames(car) {
+            if (!car) return [];
+            const adj = getQuoteAdjustments(car);
+            const selected = Array.isArray(adj.accessories) ? adj.accessories : [];
+            const result = [];
+            const seen = new Set();
+
+            selected.forEach(sel => {
+                const acc = accList.find(a => a.id === sel.id);
+                if (!acc) return;
+                const combo = getComboDetail(acc);
+                if (!combo || !Array.isArray(combo.itemNames)) return;
+
+                combo.itemNames.forEach(name => {
+                    const clean = cleanAccessoryDisplayName(name);
+                    const key = clean.toLocaleLowerCase('vi-VN');
+                    if (!clean || seen.has(key)) return;
+                    seen.add(key);
+                    result.push(clean);
+                });
+            });
+
+            return result;
+        }
+
         function openQuoteInfo() {
             const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
             if (!car) return;
@@ -3255,7 +3321,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (adj.bhvcType === 'tang') {
                 pushOption('Tặng Bảo hiểm vật chất');
             } else if (adj.bhvcType === 'mua') {
-                pushOption(`Bảo hiểm vật chất: ${formatMoney(calc.bhVal || calc.effBh || 0)}`);
+                pushOption('Bảo hiểm vật chất');
             }
 
             // Phụ kiện mua / tặng.
@@ -3326,6 +3392,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
 🎉 Options, Phụ Kiện & Quà Tặng :
 ${optionText}
+
+⚡ ${getChargingPromoSummary(car, adj)}
 
 🔰 Chính Sách Bảo Hành
 🔺 Bảo hành xe: ${warranty.vehicle || '—'}
