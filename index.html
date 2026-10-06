@@ -415,7 +415,10 @@
                 <div id="left-bhvc-panel" class="flex flex-col gap-2 mb-4"></div>
                 <hr class="border-gray-100 mb-4">
                 <!-- Phụ Kiện -->
-                <button onclick="openAccPicker()" class="w-full py-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold rounded-xl border border-purple-200 mb-4 transition-colors text-sm">+ Quản lý Phụ Kiện Gói Báo Giá</button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                    <button onclick="openAccPicker()" class="w-full py-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold rounded-xl border border-purple-200 transition-colors text-sm">+ Quản lý Phụ Kiện</button>
+                    <button onclick="clearPurchasedAccessories()" class="w-full py-2.5 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold rounded-xl border border-rose-200 transition-colors text-sm">✕ Xóa nhanh PK mua</button>
+                </div>
 
                 <div class="mb-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-3">
                     <div class="flex items-center justify-between gap-2 mb-2">
@@ -817,7 +820,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     <tbody id="acc-picker-list" class="divide-y text-sm"></tbody>
                 </table>
             </div>
-            <div class="p-4 bg-white border-t flex justify-end gap-3 sm:rounded-b-2xl shrink-0">
+            <div class="p-4 bg-white border-t flex flex-wrap justify-end gap-3 sm:rounded-b-2xl shrink-0">
+                <button onclick="clearPurchasedAccessories(true)" class="px-5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl">Xóa PK mua</button>
                 <button onclick="closeAccPicker()" class="px-5 py-2.5 bg-gray-200 text-gray-800 font-bold rounded-xl">Hủy</button>
                 <button onclick="saveAccPicker()" class="px-6 py-2.5 bg-purple-600 text-white font-bold rounded-xl">Lưu vào Báo giá</button>
             </div>
@@ -910,6 +914,135 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         function parseMoneyInput(val) { const d = String(val ?? '').replace(/\D/g, ''); return d ? Number(d) : 0; }
         function cleanAccessoryDisplayName(name) {
             return String(name || '').replace(/^\s*\[[^\]]+\]\s*/, '').trim();
+        }
+
+        // ================== COMBO PHỤ KIỆN 5 MÓN ==================
+        // Nguồn: file "Combo phụ kiện 5 món.xlsx" đã cung cấp trước đó.
+        const REFERENCE_ACCESSORY_COMBOS = [{"id": "combo_vf3_5_mon", "vehicleGroup": "VF3", "name": "Gói Combo theo xe tặng khách VF3", "discountPercent": 10, "retailTotal": 4057500, "comboPrice": 3651750, "itemIds": ["acc_pk_atx5c", "acc_pk_btlcc", "acc_tham_san_roi", "acc_pk_cmrht1m", "acc_pk_cnnx_vf3"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe VF3"]}, {"id": "combo_vf5_5_mon", "vehicleGroup": "VF5", "name": "Gói Combo theo xe tặng khách VF5", "discountPercent": 10, "retailTotal": 4295000, "comboPrice": 3865500, "itemIds": ["acc_pk_atx5c", "acc_pk_btlcc", "acc_tham_san_roi", "acc_pk_cmrht1m", "acc_pk_cnnx4c"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]}, {"id": "combo_vf6_5_mon", "vehicleGroup": "VF6", "name": "Gói Combo theo xe tặng khách VF6", "discountPercent": 10, "retailTotal": 4295000, "comboPrice": 3865500, "itemIds": ["acc_pk_atx5c", "acc_pk_btlcc", "acc_tham_san_roi", "acc_pk_cmrht1m", "acc_pk_cnnx4c"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]}, {"id": "combo_vf7_5_mon", "vehicleGroup": "VF7", "name": "Gói Combo theo xe tặng khách VF7", "discountPercent": 10, "retailTotal": 4295000, "comboPrice": 3865500, "itemIds": ["acc_pk_atx5c", "acc_pk_btlcc", "acc_tham_san_roi", "acc_pk_cmrht1m", "acc_pk_cnnx4c"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]}, {"id": "combo_vf8_5_mon", "vehicleGroup": "VF8", "name": "Gói Combo theo xe tặng khách VF8", "discountPercent": 10, "retailTotal": 4295000, "comboPrice": 3865500, "itemIds": ["acc_pk_atx5c", "acc_pk_btlcc", "acc_tham_san_roi", "acc_pk_cmrht1m", "acc_pk_cnnx4c"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]}, {"id": "combo_vf9_5_mon", "vehicleGroup": "VF9", "name": "Gói Combo theo xe tặng khách VF9", "discountPercent": 10, "retailTotal": 4460000, "comboPrice": 4014000, "itemIds": ["acc_atx7cl", "acc_pk_btlcc", "acc_tham_san_roi", "acc_pk_cmrht1m", "acc_pk_cnnx7c"], "itemNames": ["Áo trùm xe 7 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (7 chỗ)"]}, {"id": "combo_limo_5_mon", "vehicleGroup": "Limo", "name": "Gói Combo theo xe tặng khách Limo", "discountPercent": 10, "retailTotal": 4460000, "comboPrice": 4014000, "itemIds": ["acc_atx7cl", "acc_pk_btlcc", "acc_tham_san_roi", "acc_pk_cmrht1m", "acc_pk_cnnx7c"], "itemNames": ["Áo trùm xe 7 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (7 chỗ)"]}];
+
+        function getReferenceComboById(id) {
+            return REFERENCE_ACCESSORY_COMBOS.find(c => c.id === id) || null;
+        }
+
+        function getComboDetail(acc) {
+            if (!acc) return null;
+
+            const ref = getReferenceComboById(acc.id);
+            const combo = ref || (acc.isCombo ? {
+                id: acc.id,
+                vehicleGroup: acc.vehicleGroup || '',
+                name: acc.name || '',
+                discountPercent: Number(acc.discountPercent || 0),
+                retailTotal: Number(acc.retailTotal || acc.priceTang || 0),
+                comboPrice: Number(acc.comboPrice || acc.priceMua || 0),
+                itemIds: Array.isArray(acc.itemIds) ? acc.itemIds : [],
+                itemNames: Array.isArray(acc.itemNames) ? acc.itemNames : []
+            } : null);
+
+            if (!combo) return null;
+
+            let itemNames = Array.isArray(combo.itemNames) ? combo.itemNames.filter(Boolean) : [];
+            if (!itemNames.length && Array.isArray(combo.itemIds)) {
+                itemNames = combo.itemIds.map(id => {
+                    const found = accList.find(x => x.id === id);
+                    return found ? cleanAccessoryDisplayName(found.name) : '';
+                }).filter(Boolean);
+            }
+
+            return { ...combo, itemNames };
+        }
+
+        function isComboAccessory(acc) {
+            return !!getComboDetail(acc);
+        }
+
+        function isComboApplicableToCar(acc, car) {
+            const combo = getComboDetail(acc);
+            if (!combo || !car) return true;
+
+            const group = normalizeCarKey(combo.vehicleGroup || '');
+            const carKey = normalizeCarKey(car.standardName || [car.name, car.version].filter(Boolean).join(' '));
+
+            if (!group) return true;
+            if (group === 'LIMO') return carKey.includes('LIMO');
+            return carKey.includes(group);
+        }
+
+        function ensureReferenceComboAccessories() {
+            REFERENCE_ACCESSORY_COMBOS.forEach(combo => {
+                const idx = accList.findIndex(a => a.id === combo.id);
+                const comboAcc = {
+                    id: combo.id,
+                    category: `COMBO 5 MÓN - ${combo.vehicleGroup}`,
+                    name: combo.name,
+                    priceTang: combo.retailTotal,
+                    priceMua: combo.comboPrice,
+                    isCombo: true,
+                    vehicleGroup: combo.vehicleGroup,
+                    discountPercent: combo.discountPercent,
+                    retailTotal: combo.retailTotal,
+                    comboPrice: combo.comboPrice,
+                    itemIds: combo.itemIds,
+                    itemNames: combo.itemNames
+                };
+
+                if (idx < 0) {
+                    accList.push(comboAcc);
+                } else {
+                    // Giữ dữ liệu do người dùng quản lý, chỉ bù thông tin combo còn thiếu.
+                    accList[idx] = { ...comboAcc, ...accList[idx],
+                        isCombo: true,
+                        vehicleGroup: accList[idx].vehicleGroup || combo.vehicleGroup,
+                        itemIds: Array.isArray(accList[idx].itemIds) && accList[idx].itemIds.length ? accList[idx].itemIds : combo.itemIds,
+                        itemNames: Array.isArray(accList[idx].itemNames) && accList[idx].itemNames.length ? accList[idx].itemNames : combo.itemNames
+                    };
+                }
+            });
+        }
+
+        function renderComboItemsHtml(acc, compact=false) {
+            const combo = getComboDetail(acc);
+            if (!combo || !combo.itemNames.length) return '';
+
+            const items = combo.itemNames.map((name, i) =>
+                `<li>${i+1}. ${cleanAccessoryDisplayName(name)}</li>`
+            ).join('');
+
+            return compact
+                ? `<div class="mt-1.5 rounded-lg bg-white/70 border border-purple-200 px-2 py-1.5 text-[10px] text-gray-600">
+                       <div class="font-black text-purple-700 mb-1">Combo gồm ${combo.itemNames.length} món:</div>
+                       <ul class="space-y-0.5">${items}</ul>
+                   </div>`
+                : `<div class="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[11px] text-indigo-800">
+                       <div class="font-black mb-1">📦 Danh sách combo ${combo.itemNames.length} món</div>
+                       <ul class="space-y-0.5">${items}</ul>
+                       <div class="mt-1 font-bold">Giá lẻ: ${formatMoney(combo.retailTotal)} · Giá combo: ${formatMoney(combo.comboPrice)}${combo.discountPercent ? ` · Giảm ${combo.discountPercent}%` : ''}</div>
+                   </div>`;
+        }
+
+        function clearPurchasedAccessories(reopenPicker=false) {
+            const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            if (!car) return alert('Chọn xe trước.');
+
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            const current = Array.isArray(quoteAdjustments[car.id].accessories)
+                ? quoteAdjustments[car.id].accessories
+                : [];
+
+            const buyCount = current.filter(a => a.type === 'mua').length;
+            if (!buyCount) {
+                if (reopenPicker) openAccPicker();
+                else alert('Hiện không có phụ kiện Khách Mua để xóa.');
+                return;
+            }
+
+            if (!confirm(`Xóa nhanh ${buyCount} phụ kiện Khách Mua?\nCác phụ kiện Đại lý Tặng vẫn được giữ nguyên.`)) return;
+
+            quoteAdjustments[car.id].accessories = current.filter(a => a.type !== 'mua');
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+
+            if (reopenPicker) openAccPicker();
         }
         function pushUniquePromo(arr, text) {
             const val = String(text || '').trim();
@@ -1276,6 +1409,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (Array.isArray(clean.accessories)) accList = clean.accessories;
             if (Array.isArray(clean.promos)) promoList = clean.promos;
             accessoryCombos = clean.accessoryCombos || [];
+            ensureReferenceComboAccessories();
 
             if (persistLocal) {
                 localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList));
@@ -1624,13 +1758,56 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         function deleteAcc(id) { if(confirm('Xóa?')){accList=accList.filter(c=>c.id!==id); localStorage.setItem('vinfast_accessories_v2',JSON.stringify(accList)); renderAccTable(); clearAccForm(); updateQuotationUI();} }
 
         function openAccPicker() {
-            const carId = document.getElementById('carSelect').value; const car = carList.find(c => c.id === carId); if(!car)return alert("Chọn xe!");
+            const carId = document.getElementById('carSelect').value;
+            const car = carList.find(c => c.id === carId);
+            if(!car) return alert("Chọn xe!");
+
+            ensureReferenceComboAccessories();
+
             document.getElementById('acc-picker-subtitle').innerText = `Xe: ${car.name} ${car.version}`;
             const savedAccs = getQuoteAdjustments(car).accessories || [];
-            document.getElementById('acc-picker-list').innerHTML = accList.map(acc => {
-                let sav=savedAccs.find(x=>x.id===acc.id), type=sav?sav.type:'khong', price=sav?sav.finalPrice:acc.priceMua, pct=acc.priceMua>0?(1-price/acc.priceMua)*100:0;
-                return `<tr class="border-b hover:bg-purple-50"><td class="p-3 pl-6 font-semibold"><span class="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mr-2 uppercase block sm:inline-block w-fit mb-1 sm:mb-0">${acc.category||'Khác'}</span>${acc.name}<div class="text-[11px] text-gray-400 mt-1">Tặng: ${formatMoney(acc.priceTang)} | Bán: ${formatMoney(acc.priceMua)}</div></td><td class="p-3 text-center"><select id="pk_type_${acc.id}" onchange="toggleAccInputs('${acc.id}')" class="bg-gray-50 border p-2 rounded outline-none w-full"><option value="khong" ${type==='khong'?'selected':''}>Không chọn</option><option value="tang" ${type==='tang'?'selected':''}>Đại lý Tặng</option><option value="mua" ${type==='mua'?'selected':''}>Khách Mua</option></select></td><td class="p-3 w-[280px]"><div id="pk_inputs_${acc.id}" class="flex gap-2" style="display:${type==='mua'?'flex':'none'};"><div class="flex flex-col"><span class="text-[10px] text-gray-500 font-bold mb-0.5">GIẢM (%)</span><input type="number" id="pk_pct_${acc.id}" value="${pct.toFixed(1)}" oninput="calcAccPriceFromPct('${acc.id}',${acc.priceMua})" class="w-16 border p-2 rounded text-center"></div><div class="flex flex-col flex-1"><span class="text-[10px] text-gray-500 font-bold mb-0.5">GIÁ BÁN (VNĐ)</span><input type="text" id="pk_price_${acc.id}" value="${price.toLocaleString('vi-VN')}" oninput="formatInputMoney(this); calcAccPctFromPrice('${acc.id}',${acc.priceMua})" class="w-full border p-2 rounded text-right font-bold text-purple-700"></div></div></td></tr>`;
+
+            const visibleAccs = accList.filter(acc => !isComboAccessory(acc) || isComboApplicableToCar(acc, car));
+
+            document.getElementById('acc-picker-list').innerHTML = visibleAccs.map(acc => {
+                const sav = savedAccs.find(x => x.id === acc.id);
+                const type = sav ? sav.type : 'khong';
+                const price = sav ? sav.finalPrice : acc.priceMua;
+                const pct = acc.priceMua > 0 ? (1 - price / acc.priceMua) * 100 : 0;
+                const comboHtml = renderComboItemsHtml(acc, false);
+                const comboBadge = isComboAccessory(acc)
+                    ? '<span class="text-[10px] font-black text-white bg-indigo-600 px-2 py-0.5 rounded ml-1">COMBO</span>'
+                    : '';
+
+                return `<tr class="border-b hover:bg-purple-50">
+                    <td class="p-3 pl-6 font-semibold align-top">
+                        <span class="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mr-2 uppercase block sm:inline-block w-fit mb-1 sm:mb-0">${acc.category||'Khác'}</span>
+                        ${acc.name}${comboBadge}
+                        <div class="text-[11px] text-gray-400 mt-1">Tặng: ${formatMoney(acc.priceTang)} | Bán: ${formatMoney(acc.priceMua)}</div>
+                        ${comboHtml}
+                    </td>
+                    <td class="p-3 text-center align-top">
+                        <select id="pk_type_${acc.id}" onchange="toggleAccInputs('${acc.id}')" class="bg-gray-50 border p-2 rounded outline-none w-full">
+                            <option value="khong" ${type==='khong'?'selected':''}>Không chọn</option>
+                            <option value="tang" ${type==='tang'?'selected':''}>Đại lý Tặng</option>
+                            <option value="mua" ${type==='mua'?'selected':''}>Khách Mua</option>
+                        </select>
+                    </td>
+                    <td class="p-3 w-[280px] align-top">
+                        <div id="pk_inputs_${acc.id}" class="flex gap-2" style="display:${type==='mua'?'flex':'none'};">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-gray-500 font-bold mb-0.5">GIẢM (%)</span>
+                                <input type="number" id="pk_pct_${acc.id}" value="${pct.toFixed(1)}" oninput="calcAccPriceFromPct('${acc.id}',${acc.priceMua})" class="w-16 border p-2 rounded text-center">
+                            </div>
+                            <div class="flex flex-col flex-1">
+                                <span class="text-[10px] text-gray-500 font-bold mb-0.5">GIÁ BÁN (VNĐ)</span>
+                                <input type="text" id="pk_price_${acc.id}" value="${Number(price||0).toLocaleString('vi-VN')}" oninput="formatInputMoney(this); calcAccPctFromPrice('${acc.id}',${acc.priceMua})" class="w-full border p-2 rounded text-right font-bold text-purple-700">
+                            </div>
+                        </div>
+                    </td>
+                </tr>`;
             }).join('') || '<tr><td colspan="3" class="p-6 text-center text-gray-500">Chưa có dữ liệu</td></tr>';
+
             toggleModal('accPickerModal', true);
         }
         function closeAccPicker() { toggleModal('accPickerModal', false); }
@@ -1638,10 +1815,29 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         function calcAccPctFromPrice(id, base) { if(base<=0)return; const p=parseMoneyInput(document.getElementById(`pk_price_${id}`).value); document.getElementById(`pk_pct_${id}`).value = ((1-p/base)*100).toFixed(1); }
         function calcAccPriceFromPct(id, base) { const pct=parseFloat(document.getElementById(`pk_pct_${id}`).value)||0; let p=base*(1-pct/100); if(p<0)p=0; document.getElementById(`pk_price_${id}`).value=Math.round(p).toLocaleString('vi-VN'); }
         function saveAccPicker() {
-            const carId = document.getElementById('carSelect').value; const car = carList.find(c => c.id === carId); if(!car)return;
+            const carId = document.getElementById('carSelect').value;
+            const car = carList.find(c => c.id === carId);
+            if(!car) return;
+
             if(!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
-            let sel = []; accList.forEach(a => { const t = document.getElementById(`pk_type_${a.id}`); if(!t)return; if(t.value==='tang')sel.push({id:a.id,type:'tang',finalPrice:0}); else if(t.value==='mua')sel.push({id:a.id,type:'mua',finalPrice:parseMoneyInput(document.getElementById(`pk_price_${a.id}`).value)}); });
-            quoteAdjustments[car.id].accessories = sel; saveQuoteAdjustmentsToStorage(); closeAccPicker(); updateQuotationUI();
+
+            let sel = [];
+            accList.forEach(a => {
+                const t = document.getElementById(`pk_type_${a.id}`);
+                if(!t) return;
+
+                if(t.value === 'tang') {
+                    sel.push({id:a.id,type:'tang',finalPrice:0});
+                } else if(t.value === 'mua') {
+                    const priceEl = document.getElementById(`pk_price_${a.id}`);
+                    sel.push({id:a.id,type:'mua',finalPrice:parseMoneyInput(priceEl?.value || a.priceMua)});
+                }
+            });
+
+            quoteAdjustments[car.id].accessories = sel;
+            saveQuoteAdjustmentsToStorage();
+            closeAccPicker();
+            updateQuotationUI();
         }
 
         // ================== CAR MANAGER ==================
@@ -2397,7 +2593,17 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             let effectiveBhValueForReg = (bhvcType === 'tang' || bhvcType === 'khong') ? 0 : calculatedBhValue;
 
             let accTang = [], aMua = [], totAcc = 0;
-            adj.accessories.forEach(a => { const d=accList.find(x=>x.id===a.id); if(d){ if(a.type==='tang')accTang.push(d.name); else if(a.type==='mua'){aMua.push({name:d.name,price:a.finalPrice}); totAcc+=a.finalPrice;} } });
+            adj.accessories.forEach(a => {
+                const d = accList.find(x => x.id === a.id);
+                if (!d) return;
+
+                if (a.type === 'tang') {
+                    accTang.push(d.name);
+                } else if (a.type === 'mua') {
+                    aMua.push({ id:d.id, name:d.name, price:a.finalPrice });
+                    totAcc += a.finalPrice;
+                }
+            });
 
             const bTax = invoicePrice * taxR; // cơ sở theo giá Đại lý xuất hóa đơn
             let tax = adj.taxAdjust > 0 ? adj.taxAdjust : bTax;
@@ -2590,9 +2796,43 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             }
 
             // Phụ kiện
-            let hAcc=''; if(calc.aTang.length>0)hAcc+=`<div class="text-xs text-green-700 bg-green-50 border border-green-200 p-2.5 rounded-lg"><span class="font-bold uppercase block mb-1">🎁 Quà tặng đại lý:</span><ul class="list-disc pl-4 space-y-0.5">${calc.aTang.map(n=>`<li>${n}</li>`).join('')}</ul></div>`;
-            if(calc.aMua.length>0)hAcc+=`<div class="text-xs text-purple-700 bg-purple-50 border border-purple-200 p-2.5 rounded-lg mt-2"><span class="font-bold uppercase block mb-1">💳 Khách mua thêm:</span><ul class="list-disc pl-4 space-y-0.5">${calc.aMua.map(a=>`<li><span class="font-medium">${a.name}</span> <b>(${formatMoney(a.price)})</b></li>`).join('')}</ul></div>`;
-            document.getElementById('left-acc-summary').innerHTML = hAcc||'<div class="text-xs text-gray-400 italic text-center">Chưa chọn phụ kiện.</div>';
+            let hAcc = '';
+
+            if (calc.aTang.length > 0) {
+                hAcc += `<div class="text-xs text-green-700 bg-green-50 border border-green-200 p-2.5 rounded-lg">
+                    <span class="font-bold uppercase block mb-1">🎁 Quà tặng đại lý:</span>
+                    <div class="space-y-2">
+                        ${calc.aTang.map(name => {
+                            const acc = accList.find(x => x.name === name);
+                            return `<div>
+                                <div class="font-medium">• ${name}</div>
+                                ${renderComboItemsHtml(acc, true)}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }
+
+            if (calc.aMua.length > 0) {
+                hAcc += `<div class="text-xs text-purple-700 bg-purple-50 border border-purple-200 p-2.5 rounded-lg mt-2">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="font-bold uppercase">💳 Khách mua thêm:</span>
+                        <button type="button" onclick="clearPurchasedAccessories()" class="text-[9px] font-black px-2 py-1 rounded bg-white text-rose-600 border border-rose-200">Xóa nhanh</button>
+                    </div>
+                    <div class="space-y-2">
+                        ${calc.aMua.map(a => {
+                            const acc = accList.find(x => x.id === a.id) || accList.find(x => x.name === a.name);
+                            return `<div>
+                                <div>• <span class="font-medium">${a.name}</span> <b>(${formatMoney(a.price)})</b></div>
+                                ${renderComboItemsHtml(acc, true)}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }
+
+            document.getElementById('left-acc-summary').innerHTML =
+                hAcc || '<div class="text-xs text-gray-400 italic text-center">Chưa chọn phụ kiện.</div>';
 
             const lt = document.getElementById('customize-toggle'); if(lt&&lt.checked)fillLiveCustomizePanel();
 
@@ -2701,6 +2941,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             carList = carList.map(c=>({...c, standardName:c.standardName || normalizeCarKey([c.name,c.version].filter(Boolean).join(' ')), cutLimit:Number(c.cutLimit ?? c.discount ?? 0), saleSalary:Number(c.saleSalary ?? 0), dealerPromoSuggested:Number(c.dealerPromoSuggested ?? 0)})); localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList));
             const sA=localStorage.getItem('vinfast_accessories_v2'); if(sA)accList=JSON.parse(sA); else accList=[];
             try { accessoryCombos = JSON.parse(localStorage.getItem('vinfast_accessory_combos_v1') || '[]') || []; } catch(e) { accessoryCombos = []; }
+            ensureReferenceComboAccessories();
             const sP=localStorage.getItem('vinfast_promos_v1'); if(sP)promoList=JSON.parse(sP); else promoList=[...initPromos]; promoList=promoList.map(({cutLimit,...p})=>p); localStorage.setItem('vinfast_promos_v1',JSON.stringify(promoList));
             
             try{quoteAdjustments=JSON.parse(localStorage.getItem('vinfast_quote_adj_v3')||'{}')||{};}catch(e){quoteAdjustments={};}
