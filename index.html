@@ -415,10 +415,11 @@
                 <div id="left-bhvc-panel" class="flex flex-col gap-2 mb-4"></div>
                 <hr class="border-gray-100 mb-4">
                 <!-- Phụ Kiện -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mb-4">
                     <button onclick="openAccPicker()" class="w-full py-2.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold rounded-xl border border-purple-200 transition-colors text-sm">+ Phụ Kiện Bán</button>
                     <button onclick="openComboPicker()" class="w-full py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold rounded-xl border border-indigo-200 transition-colors text-sm">🎁 Quà Tặng Combo</button>
                     <button onclick="clearPurchasedAccessories()" class="w-full py-2.5 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold rounded-xl border border-rose-200 transition-colors text-sm">✕ Xóa nhanh PK mua</button>
+                    <button onclick="clearGiftAccessories()" class="w-full py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold rounded-xl border border-amber-200 transition-colors text-sm">✕ Xóa PK tặng</button>
                 </div>
 
                 <div class="mb-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-3">
@@ -865,7 +866,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             <div id="combo-picker-list" class="p-4 overflow-y-auto flex-1 space-y-3"></div>
 
             <div class="p-4 border-t bg-white flex flex-wrap justify-between gap-3">
-                <button onclick="removeSelectedCombos()" class="px-4 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl">Xóa quà Combo</button>
+                <button onclick="clearGiftAccessories(true)" class="px-4 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-xl">Xóa toàn bộ PK tặng</button>
                 <div class="flex gap-2">
                     <button onclick="closeComboPicker()" class="px-5 py-2.5 bg-gray-200 text-gray-800 font-bold rounded-xl">Đóng</button>
                 </div>
@@ -879,6 +880,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             <div class="bg-purple-600 text-white px-4 sm:px-6 py-4 flex items-center justify-between sm:rounded-t-2xl shrink-0">
                 <div><h2 class="text-lg sm:text-xl font-bold">PHỤ KIỆN BÁN CHO KHÁCH</h2><p class="text-purple-100 text-xs mt-1" id="acc-picker-subtitle"></p></div>
                 <button onclick="closeAccPicker()" class="text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="px-4 pt-3 bg-white border-b shrink-0">
+                <div id="acc-sale-tabs" class="flex gap-2 overflow-x-auto pb-3 custom-scrollbar"></div>
             </div>
             <div class="overflow-x-auto bg-gray-50 flex-1 custom-scrollbar">
                 <table class="w-full text-left bg-white min-w-[700px]">
@@ -2025,14 +2029,17 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 const salary = Number(car.saleSalary || 0);
 
                 const itemRows = combo.items.map((it, idx) => `
-                    <label class="flex items-start gap-2 p-2 rounded-lg border border-gray-200 bg-white">
+                    <label class="flex items-start gap-2 p-2.5 rounded-lg border border-gray-200 bg-white hover:border-emerald-300 transition-colors">
                         <input type="checkbox" class="combo-gift-item mt-1 accent-emerald-600"
                             data-combo="${combo.id}" value="${it.id}"
                             ${selectedIds.has(it.id)?'checked':''}
                             onchange="refreshComboGiftReference('${combo.id}')">
-                        <span class="flex-1 text-xs">
-                            <span class="font-semibold text-gray-800">${idx+1}. ${cleanAccessoryDisplayName(it.name)}</span>
-                            <span class="block text-[10px] text-gray-500 mt-0.5">${it.code ? it.code+' · ' : ''}${formatMoney(it.retailPrice)}</span>
+                        <span class="flex-1 text-xs min-w-0">
+                            <span class="font-semibold text-gray-800 block">${idx+1}. ${cleanAccessoryDisplayName(it.name)}</span>
+                            <span class="block text-[10px] text-gray-400 mt-0.5">${it.code || 'Không mã'}${it.unit ? ' · '+it.unit : ''}</span>
+                            <span class="inline-flex mt-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-[10px] font-black text-amber-700">
+                                Giá tặng lẻ tham chiếu: ${formatMoney(it.retailPrice)}
+                            </span>
                         </span>
                     </label>`).join('');
 
@@ -2072,7 +2079,10 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         <div class="mt-1 text-[10px] text-gray-500">Còn lại so với khung NPP: ${formatMoney(npp-refValue)} · Còn lại so với lương: ${formatMoney(salary-refValue)}</div>
                     </div>
 
-                    <button onclick="applyComboGiftSelection('${combo.id}')" class="w-full mt-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl">Lưu quà tặng</button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                        <button onclick="applyComboGiftSelection('${combo.id}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl">Lưu quà tặng</button>
+                        <button onclick="removeComboGiftSelection('${combo.id}')" class="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-black rounded-xl" ${sel.mode==='none'?'disabled style="opacity:.45;cursor:not-allowed"':''}>Xóa quà combo này</button>
+                    </div>
                 </div>`;
             }).join('');
 
@@ -2154,54 +2164,162 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             openComboPicker();
         }
 
+        function removeComboGiftSelection(comboId) {
+            const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            if (!car) return;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+
+            const current = Array.isArray(quoteAdjustments[car.id].comboGifts)
+                ? quoteAdjustments[car.id].comboGifts
+                : [];
+            const found = current.find(x => x.comboId === comboId);
+            if (!found) return alert('Combo này chưa được chọn làm quà tặng.');
+
+            const combo = getComboById(comboId);
+            if (!confirm(`Xóa quà tặng "${combo?.name || comboId}" khỏi báo giá?`)) return;
+
+            quoteAdjustments[car.id].comboGifts = current.filter(x => x.comboId !== comboId);
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+            openComboPicker();
+        }
+
+        function clearGiftAccessories(reopenCombo=false) {
+            const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            if (!car) return alert('Chọn xe trước.');
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+
+            const adj = quoteAdjustments[car.id];
+            const comboCount = Array.isArray(adj.comboGifts) ? adj.comboGifts.length : 0;
+            const legacyGiftCount = Array.isArray(adj.accessories)
+                ? adj.accessories.filter(x => x.type === 'tang').length
+                : 0;
+            const flexibleCount = Array.isArray(adj.flexibleGifts) ? adj.flexibleGifts.length : 0;
+            const total = comboCount + legacyGiftCount + flexibleCount;
+
+            if (!total) {
+                alert('Hiện không có phụ kiện/quà tặng để xóa.');
+                if (reopenCombo) openComboPicker();
+                return;
+            }
+
+            if (!confirm(`Xóa toàn bộ ${total} lựa chọn/phụ kiện tặng?\nPhụ kiện Khách Mua vẫn được giữ nguyên.`)) return;
+
+            adj.comboGifts = [];
+            adj.flexibleGifts = [];
+            adj.accessories = Array.isArray(adj.accessories)
+                ? adj.accessories.filter(x => x.type !== 'tang')
+                : [];
+
+            saveQuoteAdjustmentsToStorage();
+
+            const input = document.getElementById('flex-gift-input');
+            if (input) input.value = '';
+            const count = document.getElementById('flex-gift-count');
+            if (count) count.innerText = '0 món tặng';
+
+            updateQuotationUI();
+            if (reopenCombo) openComboPicker();
+        }
+
+        let activeAccessorySaleTab = 0;
+
+        function switchAccessorySaleTab(tabIndex) {
+            activeAccessorySaleTab = Number(tabIndex) || 0;
+
+            document.querySelectorAll('#acc-sale-tabs [data-acc-tab]').forEach(btn => {
+                const active = Number(btn.dataset.accTab) === activeAccessorySaleTab;
+                btn.classList.toggle('bg-purple-600', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('border-purple-600', active);
+                btn.classList.toggle('bg-white', !active);
+                btn.classList.toggle('text-purple-700', !active);
+                btn.classList.toggle('border-purple-200', !active);
+            });
+
+            document.querySelectorAll('#acc-picker-list tr[data-acc-tab]').forEach(row => {
+                row.classList.toggle('hidden', Number(row.dataset.accTab) !== activeAccessorySaleTab);
+            });
+        }
+
         function openAccPicker() {
             const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
             if (!car) return alert("Chọn xe!");
 
             normalizeAccessoryDataModel();
             document.getElementById('acc-picker-subtitle').innerText =
-                `Xe: ${car.name} ${car.version} · Chỉ hiển thị phụ kiện BÁN phù hợp`;
+                `Xe: ${car.name} ${car.version} · Chọn theo Tab/Sheet của file Báo Giá Phụ Kiện`;
 
             const savedAccs = getQuoteAdjustments(car).accessories || [];
-            const visibleAccs = accList
-                .filter(acc => isSaleAccessoryApplicableToCar(acc, car))
-                .sort((a,b) => String(a.category||'').localeCompare(String(b.category||''),'vi') || String(a.name||'').localeCompare(String(b.name||''),'vi'));
+            const visibleAccs = accList.filter(acc => isSaleAccessoryApplicableToCar(acc, car));
 
-            document.getElementById('acc-picker-list').innerHTML = visibleAccs.map(acc => {
-                const sav = savedAccs.find(x => x.id === acc.id && x.type === 'mua');
-                const type = sav ? 'mua' : 'khong';
-                const price = sav ? Number(sav.finalPrice || 0) : Number(acc.priceMua || 0);
-                const pct = acc.priceMua > 0 ? (1 - price / acc.priceMua) * 100 : 0;
+            // Giữ đúng thứ tự Sheet xuất hiện trong file/data thay vì sort alphabet.
+            const sheetNames = [];
+            const sheetSeen = new Set();
+            visibleAccs.forEach(acc => {
+                const sheet = String(acc.sourceSheet || acc.category || 'Khác').trim() || 'Khác';
+                if (!sheetSeen.has(sheet)) {
+                    sheetSeen.add(sheet);
+                    sheetNames.push(sheet);
+                }
+            });
 
-                return `<tr class="border-b hover:bg-purple-50">
-                    <td class="p-3 pl-6 font-semibold align-top">
-                        <span class="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mr-2 uppercase block sm:inline-block w-fit mb-1">${acc.category||'Khác'}</span>
-                        <div>${cleanAccessoryDisplayName(acc.name)}</div>
-                        <div class="text-[10px] text-gray-400 mt-1">${acc.code ? acc.code+' · ' : ''}${acc.unit||''}</div>
-                        <div class="text-[11px] text-purple-600 mt-1 font-bold">Giá bán: ${formatMoney(acc.priceMua)}</div>
-                    </td>
-                    <td class="p-3 text-center align-top">
-                        <select id="pk_type_${acc.id}" onchange="toggleAccInputs('${acc.id}')" class="bg-gray-50 border p-2 rounded outline-none w-full">
-                            <option value="khong" ${type==='khong'?'selected':''}>Không chọn</option>
-                            <option value="mua" ${type==='mua'?'selected':''}>Khách Mua</option>
-                        </select>
-                    </td>
-                    <td class="p-3 w-[280px] align-top">
-                        <div id="pk_inputs_${acc.id}" class="flex gap-2" style="display:${type==='mua'?'flex':'none'};">
-                            <div class="flex flex-col">
-                                <span class="text-[10px] text-gray-500 font-bold mb-0.5">GIẢM (%)</span>
-                                <input type="number" id="pk_pct_${acc.id}" value="${pct.toFixed(1)}" oninput="calcAccPriceFromPct('${acc.id}',${acc.priceMua})" class="w-16 border p-2 rounded text-center">
-                            </div>
-                            <div class="flex flex-col flex-1">
-                                <span class="text-[10px] text-gray-500 font-bold mb-0.5">GIÁ BÁN (VNĐ)</span>
-                                <input type="text" id="pk_price_${acc.id}" value="${Number(price||0).toLocaleString('vi-VN')}" oninput="formatInputMoney(this); calcAccPctFromPrice('${acc.id}',${acc.priceMua})" class="w-full border p-2 rounded text-right font-bold text-purple-700">
-                            </div>
-                        </div>
-                    </td>
-                </tr>`;
-            }).join('') || '<tr><td colspan="3" class="p-6 text-center text-gray-500">Chưa có phụ kiện bán phù hợp với dòng xe này.</td></tr>';
+            if (activeAccessorySaleTab >= sheetNames.length) activeAccessorySaleTab = 0;
+
+            const tabs = document.getElementById('acc-sale-tabs');
+            tabs.innerHTML = sheetNames.map((sheet, idx) => {
+                const count = visibleAccs.filter(a => String(a.sourceSheet || a.category || 'Khác').trim() === sheet).length;
+                return `<button type="button" data-acc-tab="${idx}" onclick="switchAccessorySaleTab(${idx})"
+                    class="shrink-0 rounded-xl border px-3 py-2 text-xs font-black transition-colors ${idx===activeAccessorySaleTab?'bg-purple-600 text-white border-purple-600':'bg-white text-purple-700 border-purple-200 hover:bg-purple-50'}">
+                    ${sheet} <span class="opacity-75">(${count})</span>
+                </button>`;
+            }).join('') || '<span class="text-xs text-gray-400 py-2">Không có nhóm phụ kiện.</span>';
+
+            const rows = [];
+            sheetNames.forEach((sheet, tabIndex) => {
+                visibleAccs
+                    .filter(acc => String(acc.sourceSheet || acc.category || 'Khác').trim() === sheet)
+                    .sort((a,b) => String(a.name||'').localeCompare(String(b.name||''),'vi'))
+                    .forEach(acc => {
+                        const sav = savedAccs.find(x => x.id === acc.id && x.type === 'mua');
+                        const type = sav ? 'mua' : 'khong';
+                        const price = sav ? Number(sav.finalPrice || 0) : Number(acc.priceMua || 0);
+                        const pct = acc.priceMua > 0 ? (1 - price / acc.priceMua) * 100 : 0;
+
+                        rows.push(`<tr data-acc-tab="${tabIndex}" class="border-b hover:bg-purple-50 ${tabIndex===activeAccessorySaleTab?'':'hidden'}">
+                            <td class="p-3 pl-6 font-semibold align-top">
+                                <span class="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mr-2 uppercase block sm:inline-block w-fit mb-1">${sheet}</span>
+                                <div>${cleanAccessoryDisplayName(acc.name)}</div>
+                                <div class="text-[10px] text-gray-400 mt-1">${acc.code ? acc.code+' · ' : ''}${acc.unit||''}</div>
+                                <div class="text-[11px] text-purple-600 mt-1 font-bold">Giá bán: ${formatMoney(acc.priceMua)}</div>
+                            </td>
+                            <td class="p-3 text-center align-top">
+                                <select id="pk_type_${acc.id}" onchange="toggleAccInputs('${acc.id}')" class="bg-gray-50 border p-2 rounded outline-none w-full">
+                                    <option value="khong" ${type==='khong'?'selected':''}>Không chọn</option>
+                                    <option value="mua" ${type==='mua'?'selected':''}>Khách Mua</option>
+                                </select>
+                            </td>
+                            <td class="p-3 w-[280px] align-top">
+                                <div id="pk_inputs_${acc.id}" class="flex gap-2" style="display:${type==='mua'?'flex':'none'};">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] text-gray-500 font-bold mb-0.5">GIẢM (%)</span>
+                                        <input type="number" id="pk_pct_${acc.id}" value="${pct.toFixed(1)}" oninput="calcAccPriceFromPct('${acc.id}',${acc.priceMua})" class="w-16 border p-2 rounded text-center">
+                                    </div>
+                                    <div class="flex flex-col flex-1">
+                                        <span class="text-[10px] text-gray-500 font-bold mb-0.5">GIÁ BÁN (VNĐ)</span>
+                                        <input type="text" id="pk_price_${acc.id}" value="${Number(price||0).toLocaleString('vi-VN')}" oninput="formatInputMoney(this); calcAccPctFromPrice('${acc.id}',${acc.priceMua})" class="w-full border p-2 rounded text-right font-bold text-purple-700">
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>`);
+                    });
+            });
+
+            document.getElementById('acc-picker-list').innerHTML =
+                rows.join('') || '<tr><td colspan="3" class="p-6 text-center text-gray-500">Chưa có phụ kiện bán phù hợp với dòng xe này.</td></tr>';
 
             toggleModal('accPickerModal', true);
+            switchAccessorySaleTab(activeAccessorySaleTab);
         }
 
         function closeAccPicker() { toggleModal('accPickerModal', false); }
