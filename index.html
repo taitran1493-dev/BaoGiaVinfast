@@ -968,7 +968,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             { id: 'pr_13', name: 'Ưu đãi Xe Công Vụ', target: 'Cơ quan NN', type: 'pct_after', value: 5, group: 'additive', carKeys: 'VF8 ALL NEW' }
         ];
 
-        let carList = []; let accList = []; let promoList = []; let accessoryCombos = []; let quoteAdjustments = {};
+        let carList = []; let accList = []; let promoList = []; let accessoryCombos = []; let accessorySaleTabs = []; let quoteAdjustments = {};
 
         function getSalaryProductCode(car) {
             if (!car) return '';
@@ -991,7 +991,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         // ================== PHỤ KIỆN: BÁN & QUÀ TẶNG COMBO ==================
         // Combo quà tặng lấy từ file "Combo phụ kiện 5 món.xlsx".
         // Phụ kiện bán lấy từ file "BÁO GIÁ PK CÁC DÒNG XE VINFAST".
-        const REFERENCE_ACCESSORY_COMBOS = [{"id": "combo_vf3_5_mon", "name": "Gói Combo theo xe tặng khách VF3", "vehicleGroup": "VF3", "sourceType": "gift_combo", "giftOnly": true, "retailTotal": 4057500, "comboPrice": 3651750, "discountPercent": 10.0, "items": [{"id": "gift_vf3_1", "code": "PK-ATX5C", "name": "Áo trùm xe 5 chỗ (loại thường)", "unit": "Cái", "retailPrice": 420000}, {"id": "gift_vf3_2", "code": "PK-BTLCC", "name": "Bao tay lái cao cấp", "unit": "Cái", "retailPrice": 500000}, {"id": "gift_vf3_3", "code": "", "name": "Thảm sàn rối may theo xe", "unit": "Cái", "retailPrice": 600000}, {"id": "gift_vf3_4", "code": "PK-CMRHT1M", "name": "Camera hành trình 1 mắt", "unit": "Bộ", "retailPrice": 900000}, {"id": "gift_vf3_5", "code": "PK-CNNX-VF3", "name": "PK - Dán phim cách nhiệt nguyên xe VF3", "unit": "Xe", "retailPrice": 1637500}], "itemIds": ["gift_vf3_1", "gift_vf3_2", "gift_vf3_3", "gift_vf3_4", "gift_vf3_5"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe VF3"]}, {"id": "combo_vf5_5_mon", "name": "Gói Combo theo xe tặng khách VF5", "vehicleGroup": "VF5", "sourceType": "gift_combo", "giftOnly": true, "retailTotal": 4295000, "comboPrice": 3865500, "discountPercent": 10.0, "items": [{"id": "gift_vf5_1", "code": "PK-ATX5C", "name": "Áo trùm xe 5 chỗ (loại thường)", "unit": "Cái", "retailPrice": 420000}, {"id": "gift_vf5_2", "code": "PK-BTLCC", "name": "Bao tay lái cao cấp", "unit": "Cái", "retailPrice": 500000}, {"id": "gift_vf5_3", "code": "", "name": "Thảm sàn rối may theo xe", "unit": "Cái", "retailPrice": 600000}, {"id": "gift_vf5_4", "code": "PK-CMRHT1M", "name": "Camera hành trình 1 mắt", "unit": "Bộ", "retailPrice": 900000}, {"id": "gift_vf5_5", "code": "PK-CNNX4C", "name": "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)", "unit": "Xe", "retailPrice": 1875000}], "itemIds": ["gift_vf5_1", "gift_vf5_2", "gift_vf5_3", "gift_vf5_4", "gift_vf5_5"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]}, {"id": "combo_vf6_5_mon", "name": "Gói Combo theo xe tặng khách VF6", "vehicleGroup": "VF6", "sourceType": "gift_combo", "giftOnly": true, "retailTotal": 4295000, "comboPrice": 3865500, "discountPercent": 10.0, "items": [{"id": "gift_vf6_1", "code": "PK-ATX5C", "name": "Áo trùm xe 5 chỗ (loại thường)", "unit": "Cái", "retailPrice": 420000}, {"id": "gift_vf6_2", "code": "PK-BTLCC", "name": "Bao tay lái cao cấp", "unit": "Cái", "retailPrice": 500000}, {"id": "gift_vf6_3", "code": "", "name": "Thảm sàn rối may theo xe", "unit": "Cái", "retailPrice": 600000}, {"id": "gift_vf6_4", "code": "PK-CMRHT1M", "name": "Camera hành trình 1 mắt", "unit": "Bộ", "retailPrice": 900000}, {"id": "gift_vf6_5", "code": "PK-CNNX4C", "name": "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)", "unit": "Xe", "retailPrice": 1875000}], "itemIds": ["gift_vf6_1", "gift_vf6_2", "gift_vf6_3", "gift_vf6_4", "gift_vf6_5"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]}, {"id": "combo_vf7_5_mon", "name": "Gói Combo theo xe tặng khách VF7", "vehicleGroup": "VF7", "sourceType": "gift_combo", "giftOnly": true, "retailTotal": 4295000, "comboPrice": 3865500, "discountPercent": 10.0, "items": [{"id": "gift_vf7_1", "code": "PK-ATX5C", "name": "Áo trùm xe 5 chỗ (loại thường)", "unit": "Cái", "retailPrice": 420000}, {"id": "gift_vf7_2", "code": "PK-BTLCC", "name": "Bao tay lái cao cấp", "unit": "Cái", "retailPrice": 500000}, {"id": "gift_vf7_3", "code": "", "name": "Thảm sàn rối may theo xe", "unit": "Cái", "retailPrice": 600000}, {"id": "gift_vf7_4", "code": "PK-CMRHT1M", "name": "Camera hành trình 1 mắt", "unit": "Bộ", "retailPrice": 900000}, {"id": "gift_vf7_5", "code": "PK-CNNX4C", "name": "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)", "unit": "Xe", "retailPrice": 1875000}], "itemIds": ["gift_vf7_1", "gift_vf7_2", "gift_vf7_3", "gift_vf7_4", "gift_vf7_5"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]}, {"id": "combo_vf8_5_mon", "name": "Gói Combo theo xe tặng khách VF8", "vehicleGroup": "VF8", "sourceType": "gift_combo", "giftOnly": true, "retailTotal": 4295000, "comboPrice": 3865500, "discountPercent": 10.0, "items": [{"id": "gift_vf8_1", "code": "PK-ATX5C", "name": "Áo trùm xe 5 chỗ (loại thường)", "unit": "Cái", "retailPrice": 420000}, {"id": "gift_vf8_2", "code": "PK-BTLCC", "name": "Bao tay lái cao cấp", "unit": "Cái", "retailPrice": 500000}, {"id": "gift_vf8_3", "code": "", "name": "Thảm sàn rối may theo xe", "unit": "Cái", "retailPrice": 600000}, {"id": "gift_vf8_4", "code": "PK-CMRHT1M", "name": "Camera hành trình 1 mắt", "unit": "Bộ", "retailPrice": 900000}, {"id": "gift_vf8_5", "code": "PK-CNNX4C", "name": "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)", "unit": "Xe", "retailPrice": 1875000}], "itemIds": ["gift_vf8_1", "gift_vf8_2", "gift_vf8_3", "gift_vf8_4", "gift_vf8_5"], "itemNames": ["Áo trùm xe 5 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]}, {"id": "combo_vf9_5_mon", "name": "Gói Combo theo xe tặng khách VF9", "vehicleGroup": "VF9", "sourceType": "gift_combo", "giftOnly": true, "retailTotal": 4460000, "comboPrice": 4014000, "discountPercent": 10.0, "items": [{"id": "gift_vf9_1", "code": "ATX7CL", "name": "Áo trùm xe 7 chỗ (loại thường)", "unit": "Cái", "retailPrice": 460000}, {"id": "gift_vf9_2", "code": "PK-BTLCC", "name": "Bao tay lái cao cấp", "unit": "Cái", "retailPrice": 500000}, {"id": "gift_vf9_3", "code": "", "name": "Thảm sàn rối may theo xe", "unit": "Cái", "retailPrice": 600000}, {"id": "gift_vf9_4", "code": "PK-CMRHT1M", "name": "Camera hành trình 1 mắt", "unit": "Bộ", "retailPrice": 900000}, {"id": "gift_vf9_5", "code": "PK-CNNX7C", "name": "PK - Dán phim cách nhiệt nguyên xe (7 chỗ)", "unit": "Xe", "retailPrice": 2000000}], "itemIds": ["gift_vf9_1", "gift_vf9_2", "gift_vf9_3", "gift_vf9_4", "gift_vf9_5"], "itemNames": ["Áo trùm xe 7 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (7 chỗ)"]}, {"id": "combo_limo_5_mon", "name": "Gói Combo theo xe tặng khách Limo", "vehicleGroup": "LIMO", "sourceType": "gift_combo", "giftOnly": true, "retailTotal": 4460000, "comboPrice": 4014000, "discountPercent": 10.0, "items": [{"id": "gift_limo_1", "code": "ATX7CL", "name": "Áo trùm xe 7 chỗ (loại thường)", "unit": "Cái", "retailPrice": 460000}, {"id": "gift_limo_2", "code": "PK-BTLCC", "name": "Bao tay lái cao cấp", "unit": "Cái", "retailPrice": 500000}, {"id": "gift_limo_3", "code": "", "name": "Thảm sàn rối may theo xe", "unit": "Cái", "retailPrice": 600000}, {"id": "gift_limo_4", "code": "PK-CMRHT1M", "name": "Camera hành trình 1 mắt", "unit": "Bộ", "retailPrice": 900000}, {"id": "gift_limo_5", "code": "PK-CNNX7C", "name": "PK - Dán phim cách nhiệt nguyên xe (7 chỗ)", "unit": "Xe", "retailPrice": 2000000}], "itemIds": ["gift_limo_1", "gift_limo_2", "gift_limo_3", "gift_limo_4", "gift_limo_5"], "itemNames": ["Áo trùm xe 7 chỗ (loại thường)", "Bao tay lái cao cấp", "Thảm sàn rối may theo xe", "Camera hành trình 1 mắt", "PK - Dán phim cách nhiệt nguyên xe (7 chỗ)"]}];
+        const REFERENCE_ACCESSORY_COMBOS = [{"id":"combo_vf3_5_mon","name":"Gói Combo theo xe tặng khách VF3","vehicleGroup":"VF3","sourceType":"gift_combo","giftOnly":true,"sourceWorkbook":"Combo phụ kiện 5 món.xlsx","sourceSheet":"VF3","retailTotal":4057500,"comboPrice":3651750,"giftFullReferencePrice":3651750,"discountPercent":10.0,"items":[{"id":"gift_vf3_1","sourceSheet":"VF3","sourceRow":3,"code":"PK-ATX5C","name":"Áo trùm xe 5 chỗ (loại thường)","unit":"Cái","retailPrice":420000,"giftReferencePrice":420000},{"id":"gift_vf3_2","sourceSheet":"VF3","sourceRow":4,"code":"PK-BTLCC","name":"Bao tay lái cao cấp","unit":"Cái","retailPrice":500000,"giftReferencePrice":500000},{"id":"gift_vf3_3","sourceSheet":"VF3","sourceRow":5,"code":"","name":"Thảm sàn rối may theo xe","unit":"Cái","retailPrice":600000,"giftReferencePrice":600000},{"id":"gift_vf3_4","sourceSheet":"VF3","sourceRow":6,"code":"PK-CMRHT1M","name":"Camera hành trình 1 mắt","unit":"Bộ","retailPrice":900000,"giftReferencePrice":900000},{"id":"gift_vf3_5","sourceSheet":"VF3","sourceRow":7,"code":"PK-CNNX-VF3","name":"PK - Dán phim cách nhiệt nguyên xe VF3","unit":"Xe","retailPrice":1637500,"giftReferencePrice":1637500}],"itemIds":["gift_vf3_1","gift_vf3_2","gift_vf3_3","gift_vf3_4","gift_vf3_5"],"itemNames":["Áo trùm xe 5 chỗ (loại thường)","Bao tay lái cao cấp","Thảm sàn rối may theo xe","Camera hành trình 1 mắt","PK - Dán phim cách nhiệt nguyên xe VF3"]},{"id":"combo_vf5_5_mon","name":"Gói Combo theo xe tặng khách VF5","vehicleGroup":"VF5","sourceType":"gift_combo","giftOnly":true,"sourceWorkbook":"Combo phụ kiện 5 món.xlsx","sourceSheet":"VF5","retailTotal":4295000,"comboPrice":3865500,"giftFullReferencePrice":3865500,"discountPercent":10.0,"items":[{"id":"gift_vf5_1","sourceSheet":"VF5","sourceRow":3,"code":"PK-ATX5C","name":"Áo trùm xe 5 chỗ (loại thường)","unit":"Cái","retailPrice":420000,"giftReferencePrice":420000},{"id":"gift_vf5_2","sourceSheet":"VF5","sourceRow":4,"code":"PK-BTLCC","name":"Bao tay lái cao cấp","unit":"Cái","retailPrice":500000,"giftReferencePrice":500000},{"id":"gift_vf5_3","sourceSheet":"VF5","sourceRow":5,"code":"","name":"Thảm sàn rối may theo xe","unit":"Cái","retailPrice":600000,"giftReferencePrice":600000},{"id":"gift_vf5_4","sourceSheet":"VF5","sourceRow":6,"code":"PK-CMRHT1M","name":"Camera hành trình 1 mắt","unit":"Bộ","retailPrice":900000,"giftReferencePrice":900000},{"id":"gift_vf5_5","sourceSheet":"VF5","sourceRow":7,"code":"PK-CNNX4C","name":"PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)","unit":"Xe","retailPrice":1875000,"giftReferencePrice":1875000}],"itemIds":["gift_vf5_1","gift_vf5_2","gift_vf5_3","gift_vf5_4","gift_vf5_5"],"itemNames":["Áo trùm xe 5 chỗ (loại thường)","Bao tay lái cao cấp","Thảm sàn rối may theo xe","Camera hành trình 1 mắt","PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]},{"id":"combo_vf6_5_mon","name":"Gói Combo theo xe tặng khách VF6","vehicleGroup":"VF6","sourceType":"gift_combo","giftOnly":true,"sourceWorkbook":"Combo phụ kiện 5 món.xlsx","sourceSheet":"VF6","retailTotal":4295000,"comboPrice":3865500,"giftFullReferencePrice":3865500,"discountPercent":10.0,"items":[{"id":"gift_vf6_1","sourceSheet":"VF6","sourceRow":3,"code":"PK-ATX5C","name":"Áo trùm xe 5 chỗ (loại thường)","unit":"Cái","retailPrice":420000,"giftReferencePrice":420000},{"id":"gift_vf6_2","sourceSheet":"VF6","sourceRow":4,"code":"PK-BTLCC","name":"Bao tay lái cao cấp","unit":"Cái","retailPrice":500000,"giftReferencePrice":500000},{"id":"gift_vf6_3","sourceSheet":"VF6","sourceRow":5,"code":"","name":"Thảm sàn rối may theo xe","unit":"Cái","retailPrice":600000,"giftReferencePrice":600000},{"id":"gift_vf6_4","sourceSheet":"VF6","sourceRow":6,"code":"PK-CMRHT1M","name":"Camera hành trình 1 mắt","unit":"Bộ","retailPrice":900000,"giftReferencePrice":900000},{"id":"gift_vf6_5","sourceSheet":"VF6","sourceRow":7,"code":"PK-CNNX4C","name":"PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)","unit":"Xe","retailPrice":1875000,"giftReferencePrice":1875000}],"itemIds":["gift_vf6_1","gift_vf6_2","gift_vf6_3","gift_vf6_4","gift_vf6_5"],"itemNames":["Áo trùm xe 5 chỗ (loại thường)","Bao tay lái cao cấp","Thảm sàn rối may theo xe","Camera hành trình 1 mắt","PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]},{"id":"combo_vf7_5_mon","name":"Gói Combo theo xe tặng khách VF7","vehicleGroup":"VF7","sourceType":"gift_combo","giftOnly":true,"sourceWorkbook":"Combo phụ kiện 5 món.xlsx","sourceSheet":"VF7","retailTotal":4295000,"comboPrice":3865500,"giftFullReferencePrice":3865500,"discountPercent":10.0,"items":[{"id":"gift_vf7_1","sourceSheet":"VF7","sourceRow":3,"code":"PK-ATX5C","name":"Áo trùm xe 5 chỗ (loại thường)","unit":"Cái","retailPrice":420000,"giftReferencePrice":420000},{"id":"gift_vf7_2","sourceSheet":"VF7","sourceRow":4,"code":"PK-BTLCC","name":"Bao tay lái cao cấp","unit":"Cái","retailPrice":500000,"giftReferencePrice":500000},{"id":"gift_vf7_3","sourceSheet":"VF7","sourceRow":5,"code":"","name":"Thảm sàn rối may theo xe","unit":"Cái","retailPrice":600000,"giftReferencePrice":600000},{"id":"gift_vf7_4","sourceSheet":"VF7","sourceRow":6,"code":"PK-CMRHT1M","name":"Camera hành trình 1 mắt","unit":"Bộ","retailPrice":900000,"giftReferencePrice":900000},{"id":"gift_vf7_5","sourceSheet":"VF7","sourceRow":7,"code":"PK-CNNX4C","name":"PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)","unit":"Xe","retailPrice":1875000,"giftReferencePrice":1875000}],"itemIds":["gift_vf7_1","gift_vf7_2","gift_vf7_3","gift_vf7_4","gift_vf7_5"],"itemNames":["Áo trùm xe 5 chỗ (loại thường)","Bao tay lái cao cấp","Thảm sàn rối may theo xe","Camera hành trình 1 mắt","PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]},{"id":"combo_vf8_5_mon","name":"Gói Combo theo xe tặng khách VF8","vehicleGroup":"VF8","sourceType":"gift_combo","giftOnly":true,"sourceWorkbook":"Combo phụ kiện 5 món.xlsx","sourceSheet":"VF8","retailTotal":4295000,"comboPrice":3865500,"giftFullReferencePrice":3865500,"discountPercent":10.0,"items":[{"id":"gift_vf8_1","sourceSheet":"VF8","sourceRow":3,"code":"PK-ATX5C","name":"Áo trùm xe 5 chỗ (loại thường)","unit":"Cái","retailPrice":420000,"giftReferencePrice":420000},{"id":"gift_vf8_2","sourceSheet":"VF8","sourceRow":4,"code":"PK-BTLCC","name":"Bao tay lái cao cấp","unit":"Cái","retailPrice":500000,"giftReferencePrice":500000},{"id":"gift_vf8_3","sourceSheet":"VF8","sourceRow":5,"code":"","name":"Thảm sàn rối may theo xe","unit":"Cái","retailPrice":600000,"giftReferencePrice":600000},{"id":"gift_vf8_4","sourceSheet":"VF8","sourceRow":6,"code":"PK-CMRHT1M","name":"Camera hành trình 1 mắt","unit":"Bộ","retailPrice":900000,"giftReferencePrice":900000},{"id":"gift_vf8_5","sourceSheet":"VF8","sourceRow":7,"code":"PK-CNNX4C","name":"PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)","unit":"Xe","retailPrice":1875000,"giftReferencePrice":1875000}],"itemIds":["gift_vf8_1","gift_vf8_2","gift_vf8_3","gift_vf8_4","gift_vf8_5"],"itemNames":["Áo trùm xe 5 chỗ (loại thường)","Bao tay lái cao cấp","Thảm sàn rối may theo xe","Camera hành trình 1 mắt","PK - Dán phim cách nhiệt nguyên xe (4 chỗ-5 chỗ)"]},{"id":"combo_vf9_5_mon","name":"Gói Combo theo xe tặng khách VF9","vehicleGroup":"VF9","sourceType":"gift_combo","giftOnly":true,"sourceWorkbook":"Combo phụ kiện 5 món.xlsx","sourceSheet":"VF9","retailTotal":4460000,"comboPrice":4014000,"giftFullReferencePrice":4014000,"discountPercent":10.0,"items":[{"id":"gift_vf9_1","sourceSheet":"VF9","sourceRow":3,"code":"ATX7CL","name":"Áo trùm xe 7 chỗ (loại thường)","unit":"Cái","retailPrice":460000,"giftReferencePrice":460000},{"id":"gift_vf9_2","sourceSheet":"VF9","sourceRow":4,"code":"PK-BTLCC","name":"Bao tay lái cao cấp","unit":"Cái","retailPrice":500000,"giftReferencePrice":500000},{"id":"gift_vf9_3","sourceSheet":"VF9","sourceRow":5,"code":"","name":"Thảm sàn rối may theo xe","unit":"Cái","retailPrice":600000,"giftReferencePrice":600000},{"id":"gift_vf9_4","sourceSheet":"VF9","sourceRow":6,"code":"PK-CMRHT1M","name":"Camera hành trình 1 mắt","unit":"Bộ","retailPrice":900000,"giftReferencePrice":900000},{"id":"gift_vf9_5","sourceSheet":"VF9","sourceRow":7,"code":"PK-CNNX7C","name":"PK - Dán phim cách nhiệt nguyên xe (7 chỗ)","unit":"Xe","retailPrice":2000000,"giftReferencePrice":2000000}],"itemIds":["gift_vf9_1","gift_vf9_2","gift_vf9_3","gift_vf9_4","gift_vf9_5"],"itemNames":["Áo trùm xe 7 chỗ (loại thường)","Bao tay lái cao cấp","Thảm sàn rối may theo xe","Camera hành trình 1 mắt","PK - Dán phim cách nhiệt nguyên xe (7 chỗ)"]},{"id":"combo_limo_5_mon","name":"Gói Combo theo xe tặng khách Limo","vehicleGroup":"LIMO","sourceType":"gift_combo","giftOnly":true,"sourceWorkbook":"Combo phụ kiện 5 món.xlsx","sourceSheet":"Limo","retailTotal":4460000,"comboPrice":4014000,"giftFullReferencePrice":4014000,"discountPercent":10.0,"items":[{"id":"gift_limo_1","sourceSheet":"Limo","sourceRow":3,"code":"ATX7CL","name":"Áo trùm xe 7 chỗ (loại thường)","unit":"Cái","retailPrice":460000,"giftReferencePrice":460000},{"id":"gift_limo_2","sourceSheet":"Limo","sourceRow":4,"code":"PK-BTLCC","name":"Bao tay lái cao cấp","unit":"Cái","retailPrice":500000,"giftReferencePrice":500000},{"id":"gift_limo_3","sourceSheet":"Limo","sourceRow":5,"code":"","name":"Thảm sàn rối may theo xe","unit":"Cái","retailPrice":600000,"giftReferencePrice":600000},{"id":"gift_limo_4","sourceSheet":"Limo","sourceRow":6,"code":"PK-CMRHT1M","name":"Camera hành trình 1 mắt","unit":"Bộ","retailPrice":900000,"giftReferencePrice":900000},{"id":"gift_limo_5","sourceSheet":"Limo","sourceRow":7,"code":"PK-CNNX7C","name":"PK - Dán phim cách nhiệt nguyên xe (7 chỗ)","unit":"Xe","retailPrice":2000000,"giftReferencePrice":2000000}],"itemIds":["gift_limo_1","gift_limo_2","gift_limo_3","gift_limo_4","gift_limo_5"],"itemNames":["Áo trùm xe 7 chỗ (loại thường)","Bao tay lái cao cấp","Thảm sàn rối may theo xe","Camera hành trình 1 mắt","PK - Dán phim cách nhiệt nguyên xe (7 chỗ)"]}];
+        const REFERENCE_ACCESSORY_SALE_TABS = ["PHỤ KIỆN DÙNG CHUNG","VF3","VF5","VF6","VF7","VF8","PHIM TẶNG (QUAD)","VF9","Limo","Phim cách nhiệt Wincos","Phim Crystal Cool","Sheet1"];
 
         function normalizeAccessoryGroup(v) {
             const s = normalizeCarKey(v || '');
@@ -1133,7 +1134,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (selection.mode === 'full') return Number(combo.comboPrice || 0);
             if (selection.mode === 'items') {
                 const ids = new Set(Array.isArray(selection.itemIds) ? selection.itemIds : []);
-                return combo.items.reduce((sum,it) => sum + (ids.has(it.id) ? Number(it.retailPrice||0) : 0), 0);
+                return combo.items.reduce((sum,it) => sum + (ids.has(it.id) ? Number(it.giftReferencePrice ?? it.retailPrice ?? 0) : 0), 0);
             }
             return 0;
         }
@@ -1634,7 +1635,10 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const accessories = Array.isArray(src.accessories) ? src.accessories : [];
             const promos = Array.isArray(src.promos) ? src.promos.map(({cutLimit,...p}) => p) : [];
             const combos = Array.isArray(src.accessoryCombos) ? src.accessoryCombos : [];
-            return { cars, accessories, promos, accessoryCombos: combos };
+            const saleTabs = Array.isArray(src.accessorySaleTabs) && src.accessorySaleTabs.length
+                ? src.accessorySaleTabs.map(x => String(x))
+                : REFERENCE_ACCESSORY_SALE_TABS;
+            return { cars, accessories, promos, accessoryCombos: combos, accessorySaleTabs: saleTabs };
         }
 
         function hasUsableSharedData(data) {
@@ -1650,6 +1654,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (Array.isArray(clean.accessories)) accList = clean.accessories;
             if (Array.isArray(clean.promos)) promoList = clean.promos;
             accessoryCombos = clean.accessoryCombos || [];
+            accessorySaleTabs = Array.isArray(clean.accessorySaleTabs) && clean.accessorySaleTabs.length
+                ? clean.accessorySaleTabs
+                : [...REFERENCE_ACCESSORY_SALE_TABS];
             normalizeAccessoryDataModel();
 
             if (persistLocal) {
@@ -1657,6 +1664,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 localStorage.setItem('vinfast_accessories_v2', JSON.stringify(accList));
                 localStorage.setItem('vinfast_promos_v1', JSON.stringify(promoList));
                 localStorage.setItem('vinfast_accessory_combos_v1', JSON.stringify(accessoryCombos));
+                localStorage.setItem('vinfast_accessory_sale_tabs_v1', JSON.stringify(accessorySaleTabs));
             }
         }
 
@@ -2038,7 +2046,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                             <span class="font-semibold text-gray-800 block">${idx+1}. ${cleanAccessoryDisplayName(it.name)}</span>
                             <span class="block text-[10px] text-gray-400 mt-0.5">${it.code || 'Không mã'}${it.unit ? ' · '+it.unit : ''}</span>
                             <span class="inline-flex mt-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-[10px] font-black text-amber-700">
-                                Giá tặng lẻ tham chiếu: ${formatMoney(it.retailPrice)}
+                                Giá tặng lẻ tham chiếu (file Combo): ${formatMoney(Number(it.giftReferencePrice ?? it.retailPrice ?? 0))}
                             </span>
                         </span>
                     </label>`).join('');
@@ -2064,7 +2072,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
                     <div class="mt-3 rounded-xl bg-indigo-50 border border-indigo-200 p-3">
                         <div class="text-xs font-black text-indigo-700">Tặng trọn gói</div>
-                        <div class="text-xs text-gray-700 mt-1">Giá lẻ tổng: <b>${formatMoney(combo.retailTotal)}</b> · Giá combo tham chiếu: <b class="text-indigo-700">${formatMoney(combo.comboPrice)}</b></div>
+                        <div class="text-xs text-gray-700 mt-1">Giá lẻ tổng: <b>${formatMoney(combo.retailTotal)}</b> · Giá tặng trọn gói tham chiếu (file Combo): <b class="text-indigo-700">${formatMoney(combo.comboPrice)}</b></div>
                         <div class="text-[10px] text-gray-500 mt-1">Giá combo chỉ để tham chiếu chi phí quà tặng, không cộng vào tiền khách thanh toán.</div>
                     </div>
 
@@ -2247,56 +2255,59 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (!car) return alert("Chọn xe!");
 
             normalizeAccessoryDataModel();
+
             document.getElementById('acc-picker-subtitle').innerText =
-                `Xe: ${car.name} ${car.version} · Chọn theo Tab/Sheet của file Báo Giá Phụ Kiện`;
+                `Xe: ${car.name} ${car.version} · Tab giữ đúng theo từng Sheet của file Báo Giá Phụ Kiện`;
 
             const savedAccs = getQuoteAdjustments(car).accessories || [];
-            const visibleAccs = accList.filter(acc => isSaleAccessoryApplicableToCar(acc, car));
+            const saleAccs = accList.filter(acc => !isComboAccessory(acc) && (acc.sourceType || 'sale') === 'sale');
 
-            // Giữ đúng thứ tự Sheet xuất hiện trong file/data thay vì sort alphabet.
-            const sheetNames = [];
-            const sheetSeen = new Set();
-            visibleAccs.forEach(acc => {
-                const sheet = String(acc.sourceSheet || acc.category || 'Khác').trim() || 'Khác';
-                if (!sheetSeen.has(sheet)) {
-                    sheetSeen.add(sheet);
-                    sheetNames.push(sheet);
-                }
-            });
+            // LUÔN dùng đúng tên + thứ tự sheet trong file Excel.
+            const sheetNames = (Array.isArray(accessorySaleTabs) && accessorySaleTabs.length
+                ? accessorySaleTabs
+                : REFERENCE_ACCESSORY_SALE_TABS).filter(Boolean);
 
             if (activeAccessorySaleTab >= sheetNames.length) activeAccessorySaleTab = 0;
 
             const tabs = document.getElementById('acc-sale-tabs');
             tabs.innerHTML = sheetNames.map((sheet, idx) => {
-                const count = visibleAccs.filter(a => String(a.sourceSheet || a.category || 'Khác').trim() === sheet).length;
+                const count = saleAccs.filter(a => String(a.sourceSheet || a.category || '').trim() === sheet).length;
                 return `<button type="button" data-acc-tab="${idx}" onclick="switchAccessorySaleTab(${idx})"
                     class="shrink-0 rounded-xl border px-3 py-2 text-xs font-black transition-colors ${idx===activeAccessorySaleTab?'bg-purple-600 text-white border-purple-600':'bg-white text-purple-700 border-purple-200 hover:bg-purple-50'}">
                     ${sheet} <span class="opacity-75">(${count})</span>
                 </button>`;
-            }).join('') || '<span class="text-xs text-gray-400 py-2">Không có nhóm phụ kiện.</span>';
+            }).join('');
 
             const rows = [];
             sheetNames.forEach((sheet, tabIndex) => {
-                visibleAccs
-                    .filter(acc => String(acc.sourceSheet || acc.category || 'Khác').trim() === sheet)
-                    .sort((a,b) => String(a.name||'').localeCompare(String(b.name||''),'vi'))
+                saleAccs
+                    .filter(acc => String(acc.sourceSheet || acc.category || '').trim() === sheet)
+                    .sort((a,b) => Number(a.sourceRow||0)-Number(b.sourceRow||0))
                     .forEach(acc => {
                         const sav = savedAccs.find(x => x.id === acc.id && x.type === 'mua');
-                        const type = sav ? 'mua' : 'khong';
-                        const price = sav ? Number(sav.finalPrice || 0) : Number(acc.priceMua || 0);
+                        const canSell = acc.priceAvailable !== false && Number(acc.priceMua || 0) > 0;
+                        const type = sav && canSell ? 'mua' : 'khong';
+                        const price = sav && canSell ? Number(sav.finalPrice || 0) : Number(acc.priceMua || 0);
                         const pct = acc.priceMua > 0 ? (1 - price / acc.priceMua) * 100 : 0;
+                        const note = String(acc.sourceNote || '').trim();
 
                         rows.push(`<tr data-acc-tab="${tabIndex}" class="border-b hover:bg-purple-50 ${tabIndex===activeAccessorySaleTab?'':'hidden'}">
                             <td class="p-3 pl-6 font-semibold align-top">
                                 <span class="text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 mr-2 uppercase block sm:inline-block w-fit mb-1">${sheet}</span>
                                 <div>${cleanAccessoryDisplayName(acc.name)}</div>
-                                <div class="text-[10px] text-gray-400 mt-1">${acc.code ? acc.code+' · ' : ''}${acc.unit||''}</div>
-                                <div class="text-[11px] text-purple-600 mt-1 font-bold">Giá bán: ${formatMoney(acc.priceMua)}</div>
+                                <div class="text-[10px] text-gray-400 mt-1">
+                                    ${acc.code ? acc.code : 'Không mã'}${acc.unit ? ' · '+acc.unit : ''}${acc.model ? ' · MODEL '+acc.model : ''}
+                                </div>
+                                ${canSell
+                                    ? `<div class="text-[11px] text-purple-600 mt-1 font-bold">Giá bán: ${formatMoney(acc.priceMua)}</div>`
+                                    : `<div class="text-[11px] text-amber-700 mt-1 font-black">Chưa có GIÁ BÁN trong file nguồn — không dùng cột số lượng làm giá.</div>`}
+                                ${note ? `<div class="text-[10px] text-gray-500 mt-1">${note}</div>` : ''}
                             </td>
                             <td class="p-3 text-center align-top">
-                                <select id="pk_type_${acc.id}" onchange="toggleAccInputs('${acc.id}')" class="bg-gray-50 border p-2 rounded outline-none w-full">
+                                <select id="pk_type_${acc.id}" onchange="toggleAccInputs('${acc.id}')" ${canSell?'':'disabled'}
+                                    class="bg-gray-50 border p-2 rounded outline-none w-full ${canSell?'':'opacity-50 cursor-not-allowed'}">
                                     <option value="khong" ${type==='khong'?'selected':''}>Không chọn</option>
-                                    <option value="mua" ${type==='mua'?'selected':''}>Khách Mua</option>
+                                    ${canSell ? `<option value="mua" ${type==='mua'?'selected':''}>Khách Mua</option>` : ''}
                                 </select>
                             </td>
                             <td class="p-3 w-[280px] align-top">
@@ -2316,7 +2327,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             });
 
             document.getElementById('acc-picker-list').innerHTML =
-                rows.join('') || '<tr><td colspan="3" class="p-6 text-center text-gray-500">Chưa có phụ kiện bán phù hợp với dòng xe này.</td></tr>';
+                rows.join('') || '<tr><td colspan="3" class="p-6 text-center text-gray-500">File nguồn chưa có dữ liệu phụ kiện bán.</td></tr>';
 
             toggleModal('accPickerModal', true);
             switchAccessorySaleTab(activeAccessorySaleTab);
@@ -3717,6 +3728,8 @@ ${optionText}
             carList = carList.map(c=>({...c, standardName:c.standardName || normalizeCarKey([c.name,c.version].filter(Boolean).join(' ')), cutLimit:Number(c.cutLimit ?? c.discount ?? 0), saleSalary:Number(c.saleSalary ?? 0), dealerPromoSuggested:Number(c.dealerPromoSuggested ?? 0)})); localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList));
             const sA=localStorage.getItem('vinfast_accessories_v2'); if(sA)accList=JSON.parse(sA); else accList=[];
             try { accessoryCombos = JSON.parse(localStorage.getItem('vinfast_accessory_combos_v1') || '[]') || []; } catch(e) { accessoryCombos = []; }
+            try { accessorySaleTabs = JSON.parse(localStorage.getItem('vinfast_accessory_sale_tabs_v1') || '[]') || []; } catch(e) { accessorySaleTabs = []; }
+            if (!accessorySaleTabs.length) accessorySaleTabs = [...REFERENCE_ACCESSORY_SALE_TABS];
             normalizeAccessoryDataModel();
             const sP=localStorage.getItem('vinfast_promos_v1'); if(sP)promoList=JSON.parse(sP); else promoList=[...initPromos]; promoList=promoList.map(({cutLimit,...p})=>p); localStorage.setItem('vinfast_promos_v1',JSON.stringify(promoList));
             
