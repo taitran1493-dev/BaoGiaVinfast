@@ -1009,42 +1009,112 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         function normalizeComboRecord(c) {
             if (!c) return null;
-            let items = Array.isArray(c.items) ? c.items.map((it, idx) => ({
-                id: it.id || `${c.id || 'combo'}_item_${idx+1}`,
-                code: it.code || '',
-                name: it.name || (Array.isArray(c.itemNames) ? c.itemNames[idx] : '') || '',
-                unit: it.unit || '',
-                retailPrice: Number(it.retailPrice ?? it.price ?? 0)
-            })) : [];
 
-            if (!items.length && Array.isArray(c.itemNames)) {
-                items = c.itemNames.map((name, idx) => ({
-                    id: Array.isArray(c.itemIds) && c.itemIds[idx] ? c.itemIds[idx] : `${c.id || 'combo'}_item_${idx+1}`,
-                    code: '',
-                    name,
-                    unit: '',
-                    retailPrice: 0
-                }));
+            // File Combo là nguồn chuẩn cho mã SP + giá tặng lẻ + giá trọn gói.
+            // Dữ liệu localStorage/JSON cũ chỉ được bổ sung trạng thái, không được
+            // ghi đè giá chuẩn bằng 0 hoặc làm mất mã sản phẩm.
+            const canonical = (typeof REFERENCE_ACCESSORY_COMBOS !== 'undefined'
+                ? REFERENCE_ACCESSORY_COMBOS.find(x => x.id === c.id)
+                : null);
+
+            const rawItems = Array.isArray(c.items) ? c.items : [];
+            const oldNames = Array.isArray(c.itemNames) ? c.itemNames : [];
+            const oldIds = Array.isArray(c.itemIds) ? c.itemIds : [];
+            const canonicalItems = Array.isArray(canonical?.items) ? canonical.items : [];
+
+            const itemCount = Math.max(rawItems.length, oldNames.length, oldIds.length, canonicalItems.length);
+            const items = [];
+
+            for (let idx = 0; idx < itemCount; idx++) {
+                const raw = rawItems[idx] || {};
+                const oldName = oldNames[idx] || '';
+                const oldId = oldIds[idx] || '';
+
+                // Tìm món chuẩn theo ID, mã SP, tên; cuối cùng fallback theo vị trí.
+                let ref = null;
+                if (canonicalItems.length) {
+                    ref = canonicalItems.find(x => raw.id && x.id === raw.id)
+                        || canonicalItems.find(x => raw.code && x.code && x.code === raw.code)
+                        || canonicalItems.find(x => {
+                            const a = cleanAccessoryDisplayName(raw.name || oldName).toLocaleLowerCase('vi-VN');
+                            const b = cleanAccessoryDisplayName(x.name || '').toLocaleLowerCase('vi-VN');
+                            return a && b && a === b;
+                        })
+                        || canonicalItems[idx]
+                        || null;
+                }
+
+                const refPrice = Number(ref?.giftReferencePrice ?? ref?.retailPrice ?? 0);
+                const rawPrice = Number(raw.giftReferencePrice ?? raw.retailPrice ?? raw.price ?? 0);
+
+                items.push({
+                    ...raw,
+                    id: ref?.id || raw.id || oldId || `${c.id || 'combo'}_item_${idx+1}`,
+                    sourceSheet: ref?.sourceSheet || raw.sourceSheet || canonical?.sourceSheet || c.sourceSheet || '',
+                    sourceRow: Number(ref?.sourceRow || raw.sourceRow || 0),
+                    code: ref?.code || raw.code || '',
+                    name: ref?.name || raw.name || oldName || '',
+                    unit: ref?.unit || raw.unit || '',
+                    // Nếu file Combo có giá > 0 thì luôn ưu tiên giá chuẩn đó.
+                    retailPrice: refPrice > 0 ? refPrice : rawPrice,
+                    giftReferencePrice: refPrice > 0 ? refPrice : rawPrice
+                });
             }
+
+            const retailTotalFromItems = items.reduce((s,x) => s + Number(x.giftReferencePrice ?? x.retailPrice ?? 0), 0);
+            const canonicalRetailTotal = Number(canonical?.retailTotal || 0);
+            const canonicalComboPrice = Number(canonical?.comboPrice || 0);
 
             return {
                 ...c,
-                vehicleGroup: normalizeAccessoryGroup(c.vehicleGroup || ''),
+                ...canonical,
+                id: canonical?.id || c.id,
+                name: canonical?.name || c.name,
+                vehicleGroup: normalizeAccessoryGroup(canonical?.vehicleGroup || c.vehicleGroup || ''),
                 sourceType: 'gift_combo',
                 giftOnly: true,
-                retailTotal: Number(c.retailTotal || items.reduce((s,x)=>s+Number(x.retailPrice||0),0)),
-                comboPrice: Number(c.comboPrice || c.priceMua || 0),
-                discountPercent: Number(c.discountPercent || 0),
+                sourceWorkbook: canonical?.sourceWorkbook || c.sourceWorkbook || 'Combo phụ kiện 5 món.xlsx',
+                sourceSheet: canonical?.sourceSheet || c.sourceSheet || '',
+                retailTotal: canonicalRetailTotal > 0
+                    ? canonicalRetailTotal
+                    : Number(c.retailTotal || retailTotalFromItems),
+                comboPrice: canonicalComboPrice > 0
+                    ? canonicalComboPrice
+                    : Number(c.comboPrice || c.priceMua || 0),
+                giftFullReferencePrice: canonicalComboPrice > 0
+                    ? canonicalComboPrice
+                    : Number(c.giftFullReferencePrice || c.comboPrice || 0),
+                discountPercent: Number(canonical?.discountPercent ?? c.discountPercent ?? 0),
                 items,
-                itemIds: items.map(x=>x.id),
-                itemNames: items.map(x=>x.name)
+                itemIds: items.map(x => x.id),
+                itemNames: items.map(x => x.name)
             };
+        }
+
+        function repairAccessoryComboReferenceData(persist=true) {
+            normalizeAccessoryDataModel();
+
+            // Đảm bảo mọi combo trong bộ nhớ có đủ mã + giá lẻ chuẩn từ file Combo.
+            accessoryCombos = accessoryCombos.map(c => normalizeComboRecord(c));
+
+            if (persist) {
+                try {
+                    localStorage.setItem('vinfast_accessory_combos_v1', JSON.stringify(accessoryCombos));
+                } catch(e) {
+                    console.warn('Không thể lưu combo đã repair:', e);
+                }
+            }
         }
 
         function getComboById(id) {
             const live = (Array.isArray(accessoryCombos) ? accessoryCombos : []).find(c => c.id === id);
-            const fallback = REFERENCE_ACCESSORY_COMBOS.find(c => c.id === id);
-            return normalizeComboRecord(live || fallback);
+            const canonical = REFERENCE_ACCESSORY_COMBOS.find(c => c.id === id);
+
+            if (!live) return normalizeComboRecord(canonical);
+            if (!canonical) return normalizeComboRecord(live);
+
+            // Trộn metadata live nhưng canonical sẽ được normalize lại làm chuẩn giá/mã.
+            return normalizeComboRecord({ ...canonical, ...live, id });
         }
 
         function getComboDetail(comboOrAcc) {
@@ -1078,6 +1148,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const oldComboRecords = (Array.isArray(accList) ? accList : []).filter(a => a && (a.isCombo || a.sourceType === 'gift_combo'));
             const comboMap = new Map();
 
+            // Nạp canonical trước; mọi dữ liệu live/legacy sau đó đều đi qua
+            // normalizeComboRecord nên mã + giá trong file Combo vẫn được bảo toàn.
             REFERENCE_ACCESSORY_COMBOS.forEach(c => comboMap.set(c.id, normalizeComboRecord(c)));
             (Array.isArray(accessoryCombos) ? accessoryCombos : []).forEach(c => {
                 const n = normalizeComboRecord(c);
@@ -1134,7 +1206,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (selection.mode === 'full') return Number(combo.comboPrice || 0);
             if (selection.mode === 'items') {
                 const ids = new Set(Array.isArray(selection.itemIds) ? selection.itemIds : []);
-                return combo.items.reduce((sum,it) => sum + (ids.has(it.id) ? Number(it.giftReferencePrice ?? it.retailPrice ?? 0) : 0), 0);
+                return combo.items.reduce((sum,it) => sum + (ids.has(it.id) ? Number(it.giftReferencePrice || it.retailPrice || 0) : 0), 0);
             }
             return 0;
         }
@@ -1658,6 +1730,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 ? clean.accessorySaleTabs
                 : [...REFERENCE_ACCESSORY_SALE_TABS];
             normalizeAccessoryDataModel();
+            accessoryCombos = accessoryCombos.map(c => normalizeComboRecord(c));
 
             if (persistLocal) {
                 localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList));
@@ -2046,7 +2119,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                             <span class="font-semibold text-gray-800 block">${idx+1}. ${cleanAccessoryDisplayName(it.name)}</span>
                             <span class="block text-[10px] text-gray-400 mt-0.5">${it.code || 'Không mã'}${it.unit ? ' · '+it.unit : ''}</span>
                             <span class="inline-flex mt-1 px-2 py-1 rounded-md bg-amber-50 border border-amber-200 text-[10px] font-black text-amber-700">
-                                Giá tặng lẻ tham chiếu (file Combo): ${formatMoney(Number(it.giftReferencePrice ?? it.retailPrice ?? 0))}
+                                Giá tặng lẻ tham chiếu (file Combo): ${formatMoney(Number(it.giftReferencePrice || it.retailPrice || 0))}
                             </span>
                         </span>
                     </label>`).join('');
@@ -3731,6 +3804,8 @@ ${optionText}
             try { accessorySaleTabs = JSON.parse(localStorage.getItem('vinfast_accessory_sale_tabs_v1') || '[]') || []; } catch(e) { accessorySaleTabs = []; }
             if (!accessorySaleTabs.length) accessorySaleTabs = [...REFERENCE_ACCESSORY_SALE_TABS];
             normalizeAccessoryDataModel();
+            accessoryCombos = accessoryCombos.map(c => normalizeComboRecord(c));
+            try { localStorage.setItem('vinfast_accessory_combos_v1', JSON.stringify(accessoryCombos)); } catch(e) {}
             const sP=localStorage.getItem('vinfast_promos_v1'); if(sP)promoList=JSON.parse(sP); else promoList=[...initPromos]; promoList=promoList.map(({cutLimit,...p})=>p); localStorage.setItem('vinfast_promos_v1',JSON.stringify(promoList));
             
             try{quoteAdjustments=JSON.parse(localStorage.getItem('vinfast_quote_adj_v3')||'{}')||{};}catch(e){quoteAdjustments={};}
