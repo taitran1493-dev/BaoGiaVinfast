@@ -645,7 +645,12 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
                     <!-- Section 4: BANK -->
                     <div id="bank-info-container" class="mt-6" style="display: none;">
-                        <div class="capture-grid-cost">
+                        <div class="flex gap-2 mb-3 export-hide-loan-schedule">
+                            <button type="button" id="bank-tab-summary-btn" onclick="switchBankTab('summary')" class="px-4 py-2 rounded-xl border border-blue-600 bg-blue-600 text-white text-xs font-black">Thông tin vay</button>
+                            <button type="button" id="bank-tab-schedule-btn" onclick="switchBankTab('schedule')" class="px-4 py-2 rounded-xl border border-blue-200 bg-white text-blue-700 text-xs font-black">Bảng trả góp</button>
+                        </div>
+
+                        <div id="bank-tab-summary-panel" class="capture-grid-cost">
                             <div class="capture-col flex flex-col min-w-0">
                                 <h3 class="text-sm font-bold text-white bg-blue-700 py-2.5 px-4 rounded-t-lg uppercase shadow-sm">Chính Sách Vay Ngân Hàng</h3>
                                 <div class="border border-blue-700 border-t-0 rounded-b-lg p-5 space-y-3.5 text-sm bg-white shadow-sm flex-1">
@@ -665,6 +670,54 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                     <div class="flex justify-between items-center bg-white p-3 rounded shadow-sm border border-blue-200"><span class="text-gray-600 text-sm font-semibold">Số tiền đối ứng (Vốn tự có)</span><input type="text" id="bank-down-payment" class="w-32 text-right font-bold text-gray-800 outline-none border-b border-dashed border-gray-400" oninput="formatInputMoney(this); syncBank('down');"></div>
                                     <div class="flex justify-between items-end pt-3 mt-1 border-t border-blue-200"><div><span class="font-bold text-gray-800 uppercase text-sm block">Tổng thanh toán nhận xe</span><span class="text-[11px] text-gray-500 italic block">(Vốn đối ứng + Chi phí ĐK sau giảm)</span></div><span id="bank-total-pay" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
                                     <div class="flex justify-between items-end pt-3 mt-1 border-t border-blue-200"><div><span class="font-bold text-blue-800 uppercase text-sm block">Trung bình trả góp 1 năm đầu</span></div><span id="bank-avg-monthly" class="font-bold text-lg text-blue-700 bg-blue-100 px-3 py-1 rounded shadow-sm">0 VNĐ / tháng</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="bank-tab-schedule-panel" class="hidden export-hide-loan-schedule">
+                            <div class="rounded-xl border border-blue-200 bg-white overflow-hidden shadow-sm">
+                                <div class="px-4 py-3 bg-blue-50 border-b border-blue-200">
+                                    <div class="font-black text-blue-900 uppercase text-sm">Bảng trả góp dự kiến theo dư nợ giảm dần</div>
+                                    <div id="loan-schedule-note" class="text-[10px] text-blue-700 mt-1"></div>
+                                </div>
+
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 bg-slate-50 border-b">
+                                    <div class="rounded-lg bg-white border p-2">
+                                        <div class="text-[9px] uppercase font-black text-gray-500">Tổng lãi dự kiến</div>
+                                        <div id="loan-stat-total-interest" class="text-sm font-black text-blue-700 mt-1">0 VNĐ</div>
+                                    </div>
+                                    <div class="rounded-lg bg-white border p-2">
+                                        <div class="text-[9px] uppercase font-black text-gray-500">Lãi TB / tháng</div>
+                                        <div id="loan-stat-avg-month" class="text-sm font-black text-blue-700 mt-1">0 VNĐ</div>
+                                    </div>
+                                    <div class="rounded-lg bg-white border p-2">
+                                        <div class="text-[9px] uppercase font-black text-gray-500">Lãi TB / ngày</div>
+                                        <div id="loan-stat-avg-day" class="text-sm font-black text-blue-700 mt-1">0 VNĐ</div>
+                                    </div>
+                                    <div class="rounded-lg bg-white border p-2">
+                                        <div class="text-[9px] uppercase font-black text-gray-500">Đóng cao nhất</div>
+                                        <div id="loan-stat-max-payment" class="text-sm font-black text-rose-700 mt-1">0 VNĐ</div>
+                                    </div>
+                                    <div class="rounded-lg bg-white border p-2">
+                                        <div class="text-[9px] uppercase font-black text-gray-500">Đóng thấp nhất</div>
+                                        <div id="loan-stat-min-payment" class="text-sm font-black text-emerald-700 mt-1">0 VNĐ</div>
+                                    </div>
+                                </div>
+
+                                <div class="overflow-x-auto max-h-[520px] custom-scrollbar">
+                                    <table class="w-full min-w-[720px] text-[11px]">
+                                        <thead class="sticky top-0 bg-blue-900 text-white z-10">
+                                            <tr>
+                                                <th class="px-3 py-2 text-center">Kỳ</th>
+                                                <th class="px-3 py-2 text-right">Dư nợ đầu kỳ</th>
+                                                <th class="px-3 py-2 text-right">Gốc</th>
+                                                <th class="px-3 py-2 text-right">Lãi</th>
+                                                <th class="px-3 py-2 text-right">Tổng Gốc + Lãi</th>
+                                                <th class="px-3 py-2 text-right">Lãi suất</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="loan-schedule-body"></tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -3484,6 +3537,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
                 const avgEl = document.getElementById('bank-avg-monthly');
                 if (avgEl) avgEl.innerText = formatMoney(calc.avgM) + ' / tháng';
+
+                renderLoanSchedule(car, calc);
+                switchBankTab(activeBankTab);
             } else {
                 bk.style.display='none';
             }
@@ -3924,6 +3980,9 @@ ${optionText}
                 // PK mua đã được chuyển vào khuyến mãi nên bỏ bảng riêng trên ảnh.
                 clone.querySelectorAll('.export-hide-accessory-purchase').forEach(el => el.remove());
 
+                // Tab bảng trả góp chỉ dùng để tham khảo, không đưa vào ảnh báo giá.
+                clone.querySelectorAll('.export-hide-loan-schedule').forEach(el => el.remove());
+
                 styleInputsForPrint(clone);
 
                 const preview = document.getElementById('preview-container');
@@ -3949,6 +4008,162 @@ ${optionText}
         }
 
         // ================== CÁC PHÍ BỔ SUNG & BANK ==================
+
+        let activeBankTab = 'summary';
+
+        function switchBankTab(tab) {
+            activeBankTab = tab === 'schedule' ? 'schedule' : 'summary';
+
+            const summaryPanel = document.getElementById('bank-tab-summary-panel');
+            const schedulePanel = document.getElementById('bank-tab-schedule-panel');
+            const summaryBtn = document.getElementById('bank-tab-summary-btn');
+            const scheduleBtn = document.getElementById('bank-tab-schedule-btn');
+
+            if (summaryPanel) summaryPanel.classList.toggle('hidden', activeBankTab !== 'summary');
+            if (schedulePanel) schedulePanel.classList.toggle('hidden', activeBankTab !== 'schedule');
+
+            const applyBtnState = (btn, active) => {
+                if (!btn) return;
+                btn.classList.toggle('bg-blue-600', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('border-blue-600', active);
+                btn.classList.toggle('bg-white', !active);
+                btn.classList.toggle('text-blue-700', !active);
+                btn.classList.toggle('border-blue-200', !active);
+            };
+            applyBtnState(summaryBtn, activeBankTab === 'summary');
+            applyBtnState(scheduleBtn, activeBankTab === 'schedule');
+
+            if (activeBankTab === 'schedule') {
+                const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+                if (car) renderLoanSchedule(car, calculateQuotation(car));
+            }
+        }
+
+        function buildLoanSchedule(calc) {
+            if (!calc?.isBank || !calc?.adj?.loan) {
+                return { rows:[], totalInterest:0, avgInterestMonth:0, avgInterestDay:0, maxPayment:0, minPayment:0, totalMonths:0, floatingRate:0 };
+            }
+
+            const loanCfg = calc.adj.loan;
+            const principal = Math.max(0, Number(calc.loan || 0));
+            const totalMonths = Math.max(0, Math.round(Number(loanCfg.years || 0) * 12));
+            const promoMonths = Math.max(0, Math.min(totalMonths, Math.round(Number(loanCfg.promoMonths || 0))));
+            const promoRate = Math.max(0, Number(loanCfg.promoRate || 0));
+            const marginRate = Math.max(0, Number(loanCfg.floatRate || 0));
+
+            // Giữ đúng tư duy Bank hiện tại của tool:
+            // Lãi sau ưu đãi dự kiến = Lãi suất ưu đãi + Biên độ thả nổi.
+            const floatingRate = promoRate + marginRate;
+
+            if (!principal || !totalMonths) {
+                return { rows:[], totalInterest:0, avgInterestMonth:0, avgInterestDay:0, maxPayment:0, minPayment:0, totalMonths, promoMonths, promoRate, marginRate, floatingRate };
+            }
+
+            const monthlyPrincipalExact = principal / totalMonths;
+            let remaining = principal;
+            let totalInterest = 0;
+            let maxPayment = 0;
+            let minPayment = Infinity;
+            const rows = [];
+
+            for (let month = 1; month <= totalMonths; month++) {
+                const opening = remaining;
+                const annualRate = month <= promoMonths ? promoRate : floatingRate;
+                const monthlyRate = annualRate / 100 / 12;
+
+                const principalPay = month === totalMonths
+                    ? remaining
+                    : Math.min(remaining, monthlyPrincipalExact);
+
+                const interest = opening * monthlyRate;
+                const totalPay = principalPay + interest;
+
+                totalInterest += interest;
+                maxPayment = Math.max(maxPayment, totalPay);
+                minPayment = Math.min(minPayment, totalPay);
+
+                rows.push({
+                    month,
+                    opening,
+                    principal: principalPay,
+                    interest,
+                    totalPay,
+                    annualRate
+                });
+
+                remaining = Math.max(0, remaining - principalPay);
+            }
+
+            const avgInterestMonth = totalInterest / totalMonths;
+            const estimatedDays = totalMonths * (365 / 12);
+            const avgInterestDay = estimatedDays > 0 ? totalInterest / estimatedDays : 0;
+
+            return {
+                rows,
+                principal,
+                totalMonths,
+                promoMonths,
+                promoRate,
+                marginRate,
+                floatingRate,
+                totalInterest,
+                avgInterestMonth,
+                avgInterestDay,
+                maxPayment,
+                minPayment: Number.isFinite(minPayment) ? minPayment : 0
+            };
+        }
+
+        function renderLoanSchedule(car, calc) {
+            const body = document.getElementById('loan-schedule-body');
+            if (!body) return;
+
+            const sch = buildLoanSchedule(calc);
+
+            const setText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            };
+
+            setText('loan-stat-total-interest', formatMoney(sch.totalInterest));
+            setText('loan-stat-avg-month', formatMoney(sch.avgInterestMonth));
+            setText('loan-stat-avg-day', formatMoney(sch.avgInterestDay));
+            setText('loan-stat-max-payment', formatMoney(sch.maxPayment));
+            setText('loan-stat-min-payment', formatMoney(sch.minPayment));
+
+            const note = document.getElementById('loan-schedule-note');
+            if (note) {
+                note.innerHTML = sch.totalMonths
+                    ? `Tiền vay: <b>${formatMoney(calc.loan)}</b> · Tổng kỳ: <b>${sch.totalMonths} tháng</b> · Lãi cố định <b>${sch.promoRate}%/năm</b> trong <b>${sch.promoMonths} tháng đầu</b> · Sau đó dự kiến <b>${sch.floatingRate.toFixed(2)}%/năm</b> (= ${sch.promoRate}% + biên độ ${sch.marginRate}%).`
+                    : 'Chưa đủ dữ liệu để lập bảng trả góp.';
+            }
+
+            if (!sch.rows.length) {
+                body.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-gray-500 italic">Chưa có dữ liệu khoản vay.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = sch.rows.map((r, idx) => {
+                const promoEnd = sch.promoMonths > 0 && r.month === sch.promoMonths;
+                const firstFloat = sch.promoMonths < sch.totalMonths && r.month === sch.promoMonths + 1;
+                const rowClass = promoEnd
+                    ? 'bg-amber-50'
+                    : firstFloat
+                        ? 'bg-yellow-100'
+                        : (idx % 2 ? 'bg-slate-50' : 'bg-white');
+
+                return `<tr class="${rowClass} border-b border-slate-100">
+                    <td class="px-3 py-2 text-center font-bold">${r.month}</td>
+                    <td class="px-3 py-2 text-right">${Math.round(r.opening).toLocaleString('vi-VN')}</td>
+                    <td class="px-3 py-2 text-right">${Math.round(r.principal).toLocaleString('vi-VN')}</td>
+                    <td class="px-3 py-2 text-right">${Math.round(r.interest).toLocaleString('vi-VN')}</td>
+                    <td class="px-3 py-2 text-right font-black text-blue-800">${Math.round(r.totalPay).toLocaleString('vi-VN')}</td>
+                    <td class="px-3 py-2 text-right font-bold ${firstFloat?'text-amber-700':'text-gray-600'}">${r.annualRate.toFixed(2)}%</td>
+                </tr>`;
+            }).join('');
+        }
+
         function syncBank(src) {
             const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
             if (!car) return;
