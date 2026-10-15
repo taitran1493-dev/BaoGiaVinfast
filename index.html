@@ -296,7 +296,7 @@
                         <option value="MIC">MIC</option>
                         <option value="BIC">BIC</option>
                     </select>
-                    <div class="live-help">Biểu phí xe mới VINFAST năm 2026 theo bảng bạn cung cấp.</div>
+                    <div class="live-help">Biểu phí xe mới VINFAST năm 2026 · cập nhật theo bảng mới nhất.</div>
                 </div>
 
                 <div class="live-field">
@@ -659,7 +659,12 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                     <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Thời gian vay (Năm)</span><div class="dot-leader"></div><input type="number" id="bank-years" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('other')"></div>
                                     <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Ưu đãi cố định</span><div class="dot-leader"></div><select id="bank-promo-months" class="font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" onchange="syncBank('other')"><option value="6">6 Tháng</option><option value="12">12 Tháng</option><option value="24">24 Tháng</option></select></div>
                                     <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Lãi suất ưu đãi (%/năm)</span><div class="dot-leader"></div><input type="number" id="bank-promo-rate" step="0.1" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('other')"></div>
-                                    <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Biên độ thả nổi (%/năm)</span><div class="dot-leader"></div><input type="number" id="bank-float-rate" step="0.1" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('other')"></div>
+                                    <div class="flex justify-between items-end hover:bg-blue-50 px-2 -mx-2 rounded"><span class="text-gray-600">Biên độ thả nổi (%/năm)</span>                                <div>
+                                    <label class="block text-[10px] font-black text-gray-500 mb-1">LÃI SUẤT THAM CHIẾU NHÀ NƯỚC (%/NĂM)</label>
+                                    <input type="number" id="bank-state-rate" step="0.01" min="0" value="0" onchange="syncBank('stateRate')" class="w-full border rounded-lg px-3 py-2 text-right font-black text-blue-700">
+                                    <div class="text-[9px] text-gray-400 mt-1">Lãi thả nổi = Lãi tham chiếu Nhà nước + Biên độ.</div>
+                                </div>
+<div class="dot-leader"></div><input type="number" id="bank-float-rate" step="0.1" class="w-16 text-right font-bold text-blue-700 outline-none border-b border-dashed border-gray-400" oninput="syncBank('other')"></div>
                                 </div>
                             </div>
                             
@@ -1699,7 +1704,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return { 
                 taxAdjust: 0, registrationService: PHI_DICH_VU, buTax: 0, vcInsurance: 0, bhvcType: 'mua', bhvcRateOverride: null, bhvcManualAmount: null, bhvcInsurer: 'PJICO', bhvcVehicleClass: 'auto', selectedColor: '', accessories: [], comboGifts: [], flexibleGifts: [], chargingUsage: 'family',
                 regFees: { registrationPreset:'ward', registrationFee:140000, inspectionPreset:'57', inspectionFee:90000, civilPreset:'family5', civilFee:530700, roadPreset:'white1', roadFee:1560000 },
-                loan: { autoBuTax: false, percent: 80, years: 8, promoMonths: 12, promoRate: 10.2, floatRate: 3.6, manualLoan: null },
+                loan: { autoBuTax: false, percent: 80, years: 8, promoMonths: 12, promoRate: 10.2, floatRate: 3.6, stateRate: 0, manualLoan: null },
                 vfPromos: { exclusiveId: 'none', additiveIds: [], customValues: {}, dealerExtra: 0, catMau: 0 } 
             };
         }
@@ -2890,9 +2895,17 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             let available = true;
             let note = '';
 
+            const isEcVan = model.includes('EC VAN') || model.includes('ECVAN');
+            const isVf2 = model.includes('VF2');
+            const isVf3 = model.includes('VF3');
+            const isMinio = model.includes('MINIO GREEN');
+
             if (vehicleClass === 'taxi') {
                 if (insurer === 'PJICO') {
                     rate = 2.30;
+                } else if (insurer === 'BIC' && isEcVan) {
+                    rate = 1.30;
+                    note = 'Biểu phí riêng BIC cho EC Van.';
                 } else {
                     available = false;
                     note = 'Bảng không thể hiện biểu phí Taxi cho hãng này.';
@@ -2901,59 +2914,60 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 if (insurer === 'PJICO' || insurer === 'MIC') {
                     rate = p < 500000000 ? 1.70 : 1.60;
                 } else if (insurer === 'BIC') {
-                    rate = 2.75;
+                    rate = isEcVan ? 1.30 : 2.75;
+                    if (isEcVan) note = 'Biểu phí riêng BIC cho EC Van.';
                 } else {
                     available = false;
-                    note = 'Bảng không thể hiện biểu phí xe chở người kinh doanh của DBV.';
+                    note = 'Bảng không thể hiện biểu phí xe kinh doanh của DBV.';
                 }
             } else {
-                // Xe không kinh doanh
                 if (p < 400000000) {
                     if (insurer === 'PJICO') {
-                        if (model.includes('VF2') || model.includes('MINIO GREEN')) {
+                        if (isVf2 || isMinio) {
                             minimumFee = 4000000;
-                            note = 'Phí tối thiểu PJICO: 4.000.000 VNĐ cho VF2/Minio Green.';
-                        } else if (model.includes('EC VAN') || model.includes('ECVAN') || model.includes('VF3')) {
+                            note = 'PJICO: VF2/Minio Green phí tối thiểu 4.000.000 VNĐ.';
+                        } else if (isVf3 || isEcVan) {
                             minimumFee = 5000000;
-                            note = 'Phí tối thiểu PJICO: 5.000.000 VNĐ cho EC VAN/VF3.';
+                            note = 'PJICO: VF3/EC Van phí tối thiểu 5.000.000 VNĐ.';
                         } else {
                             available = false;
-                            note = 'Bảng PJICO dưới 400 triệu chỉ nêu VF2/Minio Green và EC VAN/VF3.';
+                            note = 'PJICO dưới 400 triệu chỉ nêu VF2/Minio Green và VF3/EC Van.';
                         }
                     } else if (insurer === 'DBV') {
                         rate = 1.90;
                     } else if (insurer === 'MIC') {
                         available = false;
-                        note = 'MIC: Không bán ở nhóm dưới 400 triệu.';
+                        note = 'MIC: KHÔNG BÁN ở nhóm xe dưới 400 triệu.';
                     } else if (insurer === 'BIC') {
+                        rate = 1.50;
                         minimumFee = 5500000;
-                        note = 'Phí tối thiểu BIC: 5.500.000 VNĐ.';
+                        note = 'BIC: 1,50%, phí tối thiểu 5.500.000 VNĐ/đơn.';
                     }
                 } else if (p < 600000000) {
                     if (insurer === 'PJICO') rate = 1.41;
-                    if (insurer === 'DBV') rate = 1.40;
-                    if (insurer === 'MIC') rate = 1.50;
-                    if (insurer === 'BIC') rate = 1.50;
+                    else if (insurer === 'DBV') rate = 1.40;
+                    else if (insurer === 'MIC') rate = 1.50;
+                    else if (insurer === 'BIC') rate = 1.50;
                 } else if (p < 700000000) {
                     if (insurer === 'PJICO') rate = 1.16;
-                    if (insurer === 'DBV') rate = 1.25;
-                    if (insurer === 'MIC') rate = 1.35;
-                    if (insurer === 'BIC') rate = 1.21;
+                    else if (insurer === 'DBV') rate = 1.25;
+                    else if (insurer === 'MIC') rate = 1.35;
+                    else if (insurer === 'BIC') rate = 1.2155;
                 } else if (p < 800000000) {
                     if (insurer === 'PJICO') rate = 1.16;
-                    if (insurer === 'DBV') rate = 1.25;
-                    if (insurer === 'MIC') rate = 1.35;
-                    if (insurer === 'BIC') rate = 1.19;
+                    else if (insurer === 'DBV') rate = 1.25;
+                    else if (insurer === 'MIC') rate = 1.35;
+                    else if (insurer === 'BIC') rate = 1.19;
                 } else if (p <= 1000000000) {
                     if (insurer === 'PJICO') rate = 1.00;
-                    if (insurer === 'DBV') rate = 1.00;
-                    if (insurer === 'MIC') rate = 1.10;
-                    if (insurer === 'BIC') rate = 1.08;
+                    else if (insurer === 'DBV') rate = 1.00;
+                    else if (insurer === 'MIC') rate = 1.10;
+                    else if (insurer === 'BIC') rate = 1.08;
                 } else {
                     if (insurer === 'PJICO') rate = 1.00;
-                    if (insurer === 'DBV') rate = 0.95;
-                    if (insurer === 'MIC') rate = 1.10;
-                    if (insurer === 'BIC') rate = 1.10;
+                    else if (insurer === 'DBV') rate = 0.95;
+                    else if (insurer === 'MIC') rate = 1.10;
+                    else if (insurer === 'BIC') rate = 1.10;
                 }
             }
 
@@ -2975,7 +2989,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 fee,
                 effectiveRate,
                 available,
-                note
+                note,
+                tariffVersion: 'VINFAST 2026 - cập nhật 15/10/2026'
             };
         }
 
@@ -3528,6 +3543,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 setValue('bank-years', lc.years);
                 setValue('bank-promo-months', lc.promoMonths);
                 setValue('bank-promo-rate', lc.promoRate);
+                setValue('bank-state-rate', Number(lc.stateRate || 0));
                 setValue('bank-float-rate', lc.floatRate);
                 setValue('bank-loan-amount', Math.round(calc.loan).toLocaleString('vi-VN'));
                 setValue('bank-down-payment', Math.round(calc.down).toLocaleString('vi-VN'));
@@ -3733,7 +3749,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 🔹 Tỷ lệ vay: ${loanPercent.toFixed(2).replace(/\.00$/,'')}%
 🔹 Tổng thanh toán nhận xe: ${formatMoney(calc.totB || 0)}
 🔹 Lãi suất cố định ${fixedPeriodText}: ${promoRate.toFixed(2).replace(/\.00$/,'')}%/năm
-🔹 Biên độ từ tháng ${afterMonth} trở đi: ${floatRate.toFixed(2).replace(/\.00$/,'')}%/năm`;
+🔹 Lãi suất tham chiếu Nhà nước: ${Number(loanCfg.stateRate || 0).toFixed(2).replace(/\.00$/,'')}%/năm
+🔹 Biên độ từ tháng ${afterMonth} trở đi: +${floatRate.toFixed(2).replace(/\.00$/,'')}%
+🔹 Lãi suất thả nổi dự kiến: ${(Number(loanCfg.stateRate || 0) + floatRate).toFixed(2).replace(/\.00$/,'')}%/năm`;
             }
 
             const warranty = getWarrantyPolicy(car, adj);
@@ -4050,14 +4068,15 @@ ${optionText}
             const totalMonths = Math.max(0, Math.round(Number(loanCfg.years || 0) * 12));
             const promoMonths = Math.max(0, Math.min(totalMonths, Math.round(Number(loanCfg.promoMonths || 0))));
             const promoRate = Math.max(0, Number(loanCfg.promoRate || 0));
+            const stateRate = Math.max(0, Number(loanCfg.stateRate || 0));
             const marginRate = Math.max(0, Number(loanCfg.floatRate || 0));
 
-            // Giữ đúng tư duy Bank hiện tại của tool:
-            // Lãi sau ưu đãi dự kiến = Lãi suất ưu đãi + Biên độ thả nổi.
-            const floatingRate = promoRate + marginRate;
+            // Sau thời gian ưu đãi:
+            // Lãi suất thả nổi dự kiến = Lãi suất tham chiếu Nhà nước + Biên độ ngân hàng.
+            const floatingRate = stateRate + marginRate;
 
             if (!principal || !totalMonths) {
-                return { rows:[], totalInterest:0, avgInterestMonth:0, avgInterestDay:0, maxPayment:0, minPayment:0, totalMonths, promoMonths, promoRate, marginRate, floatingRate };
+                return { rows:[], totalInterest:0, avgInterestMonth:0, avgInterestDay:0, maxPayment:0, minPayment:0, totalMonths, promoMonths, promoRate, stateRate, marginRate, floatingRate };
             }
 
             const monthlyPrincipalExact = principal / totalMonths;
@@ -4105,6 +4124,7 @@ ${optionText}
                 totalMonths,
                 promoMonths,
                 promoRate,
+                stateRate,
                 marginRate,
                 floatingRate,
                 totalInterest,
@@ -4135,7 +4155,7 @@ ${optionText}
             const note = document.getElementById('loan-schedule-note');
             if (note) {
                 note.innerHTML = sch.totalMonths
-                    ? `Tiền vay: <b>${formatMoney(calc.loan)}</b> · Tổng kỳ: <b>${sch.totalMonths} tháng</b> · Lãi cố định <b>${sch.promoRate}%/năm</b> trong <b>${sch.promoMonths} tháng đầu</b> · Sau đó dự kiến <b>${sch.floatingRate.toFixed(2)}%/năm</b> (= ${sch.promoRate}% + biên độ ${sch.marginRate}%).`
+                    ? `Tiền vay: <b>${formatMoney(calc.loan)}</b> · Tổng kỳ: <b>${sch.totalMonths} tháng</b> · Lãi cố định <b>${sch.promoRate}%/năm</b> trong <b>${sch.promoMonths} tháng đầu</b> · Sau đó dự kiến <b>${sch.floatingRate.toFixed(2)}%/năm</b> (= lãi tham chiếu Nhà nước ${sch.stateRate}% + biên độ ${sch.marginRate}%).`
                     : 'Chưa đủ dữ liệu để lập bảng trả góp.';
             }
 
@@ -4205,6 +4225,7 @@ ${optionText}
                 loanCfg.years = parseInt(document.getElementById('bank-years')?.value) || 0;
                 loanCfg.promoMonths = parseInt(document.getElementById('bank-promo-months')?.value) || 12;
                 loanCfg.promoRate = parseFloat(document.getElementById('bank-promo-rate')?.value) || 0;
+                loanCfg.stateRate = parseFloat(document.getElementById('bank-state-rate')?.value) || 0;
                 loanCfg.floatRate = parseFloat(document.getElementById('bank-float-rate')?.value) || 0;
             }
 
@@ -4389,7 +4410,10 @@ ${optionText}
                 } else if (tableQuote.minimumFee > 0 && tableQuote.rate === null) {
                     tableHelp.innerHTML = `${tableQuote.insurer} · ${clsLabel} · Giá HĐ <b>${formatMoney(tableQuote.price)}</b> · <b>${tableQuote.note}</b>`;
                 } else {
-                    tableHelp.innerHTML = `${tableQuote.insurer} · ${clsLabel} · Giá HĐ <b>${formatMoney(tableQuote.price)}</b> · Biểu phí <b>${tableQuote.rate}%</b>${tableQuote.minimumFee>0?` · Tối thiểu <b>${formatMoney(tableQuote.minimumFee)}</b>`:''}`;
+                    const rateText = tableQuote.rate !== null
+                        ? `${Number(tableQuote.rate).toFixed(4).replace(/0+$/,'').replace(/\.$/,'')}%`
+                        : 'Theo phí tối thiểu';
+                    tableHelp.innerHTML = `${tableQuote.insurer} · ${clsLabel} · Giá HĐ <b>${formatMoney(tableQuote.price)}</b> · Biểu phí <b>${rateText}</b>${tableQuote.minimumFee>0?` · Tối thiểu <b>${formatMoney(tableQuote.minimumFee)}</b>`:''}${tableQuote.note?` · ${tableQuote.note}`:''}`;
                 }
             }
         }
