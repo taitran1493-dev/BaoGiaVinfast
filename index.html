@@ -1741,11 +1741,32 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             };
         }
 
-        function getCarDisplayImage(car) {
+
+        function getCarDisplayImage(car, colorName=null) {
             if (!car) return '';
-            const color = getSelectedColorInfo(car)?.name || '';
-            const map = (car.colorImages && typeof car.colorImages === 'object') ? car.colorImages : {};
-            return map[color] || car.image || '';
+
+            const selectedColor = colorName || getSelectedColorInfo(car)?.name || '';
+            const map = (car.colorImages && typeof car.colorImages === 'object' && !Array.isArray(car.colorImages))
+                ? car.colorImages
+                : {};
+
+            if (selectedColor && map[selectedColor]) return map[selectedColor];
+
+            const normalizeColorKey = value => String(value || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, ' ');
+
+            const wanted = normalizeColorKey(selectedColor);
+            if (wanted) {
+                const matchedKey = Object.keys(map).find(k => normalizeColorKey(k) === wanted);
+                if (matchedKey && map[matchedKey]) return map[matchedKey];
+            }
+
+            // Chưa có ảnh riêng của màu -> dùng ảnh mẫu của Model.
+            return car.image || '';
         }
 
         function carColorCss(name) {
@@ -1762,6 +1783,25 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (s.includes('nâu') || s.includes('brown')) return '#8b6f47';
             if (s.includes('gold') || s.includes('vàng cát')) return '#c8a96b';
             return '#d1d5db';
+        }
+
+
+        function refreshQuoteCarImage(car=null) {
+            const activeCar = car || carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            const img = document.getElementById('quote-car-img');
+            if (!activeCar || !img) return;
+
+            const selectedColor = getSelectedColorInfo(activeCar)?.name || '';
+            const src = getCarDisplayImage(activeCar, selectedColor)
+                || activeCar.image
+                || 'https://placehold.co/800x600?text=No+Image';
+
+            img.dataset.carId = activeCar.id || '';
+            img.dataset.colorName = selectedColor;
+            img.dataset.fallbackSrc = activeCar.image || '';
+            img.dataset.requestedSrc = src;
+            img.onerror = function() { handleQuoteCarImageError(this); };
+            img.src = src;
         }
 
         function renderQuoteColorSwatches(car) {
@@ -1865,6 +1905,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             else setCarColorImageStatus('Có thể dùng link PNG/WEBP/JPG trực tiếp.', 'normal');
         }
 
+
         function saveSelectedCarColorImageUrl() {
             const color = document.getElementById('form-car-color-image-select')?.value || '';
             const url = document.getElementById('form-car-color-image-url')?.value?.trim() || '';
@@ -1876,6 +1917,27 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             writeCarColorImagesForm(map);
             previewSelectedCarColorImage();
+
+            // Đồng bộ ngay vào Model đang chỉnh, không cần đợi bấm Lưu Dữ Liệu.
+            const editId = document.getElementById('form-car-id')?.value || '';
+            const car = carList.find(c => c.id === editId);
+            if (car) {
+                car.colorImages = { ...(car.colorImages || {}) };
+                if (url) car.colorImages[color] = url;
+                else delete car.colorImages[color];
+
+                try { localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList)); } catch (_) {}
+
+                if (document.getElementById('carSelect')?.value === car.id) {
+                    renderQuoteColorSwatches(car);
+                    refreshQuoteCarImage(car);
+                }
+            }
+
+            setCarColorImageStatus(
+                url ? 'Đã lưu link cho màu này và cập nhật ảnh báo giá.' : 'Đã xóa ảnh riêng; sẽ dùng ảnh mẫu của Model.',
+                url ? 'ok' : 'normal'
+            );
         }
 
         function handleCarColorPreviewLoad() {
@@ -1895,11 +1957,15 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             setCarColorImageStatus('Không tải được ảnh từ link này. Có thể máy chủ chặn hotlink/CORS.', 'error');
         }
 
+
         function handleQuoteCarImageError(img) {
             if (!img) return;
+
             const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
-            const fallback = car?.image || '';
-            if (fallback && img.src !== fallback) {
+            const fallback = img.dataset.fallbackSrc || car?.image || '';
+
+            // Ảnh màu lỗi -> ảnh mẫu của Model.
+            if (fallback && img.getAttribute('src') !== fallback) {
                 img.onerror = function() {
                     this.onerror = null;
                     this.src = 'https://placehold.co/800x600?text=No+Image';
@@ -1907,6 +1973,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 img.src = fallback;
                 return;
             }
+
             img.onerror = null;
             img.src = 'https://placehold.co/800x600?text=No+Image';
         }
@@ -1991,6 +2058,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             }
         }
 
+
         async function uploadSelectedCarColorImage(input) {
             const file = input?.files?.[0];
             const color = document.getElementById('form-car-color-image-select')?.value || '';
@@ -2000,6 +2068,17 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 const map = readCarColorImagesForm();
                 map[color] = data;
                 writeCarColorImagesForm(map);
+
+                const editId = document.getElementById('form-car-id')?.value || '';
+                const car = carList.find(c => c.id === editId);
+                if (car) {
+                    car.colorImages = { ...(car.colorImages || {}), [color]: data };
+                    try { localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList)); } catch (_) {}
+                    if (document.getElementById('carSelect')?.value === car.id) {
+                        refreshQuoteCarImage(car);
+                    }
+                }
+
                 const urlField = document.getElementById('form-car-color-image-url');
                 if (urlField) urlField.value = '';
                 previewSelectedCarColorImage();
@@ -2010,12 +2089,25 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             }
         }
 
+
         function removeSelectedCarColorImage() {
             const color = document.getElementById('form-car-color-image-select')?.value || '';
             if (!color) return;
+
             const map = readCarColorImagesForm();
             delete map[color];
             writeCarColorImagesForm(map);
+
+            const editId = document.getElementById('form-car-id')?.value || '';
+            const car = carList.find(c => c.id === editId);
+            if (car?.colorImages) {
+                delete car.colorImages[color];
+                try { localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList)); } catch (_) {}
+                if (document.getElementById('carSelect')?.value === car.id) {
+                    refreshQuoteCarImage(car);
+                }
+            }
+
             const urlField = document.getElementById('form-car-color-image-url');
             if (urlField) urlField.value = '';
             previewSelectedCarColorImage();
@@ -2081,26 +2173,24 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (wrapper) wrapper.classList.toggle('has-color-surcharge', !!(info.isPremium && info.surcharge > 0));
         }
 
+
         function syncCarColor(selectedValue=null) {
             const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
             if (!car) return;
-            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
 
+            const cfg = getVehicleColorConfig(car);
             const select = document.getElementById('colorSelect');
-            const nextColor = selectedValue || select?.value || '';
+            const value = selectedValue || select?.value || cfg.basic?.[0] || cfg.premium?.[0] || '';
 
-            quoteAdjustments[car.id].selectedColor = nextColor;
+            if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            quoteAdjustments[car.id].selectedColor = value;
 
-            // Giữ nguyên option đang chọn trong DOM; không render lại danh sách màu khi đổi màu.
-            if (select && select.value !== nextColor) select.value = nextColor;
-
+            if (select && select.value !== value) select.value = value;
             saveQuoteAdjustmentsToStorage();
+
             updateColorSurchargeHint(car);
             renderQuoteColorSwatches(car);
-
-            const quoteImg = document.getElementById('quote-car-img');
-            if (quoteImg) quoteImg.src = getCarDisplayImage(car) || 'https://placehold.co/800x600?text=No+Image';
-
+            refreshQuoteCarImage(car);
             updateQuotationUI();
         }
 
@@ -3026,6 +3116,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             renderDropdown();
             renderPromosUI();
             updateQuotationUI();
+            if (document.getElementById('carSelect')?.value === normalizedCar.id) refreshQuoteCarImage(normalizedCar);
             alert('Đã lưu cập nhật Model, hình xe/màu xe và thông số kỹ thuật.');
             clearCarForm();
         }
@@ -4235,7 +4326,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 bk.style.display='none';
             }
 
-            document.getElementById('quote-car-img').src = getCarDisplayImage(car) || 'https://placehold.co/800x600?text=No+Image';
+            refreshQuoteCarImage(car);
             document.getElementById('quote-car-specs').innerHTML = (car.specs||'').split('\n').filter(p=>p.trim()).map(s=>`<li class="flex items-start">${SVG_CHECK}<span class="leading-snug flex-1 pt-[1px]">${s}</span></li>`).join('');
             document.getElementById('quote-max-power').innerText = car.maxPower || '—';
             document.getElementById('quote-battery-capacity').innerText = car.batteryCapacity || '—';
