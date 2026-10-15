@@ -296,7 +296,7 @@
                         <option value="MIC">MIC</option>
                         <option value="BIC">BIC</option>
                     </select>
-                    <div class="live-help">Chọn đơn vị bảo hiểm phân phối để áp dụng đúng biểu phí BHVC.</div>
+                    <div class="live-help">Chọn bảo hiểm phân phối · DBV tối thiểu 5 triệu · BIC tối thiểu 5,5 triệu · EC VAN BIC 1,30%.</div>
                 </div>
 
                 <div class="live-field">
@@ -3020,6 +3020,20 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     else if (insurer === 'MIC') rate = 1.10;
                     else if (insurer === 'BIC') rate = 1.10;
                 }
+            }
+
+            // Phí tối thiểu theo đơn vị bảo hiểm:
+            // - DBV (BT): tối thiểu 5.000.000 VNĐ
+            // - BIC: tối thiểu 5.500.000 VNĐ
+            //   Riêng EC VAN BIC áp dụng 1,30% theo dòng riêng, không ép mức tối thiểu 5,5 triệu.
+            if (available && insurer === 'DBV') {
+                minimumFee = Math.max(minimumFee, 5000000);
+                note = note || 'DBV (BT): phí tối thiểu 5.000.000 VNĐ.';
+            }
+
+            if (available && insurer === 'BIC' && !isEcVan) {
+                minimumFee = Math.max(minimumFee, 5500000);
+                note = note || 'BIC: phí tối thiểu 5.500.000 VNĐ.';
             }
 
             let fee = 0;
