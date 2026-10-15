@@ -289,14 +289,14 @@
                     <button type="button" onclick="applyRecommendedBhvcRate()" class="mt-2 w-full py-2 px-3 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-black hover:bg-indigo-100">Áp dụng tỷ lệ theo biểu phí</button>
                 </div>
                 <div class="live-field">
-                    <label>Hãng Bảo hiểm vật chất</label>
+                    <label>Bảo hiểm phân phối</label>
                     <select id="live-bhvc-insurer" class="w-full border rounded-lg px-3 py-2 bg-white">
                         <option value="PJICO">PJICO</option>
                         <option value="DBV">DBV (BT)</option>
                         <option value="MIC">MIC</option>
                         <option value="BIC">BIC</option>
                     </select>
-                    <div class="live-help">Biểu phí xe mới VINFAST năm 2026 · cập nhật theo bảng mới nhất.</div>
+                    <div class="live-help">Chọn đơn vị bảo hiểm phân phối để áp dụng đúng biểu phí BHVC.</div>
                 </div>
 
                 <div class="live-field">
@@ -2925,6 +2925,32 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const isVf3 = model.includes('VF3');
             const isMinio = model.includes('MINIO GREEN');
 
+            // ============================================================
+            // RULE ĐẶC BIỆT PJICO - VF2 / VF3
+            // Áp dụng cả biển trắng lẫn biển vàng, bất kể mục đích sử dụng.
+            // VF2: 4.000.000 VNĐ cố định
+            // VF3: 5.000.000 VNĐ cố định
+            // ============================================================
+            if (insurer === 'PJICO' && (isVf2 || isVf3)) {
+                const fixedFee = isVf2 ? 4000000 : 5000000;
+                const effectiveRate = p > 0 ? fixedFee / p * 100 : 0;
+
+                return {
+                    insurer,
+                    vehicleClass,
+                    price: p,
+                    rate: null,
+                    minimumFee: fixedFee,
+                    fee: fixedFee,
+                    effectiveRate,
+                    available: true,
+                    note: isVf2
+                        ? 'PJICO VF2: phí cố định 4.000.000 VNĐ, áp dụng biển trắng/biển vàng.'
+                        : 'PJICO VF3: phí cố định 5.000.000 VNĐ, áp dụng biển trắng/biển vàng.',
+                    tariffVersion: 'VINFAST 2026 - PJICO VF2/VF3 phí cố định'
+                };
+            }
+
             if (vehicleClass === 'taxi') {
                 if (insurer === 'PJICO') {
                     rate = 2.30;
@@ -4444,7 +4470,7 @@ ${optionText}
                 if (!tableQuote.available) {
                     tableHelp.innerHTML = `<span class="text-red-600 font-black">${tableQuote.insurer} · ${clsLabel}: không có biểu phí trong bảng.</span> ${tableQuote.note || ''}`;
                 } else if (tableQuote.minimumFee > 0 && tableQuote.rate === null) {
-                    tableHelp.innerHTML = `${tableQuote.insurer} · ${clsLabel} · Giá HĐ <b>${formatMoney(tableQuote.price)}</b> · <b>${tableQuote.note}</b>`;
+                    tableHelp.innerHTML = `${tableQuote.insurer} · ${clsLabel} · Giá HĐ <b>${formatMoney(tableQuote.price)}</b> · Phí BHVC <b>${formatMoney(tableQuote.fee || tableQuote.minimumFee)}</b> · ${tableQuote.note || ''}`;
                 } else {
                     const rateText = tableQuote.rate !== null
                         ? `${Number(tableQuote.rate).toFixed(4).replace(/0+$/,'').replace(/\.$/,'')}%`
