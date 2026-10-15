@@ -390,6 +390,12 @@
                 font-size:13px !important;
             }
         }
+
+        @media (max-width: 767px) {
+            #charging-promo-panel { margin-left:0 !important; margin-right:0 !important; }
+            #charging-promo-panel .grid { grid-template-columns:1fr !important; }
+            #charging-promo-summary { font-size:11px !important; line-height:1.5 !important; }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -742,9 +748,32 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         </div>
                     </div>
 
-                    <div id="charging-promo-panel" class="mb-4 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3">
-                        <div class="text-[11px] font-black text-cyan-800 uppercase mb-1">⚡ Ưu đãi sạc</div>
-                        <div id="charging-promo-summary" class="text-xs text-cyan-900 font-semibold leading-relaxed">—</div>
+                    <div id="charging-promo-panel" class="mb-4 rounded-xl border border-cyan-200 bg-cyan-50 overflow-hidden">
+                        <div class="px-4 py-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="text-[11px] font-black text-cyan-800 uppercase">⚡ Ưu đãi sạc V-Green</div>
+                                <div class="text-[9px] font-bold text-cyan-700">CS cập nhật 19/09/2026</div>
+                            </div>
+                            <div id="charging-promo-summary" class="text-xs text-cyan-900 font-semibold leading-relaxed mt-1">—</div>
+                        </div>
+                        <div class="border-t border-cyan-200 bg-white/70 px-4 py-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px]">
+                                <div class="rounded-lg border border-cyan-100 bg-white px-3 py-2">
+                                    <div class="font-black text-gray-600 uppercase">Thứ Hai - Thứ Năm</div>
+                                    <div class="font-bold text-emerald-700 mt-0.5">Biển vàng: áp dụng cả ngày</div>
+                                </div>
+                                <div class="rounded-lg border border-cyan-100 bg-white px-3 py-2">
+                                    <div class="font-black text-gray-600 uppercase">Thứ Sáu - Chủ Nhật</div>
+                                    <div class="font-bold text-amber-700 mt-0.5">23:00-06:00 và 14:00-16:00</div>
+                                </div>
+                            </div>
+                            <div id="charging-current-window" class="mt-2 rounded-lg bg-cyan-100/70 px-3 py-2 text-[10px] font-black text-cyan-900"></div>
+                            <div id="charging-cycle-info" class="mt-1 text-[9px] text-cyan-800 font-semibold"></div>
+                            <div class="mt-2 text-[9px] text-gray-500 leading-relaxed">
+                                * Khung giờ trên áp dụng cho khách hàng xe Biển vàng mua từ 20/04/2026.
+                                Số lần sạc được tính từ ngày 26 tháng trước đến hết ngày 25 tháng tiếp theo.
+                            </div>
+                        </div>
                     </div>
 
                     <!-- BẢO HÀNH THEO DÒNG XE -->
@@ -3361,8 +3390,13 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return 'flexible';
         }
 
+
         function losesFreeChargingWhenCommercial(car) {
             const k = compactVehicleKey(car);
+
+            // Chính sách VB 19/09/2026 nêu: VF3, VF7, VF8, VF9, VF MPV 7,
+            // Lạc Hồng không được dùng kinh doanh dịch vụ nếu muốn hưởng ưu đãi sạc.
+            // VF2 được bổ sung theo quy tắc nghiệp vụ đã chốt trong tool.
             return (
                 k.startsWith('VF2') ||
                 k.startsWith('VF3') ||
@@ -3379,6 +3413,96 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const usage = String(adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family').toLowerCase();
 
             return plate === 'vang' || usage === 'service' || usage === 'xanhsm';
+        }
+
+
+        function getChargingBillingCycle(date=new Date()) {
+            const d = new Date(date);
+            d.setHours(0,0,0,0);
+
+            let startYear = d.getFullYear();
+            let startMonth = d.getMonth();
+
+            if (d.getDate() < 26) {
+                startMonth -= 1;
+                if (startMonth < 0) {
+                    startMonth = 11;
+                    startYear -= 1;
+                }
+            }
+
+            const start = new Date(startYear, startMonth, 26);
+            const endMonthDate = new Date(startYear, startMonth + 1, 25);
+            const fmt = x => String(x).padStart(2, '0');
+
+            return {
+                start,
+                end: endMonthDate,
+                label: `${fmt(start.getDate())}/${fmt(start.getMonth()+1)}/${start.getFullYear()} - ${fmt(endMonthDate.getDate())}/${fmt(endMonthDate.getMonth()+1)}/${endMonthDate.getFullYear()}`
+            };
+        }
+
+        function getYellowPlateChargingWindow(date=new Date()) {
+            const d = new Date(date);
+            const day = d.getDay(); // 0 CN, 1 T2 ... 6 T7
+            const hour = d.getHours() + d.getMinutes()/60;
+            const isFriSatSun = day === 5 || day === 6 || day === 0;
+
+            if (!isFriSatSun) {
+                return {
+                    eligibleNow: true,
+                    allDay: true,
+                    schedule: 'Thứ Hai - Thứ Năm: được áp dụng cả ngày.',
+                    today: 'Hôm nay thuộc Thứ Hai - Thứ Năm: ưu đãi áp dụng cả ngày.'
+                };
+            }
+
+            const inNight = hour >= 23 || hour < 6;
+            const inAfternoon = hour >= 14 && hour < 16;
+            const eligibleNow = inNight || inAfternoon;
+
+            const dayNames = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+            return {
+                eligibleNow,
+                allDay: false,
+                schedule: 'Thứ Sáu - Chủ Nhật: chỉ áp dụng 23:00-06:00 và 14:00-16:00.',
+                today: `Hôm nay ${dayNames[day]}: ${eligibleNow ? 'đang trong khung giờ được ưu đãi' : 'hiện ngoài khung giờ ưu đãi'} (23:00-06:00, 14:00-16:00).`
+            };
+        }
+
+        function getChargingSessionPolicy(car, invoiceDate=new Date()) {
+            const key = compactVehicleKey(car);
+            const invoice = new Date(invoiceDate);
+            invoice.setHours(0,0,0,0);
+
+            const minioCut = new Date('2026-09-01T00:00:00');
+
+            if (key.startsWith('EC VAN')) {
+                return {
+                    sessions: 20,
+                    label: '20 lần sạc đầu tiên/xe/tháng',
+                    until: '10/02/2029',
+                    note: 'Áp dụng từ kỳ tính cước bắt đầu ngày 26/03/2026.'
+                };
+            }
+
+            if (key === 'MINIO GREEN' && invoice < minioCut) {
+                return {
+                    sessions: 20,
+                    label: '20 lần sạc đầu tiên/xe/tháng',
+                    until: '10/02/2029',
+                    note: 'Áp dụng cho xe xuất hóa đơn trước 01/09/2026.'
+                };
+            }
+
+            return {
+                sessions: 10,
+                label: '10 lần sạc đầu tiên/xe/tháng',
+                until: '10/02/2029',
+                note: key === 'MINIO GREEN'
+                    ? 'Áp dụng cho xe xuất hóa đơn từ 01/09/2026.'
+                    : ''
+            };
         }
 
         function hasFreeChargingBenefit(car, adj) {
@@ -3441,45 +3565,33 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             updateQuotationUI();
         }
 
+
         function getChargingPromotion(car, adj) {
             if (!car) return '';
 
-            // VF2/VF3/VF7/VF8/VF9/VF MVP7/Lạc Hồng vẫn có thể chạy dịch vụ/biển vàng,
-            // nhưng khi đó không còn quyền lợi hỗ trợ sạc miễn phí.
             if (!hasFreeChargingBenefit(car, adj)) return '';
-            const key = compactVehicleKey(car);
+
             const plate = document.getElementById('plateSelect')?.value || 'trang';
-            const now = new Date();
-            const invoice = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const invoice = new Date();
             const policyStart = new Date('2026-02-10T00:00:00');
-            const minioCut = new Date('2026-09-01T00:00:00');
             const yellowRuleStart = new Date('2026-04-20T00:00:00');
 
-            if (Number.isNaN(invoice.getTime()) || invoice < policyStart) return '';
+            if (invoice < policyStart) return '';
 
-            let base = '';
-            if (key.startsWith('EC VAN')) {
-                base = 'Ưu đãi sạc V-Green: Miễn phí 20 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029. Kỳ tính số lần sạc bắt đầu từ ngày 26/03/2026.';
-            } else if (key === 'MINIO GREEN') {
-                if (invoice < minioCut) {
-                    base = 'Ưu đãi sạc V-Green: Miễn phí 20 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029. Kỳ tính số lần sạc bắt đầu từ ngày 26/03/2026.';
-                } else {
-                    base = 'Ưu đãi sạc V-Green: Miễn phí 10 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029.';
-                }
-            } else if (key.startsWith('VF WILD')) {
-                base = 'Ưu đãi sạc V-Green: Miễn phí 10 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029.';
-            } else {
-                base = 'Ưu đãi sạc V-Green: Miễn phí 10 lần sạc đầu tiên/xe/tháng đến hết 10/02/2029.';
-            }
+            const policy = getChargingSessionPolicy(car, invoice);
+            const cycle = getChargingBillingCycle(invoice);
+
+            let text = `Ưu đãi sạc V-Green: Miễn phí ${policy.label} đến hết ${policy.until}.`;
+            if (policy.note) text += ` ${policy.note}`;
 
             if (plate === 'vang' && invoice >= yellowRuleStart) {
-                base += ' Thời gian áp dụng với ưu đãi sạc: Thứ Sáu, Thứ Bảy và Chủ Nhật áp dụng trong khung 23:00–06:00 và 14:00–16:00; các ngày còn lại trong tuần được áp dụng.';
+                text += ' Xe biển vàng mua từ 20/04/2026: Thứ Hai-Thứ Năm áp dụng cả ngày; Thứ Sáu-Chủ Nhật chỉ áp dụng 23:00-06:00 và 14:00-16:00.';
             }
-            base += ' Số lần sạc được tính theo kỳ từ ngày 26 đến hết ngày 25 của kỳ kế tiếp.';
-            return base;
+
+            text += ` Chu kỳ tính lượt sạc: ngày 26 tháng trước đến hết ngày 25 tháng tiếp theo (kỳ hiện tại ${cycle.label}).`;
+            return text;
         }
 
-        // ================== CORE CALCULATION & UI ==================
         function changeBHVCType(t) { const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(c){if(!quoteAdjustments[c.id])quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c); quoteAdjustments[c.id].bhvcType=t; saveQuoteAdjustmentsToStorage(); updateQuotationUI();} }
         
         function normalizePromoSemanticName(name) {
@@ -4251,12 +4363,37 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             renderWarrantyInfo(car);
             const chargingSummaryEl = document.getElementById('charging-promo-summary');
             if (chargingSummaryEl) {
-                const chargingText = getChargingPromoSummary(car, getQuoteAdjustments(car));
+                const chargingAdj = getQuoteAdjustments(car);
+                const chargingText = getChargingPromoSummary(car, chargingAdj);
                 chargingSummaryEl.innerText = chargingText || 'Không có ưu đãi sạc áp dụng.';
                 chargingSummaryEl.classList.toggle(
                     'text-rose-700',
                     chargingText.startsWith('Không áp dụng ưu đãi')
                 );
+
+                const plate = document.getElementById('plateSelect')?.value || 'trang';
+                const currentWindowEl = document.getElementById('charging-current-window');
+                const cycleEl = document.getElementById('charging-cycle-info');
+                const nowCharging = new Date();
+                const cycle = getChargingBillingCycle(nowCharging);
+
+                if (currentWindowEl) {
+                    if (!hasFreeChargingBenefit(car, chargingAdj)) {
+                        currentWindowEl.innerText = '⛔ Model/mục đích sử dụng hiện tại không được hưởng hỗ trợ sạc miễn phí.';
+                        currentWindowEl.className = 'mt-2 rounded-lg bg-rose-100 px-3 py-2 text-[10px] font-black text-rose-800';
+                    } else if (plate === 'vang') {
+                        const win = getYellowPlateChargingWindow(nowCharging);
+                        currentWindowEl.innerText = `${win.eligibleNow ? '✅' : '⏰'} ${win.today}`;
+                        currentWindowEl.className = `mt-2 rounded-lg px-3 py-2 text-[10px] font-black ${win.eligibleNow ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`;
+                    } else {
+                        currentWindowEl.innerText = '✅ Biển trắng/Xe Công ty: không áp dụng giới hạn khung giờ Biển vàng.';
+                        currentWindowEl.className = 'mt-2 rounded-lg bg-emerald-100 px-3 py-2 text-[10px] font-black text-emerald-800';
+                    }
+                }
+
+                if (cycleEl) {
+                    cycleEl.innerText = `Chu kỳ tính lượt hiện tại: ${cycle.label}.`;
+                }
             }
             const calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
             syncBhvcInsurerCheckboxes(calc?.adj?.bhvcInsurer || 'PJICO');
@@ -4556,43 +4693,40 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         // ================== QUOTE INFO ==================
 
+
         function getChargingPromoSummary(car, adj) {
             if (!car) return '';
 
-            if (!hasFreeChargingBenefit(car, adj)) {
-                return 'Không áp dụng ưu đãi hỗ trợ sạc miễn phí khi xe đăng ký Biển vàng / sử dụng Dịch vụ hoặc Xanh SM.';
-            }
-
-            const key = normalizeCarKey(car.standardName || [car.name, car.version].filter(Boolean).join(' '));
+            const plate = document.getElementById('plateSelect')?.value || 'trang';
             const usage = String(adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family').toLowerCase();
+            const commercial = isCommercialUseForCharging(car, adj);
 
-            // Theo chính sách đang dùng trong tool:
-            // EC VAN: 20 lượt đầu/xe/tháng đến 10/02/2029.
-            // MINIO GREEN: dùng 10 lượt/tháng theo chính sách hiện hành trong tool.
-            // VF WILD và các dòng còn lại: 10 lượt/tháng.
-            // Dịch vụ/biển vàng: áp dụng theo khung giờ thấp điểm.
-            // Xanh SM độc quyền: miễn phí không giới hạn, 10 lượt đầu do VinFast, phần còn lại do GSM.
-
-            if (usage === 'xanhsm') {
-                return 'Ưu đãi sạc: Miễn phí sạc không giới hạn theo chính sách Xanh SM độc quyền (10 lượt đầu/tháng do VinFast hỗ trợ, phần còn lại do GSM hỗ trợ).';
+            if (!hasFreeChargingBenefit(car, adj)) {
+                return 'Không áp dụng ưu đãi hỗ trợ sạc miễn phí: xe vẫn được đăng ký Biển vàng/chạy Dịch vụ, nhưng Model này mất quyền lợi hỗ trợ sạc khi sử dụng cho mục đích thương mại.';
             }
 
-            let sessions = 10;
-            let extraNote = '';
+            const now = new Date();
+            const policy = getChargingSessionPolicy(car, now);
+            const cycle = getChargingBillingCycle(now);
 
-            if (key.includes('EC VAN')) {
-                sessions = 20;
-                extraNote = ' đến 10/02/2029';
+            let parts = [
+                `Miễn phí ${policy.label} tại trạm V-Green đến hết ${policy.until}.`
+            ];
+
+            if (policy.note) parts.push(policy.note);
+            parts.push(`Kỳ tính lượt hiện tại: ${cycle.label}.`);
+
+            if (plate === 'vang') {
+                const win = getYellowPlateChargingWindow(now);
+                parts.push('Biển vàng: Thứ Hai-Thứ Năm được áp dụng cả ngày; Thứ Sáu-Chủ Nhật chỉ áp dụng 23:00-06:00 và 14:00-16:00.');
+                parts.push(win.today);
+            } else if (commercial && (usage === 'service' || usage === 'xanhsm')) {
+                // Các Model không nằm trong nhóm mất quyền lợi vẫn được áp dụng theo chính sách chung.
+                parts.push('Mục đích sử dụng thương mại không làm thay đổi số lượt nếu Model vẫn đủ điều kiện; nếu đăng ký Biển vàng thì áp dụng thêm khung giờ Biển vàng.');
             }
 
-            if (usage === 'service') {
-                return `Ưu đãi sạc: ${sessions} lượt sạc/tháng${extraNote}. Khung giờ thấp điểm: Thứ 2–Thứ 4 từ 23:00–06:00; Thứ 6–Chủ nhật từ 23:00–06:00 và 14:00–16:00.`;
-            }
-
-            return `Ưu đãi sạc: ${sessions} lượt sạc đầu tiên/tháng${extraNote}; lượt không sử dụng không cộng dồn sang tháng sau.`;
+            return parts.join(' ');
         }
-
-
 
         function getExportPromoExtraItems(car, calc) {
             if (!car || !calc) return [];
