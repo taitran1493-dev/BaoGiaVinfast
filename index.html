@@ -243,7 +243,29 @@
         </button>
         <button onclick="openAccManager()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">Quản Lý Phụ Kiện</button>
         <button onclick="openCarManager()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">Quản Lý Dữ Liệu Xe</button>
-        <button onclick="openPreview()" class="bg-brand-primary hover:bg-blue-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">Lưu hình</button>
+                                    <div id="bhvc-insurer-quick-select" class="col-span-full rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5">
+                                <div class="text-[10px] font-black uppercase text-blue-800 mb-2">Bảo hiểm phân phối</div>
+                                <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-gray-700">
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-PJICO" data-bhvc-insurer="PJICO" checked onchange="selectBhvcInsurerCheckbox('PJICO', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>PJICO</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-DBV" data-bhvc-insurer="DBV" onchange="selectBhvcInsurerCheckbox('DBV', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>DBV (BT)</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-MIC" data-bhvc-insurer="MIC" onchange="selectBhvcInsurerCheckbox('MIC', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>MIC</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-BIC" data-bhvc-insurer="BIC" onchange="selectBhvcInsurerCheckbox('BIC', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>BIC</span>
+                                    </label>
+                                </div>
+                                <div id="bhvc-insurer-quick-help" class="text-[9px] text-blue-700 mt-1.5">Mặc định PJICO · chỉ áp dụng 1 bảo hiểm tại một thời điểm.</div>
+                            </div>
+<button onclick="openPreview()" class="bg-brand-primary hover:bg-blue-700 text-white font-bold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl sm:rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2 shrink-0 text-[13px] sm:text-base whitespace-nowrap">Lưu hình</button>
         <label class="customize-check-wrap rounded-xl sm:rounded-full shadow-lg shrink-0 text-[13px] sm:text-base py-2.5 px-4 sm:py-3 sm:px-6">
             <input type="checkbox" id="customize-toggle" onchange="toggleLiveCustomize(this.checked)"><span>⚙ Phí ĐK & Bank</span>
         </label>
@@ -2596,6 +2618,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (!car) return;
             applyVehicleUseRules(car, true);
             renderColorOptions(car, true);
+            syncBhvcInsurerCheckboxes(getQuoteAdjustments(car)?.bhvcInsurer || 'PJICO');
             saveQuoteAdjustmentsToStorage();
             renderPromosUI();
             updateQuotationUI();
@@ -3100,6 +3123,48 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             updateQuotationUI();
         }
 
+        function syncBhvcInsurerCheckboxes(insurer) {
+            const selected = normalizeBhvcInsurer(insurer || 'PJICO');
+            ['PJICO','DBV','MIC','BIC'].forEach(code => {
+                const el = document.getElementById(`bhvc-check-${code}`);
+                if (el) el.checked = code === selected;
+            });
+
+            const help = document.getElementById('bhvc-insurer-quick-help');
+            if (help) {
+                help.innerHTML = `Đang chọn: <b>${selected === 'DBV' ? 'DBV (BT)' : selected}</b> · chỉ áp dụng 1 bảo hiểm tại một thời điểm.`;
+            }
+        }
+
+        function selectBhvcInsurerCheckbox(insurer, checkbox) {
+            const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
+            if (!car) return;
+
+            const selected = normalizeBhvcInsurer(insurer);
+
+            // Checkbox hoạt động độc quyền như lựa chọn đơn.
+            // Không cho trạng thái "không chọn hãng": nếu bỏ checkbox đang active thì bật lại.
+            if (checkbox && !checkbox.checked) {
+                checkbox.checked = true;
+                return;
+            }
+
+            if (!quoteAdjustments[car.id]) {
+                quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            }
+
+            quoteAdjustments[car.id].bhvcInsurer = selected;
+
+            // Đồng bộ select trong bảng điều chỉnh biểu phí.
+            const insurerSelect = document.getElementById('live-bhvc-insurer');
+            if (insurerSelect) insurerSelect.value = selected;
+
+            syncBhvcInsurerCheckboxes(selected);
+            saveQuoteAdjustmentsToStorage();
+            updateQuotationUI();
+            fillLiveCustomizePanel();
+        }
+
         function syncBhvcTableSettings() {
             const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
             if (!car) return;
@@ -3110,6 +3175,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             quoteAdjustments[car.id].bhvcInsurer = normalizeBhvcInsurer(insurer);
             quoteAdjustments[car.id].bhvcVehicleClass = vehicleClass;
+            syncBhvcInsurerCheckboxes(quoteAdjustments[car.id].bhvcInsurer);
             saveQuoteAdjustmentsToStorage();
             updateQuotationUI();
             fillLiveCustomizePanel();
@@ -3385,6 +3451,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 );
             }
             const calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
+            syncBhvcInsurerCheckboxes(calc?.adj?.bhvcInsurer || 'PJICO');
             fillFlexibleGifts(car);
 
             // Đồng bộ các bộ chọn phí ngay trên màn hình báo giá
@@ -4076,6 +4143,9 @@ ${optionText}
 
                 // Tab bảng trả góp chỉ dùng để tham khảo, không đưa vào ảnh báo giá.
                 clone.querySelectorAll('.export-hide-loan-schedule').forEach(el => el.remove());
+
+                // Checkbox hãng BHVC dùng để thao tác, không đưa vào ảnh báo giá.
+                clone.querySelectorAll('#bhvc-insurer-quick-select').forEach(el => el.remove());
 
                 styleInputsForPrint(clone);
 
