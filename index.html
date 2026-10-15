@@ -361,6 +361,35 @@
                 max-width:100%;
             }
         }
+
+        /* V70: Preview/export mobile */
+        @media (max-width: 767px) {
+            #previewModal {
+                padding:0 !important;
+                align-items:stretch !important;
+            }
+            #previewModal > div:first-child {
+                width:100% !important;
+                max-width:100vw !important;
+                padding:10px !important;
+                gap:8px !important;
+            }
+            #previewModal h2 {
+                font-size:18px !important;
+                line-height:1.15 !important;
+            }
+            #preview-container {
+                width:100vw !important;
+                max-width:100vw !important;
+                overflow:auto !important;
+                -webkit-overflow-scrolling:touch;
+            }
+            #save-image-btn {
+                min-width:128px !important;
+                min-height:44px !important;
+                font-size:13px !important;
+            }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -4930,6 +4959,22 @@ ${optionText}
                 // Checkbox hãng BHVC dùng để thao tác, không đưa vào ảnh báo giá.
                 clone.querySelectorAll('#bhvc-insurer-quick-select').forEach(el => el.remove());
 
+                // Chuẩn hóa ảnh trước khi xuất. Không ép crossorigin trên clone
+                // vì một số link VinFast hiển thị được nhưng không cấp CORS.
+                const liveImages = Array.from(source.querySelectorAll('img'));
+                const cloneImages = Array.from(clone.querySelectorAll('img'));
+                cloneImages.forEach((img, idx) => {
+                    img.removeAttribute('crossorigin');
+                    img.crossOrigin = null;
+                    const live = liveImages[idx];
+                    if (live) {
+                        const resolved = live.currentSrc || live.src || '';
+                        if (resolved) img.src = resolved;
+                    }
+                    img.loading = 'eager';
+                    img.decoding = 'sync';
+                });
+
                 styleInputsForPrint(clone);
 
                 const preview = document.getElementById('preview-container');
@@ -4943,15 +4988,116 @@ ${optionText}
         }
         function closePreview() { toggleModal('previewModal', false); document.getElementById('preview-container').innerHTML=''; }
         async function savePreviewImage() {
-            const tg=document.getElementById('capture-area-clone'), btn=document.getElementById('save-image-btn'); if(!tg)return;
-            const oT=btn.innerHTML; btn.innerHTML='⏳ Đang xử lý...'; btn.disabled=true;
-            try{
-                if(document.fonts&&document.fonts.ready) await document.fonts.ready;
-                await Promise.all(Array.from(tg.querySelectorAll('img')).map(i=>new Promise(r=>{if(i.complete)r();else{i.onload=r;i.onerror=r;}})));
-                await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-                const dU=await htmlToImage.toPng(tg, {backgroundColor:'#ffffff', width:1024, height:tg.scrollHeight, pixelRatio:2});
-                const a=document.createElement('a'); a.href=dU; a.download='BaoGia_Ucar_HD.png'; a.click();
-            } catch(e){alert('Lỗi!');} finally{btn.innerHTML=oT; btn.disabled=false;}
+            const tg = document.getElementById('capture-area-clone');
+            const btn = document.getElementById('save-image-btn');
+            if (!tg || !btn) return;
+
+            const originalText = btn.innerHTML;
+            const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+            btn.innerHTML = '⏳ Đang xử lý...';
+            btn.disabled = true;
+
+            try {
+                if (document.fonts?.ready) {
+                    try { await document.fonts.ready; } catch (_) {}
+                }
+
+                // Đợi ảnh tải, nhưng không treo vô hạn khi link ngoài bị chặn.
+                const imgs = Array.from(tg.querySelectorAll('img'));
+                await Promise.all(imgs.map(img => new Promise(resolve => {
+                    if (img.complete) return resolve();
+                    let finished = false;
+                    const done = () => {
+                        if (finished) return;
+                        finished = true;
+                        resolve();
+                    };
+                    img.onload = done;
+                    img.onerror = done;
+                    setTimeout(done, 3500);
+                })));
+
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                const width = 1024;
+                const height = Math.max(
+                    tg.scrollHeight,
+                    tg.offsetHeight,
+                    tg.getBoundingClientRect().height
+                );
+
+                // Mobile ưu tiên độ ổn định/bộ nhớ.
+                // Desktop vẫn xuất nét cao hơn.
+                const pixelRatio = isMobile ? 1 : 1.7;
+
+                let dataUrl = '';
+                let firstError = null;
+
+                // Cách 1: html-to-image
+                try {
+                    dataUrl = await htmlToImage.toPng(tg, {
+                        backgroundColor: '#ffffff',
+                        width,
+                        height,
+                        pixelRatio,
+                        cacheBust: true,
+                        skipAutoScale: false
+                    });
+                } catch (err) {
+                    firstError = err;
+                    console.warn('html-to-image failed, fallback html2canvas:', err);
+                }
+
+                // Cách 2: fallback html2canvas nếu mobile/browser không chịu html-to-image.
+                if (!dataUrl) {
+                    try {
+                        const canvas = await html2canvas(tg, {
+                            backgroundColor: '#ffffff',
+                            scale: isMobile ? 1 : 1.5,
+                            width,
+                            height,
+                            windowWidth: width,
+                            useCORS: true,
+                            allowTaint: false,
+                            imageTimeout: 4000,
+                            logging: false,
+                            scrollX: 0,
+                            scrollY: 0
+                        });
+
+                        dataUrl = canvas.toDataURL('image/png', 1.0);
+                    } catch (err2) {
+                        console.error('html2canvas fallback failed:', err2);
+                        throw new Error(
+                            'Không render được ảnh trên trình duyệt này. ' +
+                            (err2?.message || firstError?.message || '')
+                        );
+                    }
+                }
+
+                if (!dataUrl || !dataUrl.startsWith('data:image')) {
+                    throw new Error('Không tạo được dữ liệu PNG.');
+                }
+
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = 'BaoGia_Ucar_HD.png';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+            } catch (e) {
+                console.error('Save image error:', e);
+                alert(
+                    'Không thể lưu ảnh báo giá trên thiết bị này.\n\n' +
+                    'Chi tiết: ' + (e?.message || e) +
+                    '\n\nNếu ảnh xe dùng link ngoài, hãy chờ ảnh tải xong rồi thử lại.'
+                );
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
         // ================== CÁC PHÍ BỔ SUNG & BANK ==================
