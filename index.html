@@ -2524,49 +2524,70 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         function getVehicleUseRule(car) {
             const k = compactVehicleKey(car);
-            const privateOnly =
+
+            // Tất cả dòng xe đều có thể chọn Biển vàng / Dịch vụ / Xanh SM.
+            // Riêng EC VAN vẫn mặc định Biển vàng + Dịch vụ khi đổi xe.
+            if (k.startsWith('EC VAN')) return 'ecvan';
+            return 'flexible';
+        }
+
+        function losesFreeChargingWhenCommercial(car) {
+            const k = compactVehicleKey(car);
+            return (
                 k.startsWith('VF2') ||
                 k.startsWith('VF3') ||
                 k.startsWith('VF7') ||
                 k.startsWith('VF8') ||
                 k.startsWith('VF9') ||
                 k === 'VF MVP 7' ||
-                k.startsWith('LẠC HỒNG');
-            if (privateOnly) return 'private-only';
-            if (k.startsWith('EC VAN')) return 'ecvan';
-            return 'flexible';
+                k.startsWith('LẠC HỒNG')
+            );
+        }
+
+        function isCommercialUseForCharging(car, adj) {
+            const plate = document.getElementById('plateSelect')?.value || 'trang';
+            const usage = String(adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family').toLowerCase();
+
+            return plate === 'vang' || usage === 'service' || usage === 'xanhsm';
+        }
+
+        function hasFreeChargingBenefit(car, adj) {
+            if (!car) return false;
+            if (losesFreeChargingWhenCommercial(car) && isCommercialUseForCharging(car, adj)) return false;
+            return true;
         }
 
         function applyVehicleUseRules(car, forceDefaults=false) {
             if (!car) return;
+
             const rule = getVehicleUseRule(car);
             const plate = document.getElementById('plateSelect');
             const usage = document.getElementById('usageSelect');
             const usageWrap = document.getElementById('usage-wrapper');
             if (!plate || !usage) return;
 
-            const yellowOpt = Array.from(plate.options).find(o => o.value === 'vang');
-            const serviceOpt = Array.from(usage.options).find(o => o.value === 'service');
-            const xanhOpt = Array.from(usage.options).find(o => o.value === 'xanhsm');
-
-            [yellowOpt, serviceOpt, xanhOpt].forEach(o => { if(o){ o.disabled=false; o.hidden=false; } });
+            // Không khóa/ẩn Biển vàng hay nhu cầu Dịch vụ/Xanh SM cho bất kỳ dòng xe nào.
+            Array.from(plate.options).forEach(o => {
+                o.disabled = false;
+                o.hidden = false;
+            });
+            Array.from(usage.options).forEach(o => {
+                o.disabled = false;
+                o.hidden = false;
+            });
             if (usageWrap) usageWrap.style.display = '';
 
-            if (rule === 'private-only') {
-                if (yellowOpt) { yellowOpt.disabled = true; yellowOpt.hidden = true; }
-                if (serviceOpt) { serviceOpt.disabled = true; serviceOpt.hidden = true; }
-                if (xanhOpt) { xanhOpt.disabled = true; xanhOpt.hidden = true; }
-                if (plate.value === 'vang') plate.value = 'trang';
-                usage.value = 'family';
-                if (usageWrap) usageWrap.style.display = 'none';
-                if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
-                quoteAdjustments[car.id].chargingUsage = 'family';
-            } else if (rule === 'ecvan' && forceDefaults) {
+            // EC VAN vẫn mặc định Biển vàng + Dịch vụ khi vừa đổi sang xe này.
+            if (rule === 'ecvan' && forceDefaults) {
                 plate.value = 'vang';
                 usage.value = 'service';
-                if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+
+                if (!quoteAdjustments[car.id]) {
+                    quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+                }
                 quoteAdjustments[car.id].chargingUsage = 'service';
             }
+
             changePlateColor();
         }
 
@@ -2591,6 +2612,10 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         function getChargingPromotion(car, adj) {
             if (!car) return '';
+
+            // VF2/VF3/VF7/VF8/VF9/VF MVP7/Lạc Hồng vẫn có thể chạy dịch vụ/biển vàng,
+            // nhưng khi đó không còn quyền lợi hỗ trợ sạc miễn phí.
+            if (!hasFreeChargingBenefit(car, adj)) return '';
             const key = compactVehicleKey(car);
             const plate = document.getElementById('plateSelect')?.value || 'trang';
             const now = new Date();
@@ -3311,7 +3336,14 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             renderColorOptions(car, false);
             renderWarrantyInfo(car);
             const chargingSummaryEl = document.getElementById('charging-promo-summary');
-            if (chargingSummaryEl) chargingSummaryEl.innerText = getChargingPromoSummary(car, getQuoteAdjustments(car));
+            if (chargingSummaryEl) {
+                const chargingText = getChargingPromoSummary(car, getQuoteAdjustments(car));
+                chargingSummaryEl.innerText = chargingText || 'Không có ưu đãi sạc áp dụng.';
+                chargingSummaryEl.classList.toggle(
+                    'text-rose-700',
+                    chargingText.startsWith('Không áp dụng ưu đãi')
+                );
+            }
             const calc = calculateQuotation(car), plt = document.getElementById('plateSelect').value;
             fillFlexibleGifts(car);
 
@@ -3607,6 +3639,10 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         function getChargingPromoSummary(car, adj) {
             if (!car) return '';
+
+            if (!hasFreeChargingBenefit(car, adj)) {
+                return 'Không áp dụng ưu đãi hỗ trợ sạc miễn phí khi xe đăng ký Biển vàng / sử dụng Dịch vụ hoặc Xanh SM.';
+            }
 
             const key = normalizeCarKey(car.standardName || [car.name, car.version].filter(Boolean).join(' '));
             const usage = String(adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family').toLowerCase();
