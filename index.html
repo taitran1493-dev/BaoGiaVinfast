@@ -623,7 +623,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     <div class="quote-spec-card border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] min-h-[300px]">
                             <div class="bg-slate-50 flex items-center justify-center p-5 min-w-0 overflow-hidden">
-                                <img id="quote-car-img" crossorigin="anonymous" onerror="handleQuoteCarImageError(this)" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
+                                <img id="quote-car-img" referrerpolicy="no-referrer-when-downgrade" onerror="handleQuoteCarImageError(this)" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
                             </div>
                             <div class="p-5 border-t lg:border-t-0 lg:border-l border-gray-100 bg-white">
                                 <div class="flex items-center justify-between gap-3">
@@ -899,7 +899,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                         placeholder="https://.../image.png">
                                     <button type="button" onclick="saveSelectedCarColorImageUrl()" class="px-3 py-2 rounded-lg border border-cyan-300 bg-white text-cyan-700 text-[10px] font-black">Lưu link</button>
                                 </div>
-                                <div id="form-car-color-image-url-status" class="text-[9px] text-gray-500 mt-1">Có thể dùng link PNG/WEBP/JPG trực tiếp.</div>
+                                <div id="form-car-color-image-url-status" class="text-[9px] text-gray-500 mt-1">Có thể dùng link PNG/WEBP/JPG trực tiếp. Link được hiển thị như ảnh thường, không ép CORS.</div>
                             </div>
                             <div class="mt-2 h-32 rounded-lg border border-cyan-200 bg-white flex items-center justify-center overflow-hidden">
                                 <img id="form-car-color-image-preview"
@@ -1786,19 +1786,25 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         }
 
 
-        function refreshQuoteCarImage(car=null) {
+        function refreshQuoteCarImage(car=null, explicitColor=null) {
             const activeCar = car || carList.find(c => c.id === document.getElementById('carSelect')?.value);
             const img = document.getElementById('quote-car-img');
             if (!activeCar || !img) return;
 
-            const selectedColor = getSelectedColorInfo(activeCar)?.name || '';
-            const src = getCarDisplayImage(activeCar, selectedColor)
-                || activeCar.image
-                || 'https://placehold.co/800x600?text=No+Image';
+            const colorSelect = document.getElementById('colorSelect');
+            const selectedColor = explicitColor
+                || ((colorSelect?.dataset.carId === activeCar.id && colorSelect.value) ? colorSelect.value : '')
+                || getQuoteAdjustments(activeCar)?.selectedColor
+                || getSelectedColorInfo(activeCar)?.name
+                || '';
+
+            const colorSrc = getCarDisplayImage(activeCar, selectedColor);
+            const modelSrc = activeCar.image || '';
+            const src = colorSrc || modelSrc || 'https://placehold.co/800x600?text=No+Image';
 
             img.dataset.carId = activeCar.id || '';
             img.dataset.colorName = selectedColor;
-            img.dataset.fallbackSrc = activeCar.image || '';
+            img.dataset.fallbackSrc = modelSrc;
             img.dataset.requestedSrc = src;
             img.onerror = function() { handleQuoteCarImageError(this); };
             img.src = src;
@@ -1929,8 +1935,15 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 try { localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList)); } catch (_) {}
 
                 if (document.getElementById('carSelect')?.value === car.id) {
+                    const colorSelect = document.getElementById('colorSelect');
+                    if (colorSelect && Array.from(colorSelect.options).some(o => o.value === color)) {
+                        colorSelect.value = color;
+                        if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+                        quoteAdjustments[car.id].selectedColor = color;
+                        saveQuoteAdjustmentsToStorage();
+                    }
                     renderQuoteColorSwatches(car);
-                    refreshQuoteCarImage(car);
+                    refreshQuoteCarImage(car, color);
                 }
             }
 
@@ -2190,7 +2203,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             updateColorSurchargeHint(car);
             renderQuoteColorSwatches(car);
-            refreshQuoteCarImage(car);
+            refreshQuoteCarImage(car, value);
             updateQuotationUI();
         }
 
