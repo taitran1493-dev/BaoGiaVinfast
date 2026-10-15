@@ -623,7 +623,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     <div class="quote-spec-card border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] min-h-[300px]">
                             <div class="bg-slate-50 flex items-center justify-center p-5 min-w-0 overflow-hidden">
-                                <img id="quote-car-img" crossorigin="anonymous" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
+                                <img id="quote-car-img" crossorigin="anonymous" onerror="handleQuoteCarImageError(this)" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
                             </div>
                             <div class="p-5 border-t lg:border-t-0 lg:border-l border-gray-100 bg-white">
                                 <div class="flex items-center justify-between gap-3">
@@ -845,16 +845,19 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         <div class="col-span-1 sm:col-span-2">
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Ảnh xe mặc định</label>
                             <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-                                <input type="text" id="form-car-img" class="w-full border rounded p-2 text-sm outline-none" placeholder="Link ảnh hoặc dữ liệu ảnh Upload">
+                                <input type="text" id="form-car-img"
+                                    oninput="previewMainCarImageUrl()"
+                                    class="w-full border rounded p-2 text-sm outline-none"
+                                    placeholder="Link ảnh hoặc dữ liệu ảnh Upload">
                                 <label class="px-4 py-2 rounded bg-blue-600 text-white text-xs font-black cursor-pointer flex items-center justify-center">
                                     Upload ảnh xe
                                     <input type="file" id="form-car-img-file" accept="image/*" class="hidden" onchange="uploadMainCarImage(this)">
                                 </label>
                             </div>
                             <div class="mt-2 h-28 rounded-lg border bg-white flex items-center justify-center overflow-hidden">
-                                <img id="form-car-img-preview" class="max-w-full max-h-28 object-contain" alt="Xem trước ảnh xe">
+                                <img id="form-car-img-preview" class="max-w-full max-h-28 object-contain" alt="Xem trước ảnh xe" onerror="this.style.opacity=.25" onload="this.style.opacity=1">
                             </div>
-                            <p class="text-[9px] text-gray-500 mt-1">Ảnh Upload được tự nén để giảm dung lượng HTML/JSON/localStorage.</p>
+                            <p class="text-[9px] text-gray-500 mt-1">Có thể dán Link ảnh hoặc Upload. Dùng Link giúp JSON/localStorage nhẹ hơn; Upload sẽ tự nén ảnh.</p>
                         </div>
 
                         <div>
@@ -886,8 +889,24 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                     <input type="file" id="form-car-color-image-file" accept="image/*" class="hidden" onchange="uploadSelectedCarColorImage(this)">
                                 </label>
                             </div>
+                            <div class="mt-2">
+                                <label class="block text-[9px] font-black uppercase text-cyan-800 mb-1">Link ảnh cho màu đang chọn</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                                    <input type="url" id="form-car-color-image-url"
+                                        oninput="previewCarColorImageUrlOnly()"
+                                        onchange="saveSelectedCarColorImageUrl()"
+                                        class="w-full border rounded-lg p-2 text-xs bg-white outline-none"
+                                        placeholder="https://.../image.png">
+                                    <button type="button" onclick="saveSelectedCarColorImageUrl()" class="px-3 py-2 rounded-lg border border-cyan-300 bg-white text-cyan-700 text-[10px] font-black">Lưu link</button>
+                                </div>
+                                <div id="form-car-color-image-url-status" class="text-[9px] text-gray-500 mt-1">Có thể dùng link PNG/WEBP/JPG trực tiếp.</div>
+                            </div>
                             <div class="mt-2 h-32 rounded-lg border border-cyan-200 bg-white flex items-center justify-center overflow-hidden">
-                                <img id="form-car-color-image-preview" class="max-w-full max-h-32 object-contain" alt="Ảnh màu xe">
+                                <img id="form-car-color-image-preview"
+                                     class="max-w-full max-h-32 object-contain"
+                                     alt="Ảnh màu xe"
+                                     onload="handleCarColorPreviewLoad()"
+                                     onerror="handleCarColorPreviewError()">
                                 <span id="form-car-color-image-empty" class="text-[10px] text-gray-400">Chưa có ảnh riêng cho màu này</span>
                             </div>
                             <div class="mt-2 flex justify-end">
@@ -1812,6 +1831,86 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             }
         }
 
+        function previewMainCarImageUrl() {
+            const url = document.getElementById('form-car-img')?.value?.trim() || '';
+            const preview = document.getElementById('form-car-img-preview');
+            if (!preview) return;
+            preview.src = url;
+            preview.style.display = url ? '' : 'none';
+            preview.style.opacity = '1';
+        }
+
+        function setCarColorImageStatus(text, type='normal') {
+            const el = document.getElementById('form-car-color-image-url-status');
+            if (!el) return;
+            el.textContent = text || '';
+            el.classList.remove('text-gray-500','text-emerald-700','text-rose-700','text-amber-700');
+            el.classList.add(
+                type === 'ok' ? 'text-emerald-700' :
+                type === 'error' ? 'text-rose-700' :
+                type === 'warn' ? 'text-amber-700' : 'text-gray-500'
+            );
+        }
+
+        function previewCarColorImageUrlOnly() {
+            const url = document.getElementById('form-car-color-image-url')?.value?.trim() || '';
+            const img = document.getElementById('form-car-color-image-preview');
+            const empty = document.getElementById('form-car-color-image-empty');
+            if (!img) return;
+
+            img.src = url;
+            img.style.display = url ? '' : 'none';
+            if (empty) empty.style.display = url ? 'none' : '';
+            if (url) setCarColorImageStatus('Đang kiểm tra link ảnh...', 'normal');
+            else setCarColorImageStatus('Có thể dùng link PNG/WEBP/JPG trực tiếp.', 'normal');
+        }
+
+        function saveSelectedCarColorImageUrl() {
+            const color = document.getElementById('form-car-color-image-select')?.value || '';
+            const url = document.getElementById('form-car-color-image-url')?.value?.trim() || '';
+            if (!color) return;
+
+            const map = readCarColorImagesForm();
+            if (url) map[color] = url;
+            else delete map[color];
+
+            writeCarColorImagesForm(map);
+            previewSelectedCarColorImage();
+        }
+
+        function handleCarColorPreviewLoad() {
+            const img = document.getElementById('form-car-color-image-preview');
+            if (!img || !img.src) return;
+            setCarColorImageStatus('Ảnh hiển thị được.', 'ok');
+        }
+
+        function handleCarColorPreviewError() {
+            const img = document.getElementById('form-car-color-image-preview');
+            if (img) img.style.display = 'none';
+            const empty = document.getElementById('form-car-color-image-empty');
+            if (empty) {
+                empty.textContent = 'Link ảnh không tải được hoặc máy chủ chặn hiển thị.';
+                empty.style.display = '';
+            }
+            setCarColorImageStatus('Không tải được ảnh từ link này. Có thể máy chủ chặn hotlink/CORS.', 'error');
+        }
+
+        function handleQuoteCarImageError(img) {
+            if (!img) return;
+            const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            const fallback = car?.image || '';
+            if (fallback && img.src !== fallback) {
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.src = 'https://placehold.co/800x600?text=No+Image';
+                };
+                img.src = fallback;
+                return;
+            }
+            img.onerror = null;
+            img.src = 'https://placehold.co/800x600?text=No+Image';
+        }
+
         async function uploadMainCarImage(input) {
             const file = input?.files?.[0];
             if (!file) return;
@@ -1866,12 +1965,30 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const map = readCarColorImagesForm();
             const img = document.getElementById('form-car-color-image-preview');
             const empty = document.getElementById('form-car-color-image-empty');
+            const urlField = document.getElementById('form-car-color-image-url');
             const src = map[color] || '';
+
+            if (urlField) {
+                urlField.value = src && !String(src).startsWith('data:') ? src : '';
+            }
+
             if (img) {
                 img.src = src;
                 img.style.display = src ? '' : 'none';
             }
-            if (empty) empty.style.display = src ? 'none' : '';
+
+            if (empty) {
+                empty.textContent = src ? '' : 'Chưa có ảnh riêng cho màu này';
+                empty.style.display = src ? 'none' : '';
+            }
+
+            if (!src) {
+                setCarColorImageStatus('Có thể dùng link PNG/WEBP/JPG trực tiếp.', 'normal');
+            } else if (String(src).startsWith('data:')) {
+                setCarColorImageStatus('Ảnh màu này đang lưu bằng Upload.', 'ok');
+            } else {
+                setCarColorImageStatus('Đang kiểm tra link ảnh...', 'normal');
+            }
         }
 
         async function uploadSelectedCarColorImage(input) {
@@ -1883,6 +2000,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 const map = readCarColorImagesForm();
                 map[color] = data;
                 writeCarColorImagesForm(map);
+                const urlField = document.getElementById('form-car-color-image-url');
+                if (urlField) urlField.value = '';
                 previewSelectedCarColorImage();
             } catch (e) {
                 alert('Không xử lý được ảnh màu xe: ' + (e?.message || e));
@@ -1897,6 +2016,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const map = readCarColorImagesForm();
             delete map[color];
             writeCarColorImagesForm(map);
+            const urlField = document.getElementById('form-car-color-image-url');
+            if (urlField) urlField.value = '';
             previewSelectedCarColorImage();
         }
 
