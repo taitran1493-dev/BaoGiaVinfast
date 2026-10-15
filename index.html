@@ -619,14 +619,45 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         </div>
                     </div>
 
-                    <!-- Section 2 -->
-                    <div class="quote-spec-card border border-gray-200 rounded-lg flex bg-white shadow-sm items-stretch overflow-hidden">
-                        <div class="w-[55%] p-6 z-10 bg-white border-r border-gray-100">
-                            <h3 class="text-sm font-bold text-brand-dark mb-4 uppercase border-b pb-2">Thông tin xe & Trang bị</h3>
-                            <ul id="quote-car-specs" class="flex flex-wrap gap-y-3 text-[12px] text-gray-700"></ul>
+                    <!-- Section 2: HÌNH XE / MÀU XE / THÔNG SỐ -->
+                    <div class="quote-spec-card border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] min-h-[300px]">
+                            <div class="bg-slate-50 flex items-center justify-center p-5 min-w-0 overflow-hidden">
+                                <img id="quote-car-img" crossorigin="anonymous" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
+                            </div>
+                            <div class="p-5 border-t lg:border-t-0 lg:border-l border-gray-100 bg-white">
+                                <div class="flex items-center justify-between gap-3">
+                                    <h3 class="text-sm font-black text-brand-dark">Ngoại thất</h3>
+                                    <span id="quote-selected-color" class="text-xs font-bold text-gray-600">—</span>
+                                </div>
+                                <div class="mt-4">
+                                    <div class="text-[10px] font-bold text-gray-500 mb-2">Màu cơ bản - Theo xe</div>
+                                    <div id="quote-basic-color-swatches" class="flex flex-wrap gap-2"></div>
+                                </div>
+                                <div id="quote-premium-color-wrap" class="mt-4">
+                                    <div id="quote-premium-color-label" class="text-[10px] font-bold text-gray-500 mb-2">Màu nâng cao</div>
+                                    <div id="quote-premium-color-swatches" class="flex flex-wrap gap-2"></div>
+                                </div>
+                                <div class="mt-5 pt-4 border-t">
+                                    <div class="text-[10px] font-black uppercase text-gray-500 mb-2">Trang bị nổi bật</div>
+                                    <ul id="quote-car-specs" class="space-y-2 text-[11px] text-gray-700"></ul>
+                                </div>
+                            </div>
                         </div>
-                        <div class="w-[45%] bg-white flex items-center justify-center p-4 min-w-0 overflow-hidden">
-                            <img id="quote-car-img" crossorigin="anonymous" class="max-w-full max-h-[260px] object-contain drop-shadow-xl" />
+
+                        <div class="grid grid-cols-3 border-t bg-white">
+                            <div class="p-4 text-center border-r">
+                                <div class="text-[10px] text-gray-500 mb-1">Công suất tối đa</div>
+                                <div id="quote-max-power" class="text-xl font-black text-gray-800">—</div>
+                            </div>
+                            <div class="p-4 text-center border-r">
+                                <div class="text-[10px] text-gray-500 mb-1">Dung lượng pin</div>
+                                <div id="quote-battery-capacity" class="text-xl font-black text-gray-800">—</div>
+                            </div>
+                            <div class="p-4 text-center">
+                                <div class="text-[10px] text-gray-500 mb-1">Quãng đường di chuyển</div>
+                                <div id="quote-driving-range" class="text-xl font-black text-gray-800">—</div>
+                            </div>
                         </div>
                     </div>
 
@@ -779,7 +810,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     <input type="hidden" id="form-car-id">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Tên Xe</label><input type="text" id="form-car-name" class="w-full border rounded p-2 text-sm outline-none"></div>
-                        <div><label class="block text-xs font-semibold text-blue-700 mb-1">Tên chuẩn đối chiếu</label><input type="text" id="form-car-standard-name" list="standard-car-name-list" class="w-full border border-blue-200 rounded p-2 text-sm outline-none" placeholder="Chọn hoặc nhập tên chuẩn mới"><datalist id="standard-car-name-list"></datalist></div>
+                        <div><label class="block text-xs font-semibold text-blue-700 mb-1">Tên chuẩn đối chiếu</label><input type="text" id="form-car-standard-name" list="standard-car-name-list" onchange="refreshCarColorImageManager()" oninput="refreshCarColorImageManager()" class="w-full border border-blue-200 rounded p-2 text-sm outline-none" placeholder="Chọn hoặc nhập tên chuẩn mới"><datalist id="standard-car-name-list"></datalist></div>
                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Phiên Bản</label><input type="text" id="form-car-version" class="w-full border rounded p-2 text-sm outline-none"></div>
                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Năm SX</label><input type="text" id="form-car-year" class="w-full border rounded p-2 text-sm outline-none"></div>
                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Loại Xe</label><select id="form-car-type" class="w-full border rounded p-2 text-sm outline-none bg-white"><option value="dulich">Du lịch</option><option value="bantai">Bán Tải</option></select></div>
@@ -811,9 +842,60 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Tỉ lệ BH Tặng (%)</label><input type="number" step="0.01" id="form-car-bh-tang" class="w-full border rounded p-2 text-sm outline-none"></div>
                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Tỉ lệ BH Mua (%)</label><input type="number" step="0.01" id="form-car-bh-mua" class="w-full border rounded p-2 text-sm outline-none"></div>
-                        <div class="col-span-1 sm:col-span-2"><label class="block text-xs font-semibold text-gray-600 mb-1">Link Ảnh</label><input type="text" id="form-car-img" class="w-full border rounded p-2 text-sm outline-none"></div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Ảnh xe mặc định</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                                <input type="text" id="form-car-img" class="w-full border rounded p-2 text-sm outline-none" placeholder="Link ảnh hoặc dữ liệu ảnh Upload">
+                                <label class="px-4 py-2 rounded bg-blue-600 text-white text-xs font-black cursor-pointer flex items-center justify-center">
+                                    Upload ảnh xe
+                                    <input type="file" id="form-car-img-file" accept="image/*" class="hidden" onchange="uploadMainCarImage(this)">
+                                </label>
+                            </div>
+                            <div class="mt-2 h-28 rounded-lg border bg-white flex items-center justify-center overflow-hidden">
+                                <img id="form-car-img-preview" class="max-w-full max-h-28 object-contain" alt="Xem trước ảnh xe">
+                            </div>
+                            <p class="text-[9px] text-gray-500 mt-1">Ảnh Upload được tự nén để giảm dung lượng HTML/JSON/localStorage.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-violet-700 mb-1">Công suất tối đa</label>
+                            <input type="text" id="form-car-max-power" class="w-full border border-violet-200 rounded p-2 text-sm outline-none font-bold" placeholder="VD: 30 kW">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-violet-700 mb-1">Dung lượng pin</label>
+                            <input type="text" id="form-car-battery-capacity" class="w-full border border-violet-200 rounded p-2 text-sm outline-none font-bold" placeholder="VD: 18,64 kWh">
+                        </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="block text-xs font-semibold text-violet-700 mb-1">Quãng đường di chuyển</label>
+                            <input type="text" id="form-car-driving-range" class="w-full border border-violet-200 rounded p-2 text-sm outline-none font-bold" placeholder="VD: ~210 km/lần sạc">
+                        </div>
+
+                        <div class="col-span-1 sm:col-span-2 rounded-xl border border-cyan-200 bg-cyan-50 p-3">
+                            <div class="flex items-center justify-between gap-3 mb-2">
+                                <div>
+                                    <div class="text-xs font-black text-cyan-800">Ảnh xe theo màu / Model</div>
+                                    <div class="text-[9px] text-cyan-700">Chọn màu rồi Upload ảnh tương ứng. Khi báo giá đổi màu, hình xe tự đổi theo.</div>
+                                </div>
+                                <button type="button" onclick="refreshCarColorImageManager()" class="px-2.5 py-1.5 rounded-lg border border-cyan-300 bg-white text-cyan-700 text-[10px] font-black">Làm mới màu</button>
+                            </div>
+                            <input type="hidden" id="form-car-color-images-json" value="{}">
+                            <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                                <select id="form-car-color-image-select" onchange="previewSelectedCarColorImage()" class="w-full border rounded-lg p-2 text-sm bg-white"></select>
+                                <label class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-xs font-black cursor-pointer flex items-center justify-center">
+                                    Upload màu
+                                    <input type="file" id="form-car-color-image-file" accept="image/*" class="hidden" onchange="uploadSelectedCarColorImage(this)">
+                                </label>
+                            </div>
+                            <div class="mt-2 h-32 rounded-lg border border-cyan-200 bg-white flex items-center justify-center overflow-hidden">
+                                <img id="form-car-color-image-preview" class="max-w-full max-h-32 object-contain" alt="Ảnh màu xe">
+                                <span id="form-car-color-image-empty" class="text-[10px] text-gray-400">Chưa có ảnh riêng cho màu này</span>
+                            </div>
+                            <div class="mt-2 flex justify-end">
+                                <button type="button" onclick="removeSelectedCarColorImage()" class="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-black">Xóa ảnh màu đang chọn</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Thông tin xe</label><textarea id="form-car-specs" rows="3" class="w-full border rounded p-2 text-xs outline-none"></textarea></div>
+                    <div class="mb-4"><label class="block text-xs font-semibold text-gray-600 mb-1">Thông tin xe / Trang bị nổi bật</label><textarea id="form-car-specs" rows="3" class="w-full border rounded p-2 text-xs outline-none"></textarea></div>
                     <div class="flex gap-2">
                         <button onclick="saveCar()" class="flex-1 bg-green-600 text-white py-2 rounded font-bold">Lưu Dữ Liệu</button>
                         <button onclick="clearCarForm()" class="px-5 bg-gray-300 text-gray-800 rounded font-bold">Tạo mới</button>
@@ -1029,6 +1111,10 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             price: 1290000000, cutLimit: 50000000, saleSalary: 15000000, dealerPromoSuggested: 51000000, bhTangRate: 1.2, bhMuaRate: 1.3,
             ctkm2_desc: 'Giảm 51 triệu + CS Cọc', voucher_desc: 'Voucher VinFast 30 triệu', promoText: '',
             image: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&q=80&w=800',
+            colorImages: {},
+            maxPower: '',
+            batteryCapacity: '',
+            drivingRange: '',
             specs: "11 túi khí an toàn\nTrợ lý ảo thông minh\nKhả năng tăng tốc ấn tượng\nNội thất sang trọng\nHệ thống ADAS cao cấp\nPin dung lượng lớn"
         }];
 
@@ -1646,6 +1732,184 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             };
         }
 
+        function getCarDisplayImage(car) {
+            if (!car) return '';
+            const color = getSelectedColorInfo(car)?.name || '';
+            const map = (car.colorImages && typeof car.colorImages === 'object') ? car.colorImages : {};
+            return map[color] || car.image || '';
+        }
+
+        function carColorCss(name) {
+            const s = String(name || '').toLowerCase();
+            if (s.includes('trắng') || s.includes('white')) return '#f8fafc';
+            if (s.includes('đen') || s.includes('black')) return '#111827';
+            if (s.includes('đỏ') || s.includes('red')) return '#b91c1c';
+            if (s.includes('xám') || s.includes('gray') || s.includes('grey')) return '#9ca3af';
+            if (s.includes('bạc') || s.includes('silver')) return '#cbd5e1';
+            if (s.includes('xanh lá') || s.includes('green')) return '#4d7c3f';
+            if (s.includes('xanh') || s.includes('blue')) return '#18a8c9';
+            if (s.includes('vàng') || s.includes('yellow')) return '#e5df43';
+            if (s.includes('hồng') || s.includes('pink')) return '#c9979b';
+            if (s.includes('nâu') || s.includes('brown')) return '#8b6f47';
+            if (s.includes('gold') || s.includes('vàng cát')) return '#c8a96b';
+            return '#d1d5db';
+        }
+
+        function renderQuoteColorSwatches(car) {
+            if (!car) return;
+            const cfg = getVehicleColorConfig(car) || { basic:[], premium:[], surcharge:0 };
+            const selected = getSelectedColorInfo(car)?.name || '';
+            const basicEl = document.getElementById('quote-basic-color-swatches');
+            const premiumEl = document.getElementById('quote-premium-color-swatches');
+            const premiumWrap = document.getElementById('quote-premium-color-wrap');
+            const premiumLabel = document.getElementById('quote-premium-color-label');
+            const selectedEl = document.getElementById('quote-selected-color');
+
+            if (selectedEl) selectedEl.textContent = selected || '—';
+
+            const makeChip = (name, premium=false) => {
+                const active = name === selected;
+                const outline = active ? 'ring-2 ring-blue-600 ring-offset-2' : 'border border-gray-300';
+                const title = premium && Number(cfg.surcharge || 0) > 0
+                    ? `${name} · +${formatMoney(cfg.surcharge)}`
+                    : name;
+                return `<button type="button" onclick="syncCarColor(${JSON.stringify(name).replace(/"/g,'&quot;')})" title="${title.replace(/"/g,'&quot;')}" class="w-8 h-8 rounded-md ${outline} shadow-sm" style="background:${carColorCss(name)}"></button>`;
+            };
+
+            if (basicEl) basicEl.innerHTML = (cfg.basic || []).map(n => makeChip(n, false)).join('');
+            if (premiumEl) premiumEl.innerHTML = (cfg.premium || []).map(n => makeChip(n, true)).join('');
+
+            if (premiumWrap) premiumWrap.classList.toggle('hidden', !(cfg.premium || []).length);
+            if (premiumLabel) {
+                premiumLabel.textContent = Number(cfg.surcharge || 0) > 0
+                    ? `Màu nâng cao + ${formatMoney(cfg.surcharge)}`
+                    : 'Màu nâng cao';
+            }
+        }
+
+        async function compressImageFile(file, maxWidth=1280, maxHeight=900, quality=0.82) {
+            if (!file) return '';
+            const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+
+            const img = await new Promise((resolve, reject) => {
+                const el = new Image();
+                el.onload = () => resolve(el);
+                el.onerror = reject;
+                el.src = dataUrl;
+            });
+
+            let w = img.naturalWidth || img.width;
+            let h = img.naturalHeight || img.height;
+            const ratio = Math.min(1, maxWidth / w, maxHeight / h);
+            w = Math.max(1, Math.round(w * ratio));
+            h = Math.max(1, Math.round(h * ratio));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            try {
+                return canvas.toDataURL('image/webp', quality);
+            } catch (e) {
+                return canvas.toDataURL('image/jpeg', quality);
+            }
+        }
+
+        async function uploadMainCarImage(input) {
+            const file = input?.files?.[0];
+            if (!file) return;
+            try {
+                const data = await compressImageFile(file);
+                const field = document.getElementById('form-car-img');
+                const preview = document.getElementById('form-car-img-preview');
+                if (field) field.value = data;
+                if (preview) preview.src = data;
+            } catch (e) {
+                alert('Không xử lý được ảnh: ' + (e?.message || e));
+            } finally {
+                if (input) input.value = '';
+            }
+        }
+
+        function readCarColorImagesForm() {
+            try {
+                const raw = document.getElementById('form-car-color-images-json')?.value || '{}';
+                const obj = JSON.parse(raw);
+                return obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : {};
+            } catch (_) {
+                return {};
+            }
+        }
+
+        function writeCarColorImagesForm(map) {
+            const field = document.getElementById('form-car-color-images-json');
+            if (field) field.value = JSON.stringify(map || {});
+        }
+
+        function getCarFormColorConfig() {
+            const standardName = document.getElementById('form-car-standard-name')?.value?.trim()
+                || document.getElementById('form-car-name')?.value?.trim()
+                || '';
+            return getVehicleColorConfig({ standardName, name: standardName }) || { basic:[], premium:[], surcharge:0 };
+        }
+
+        function refreshCarColorImageManager() {
+            const select = document.getElementById('form-car-color-image-select');
+            if (!select) return;
+            const cfg = getCarFormColorConfig();
+            const current = select.value;
+            const colors = [...(cfg.basic || []), ...(cfg.premium || [])];
+            select.innerHTML = colors.map(name => `<option value="${String(name).replace(/"/g,'&quot;')}">${name}</option>`).join('');
+            if (colors.includes(current)) select.value = current;
+            previewSelectedCarColorImage();
+        }
+
+        function previewSelectedCarColorImage() {
+            const color = document.getElementById('form-car-color-image-select')?.value || '';
+            const map = readCarColorImagesForm();
+            const img = document.getElementById('form-car-color-image-preview');
+            const empty = document.getElementById('form-car-color-image-empty');
+            const src = map[color] || '';
+            if (img) {
+                img.src = src;
+                img.style.display = src ? '' : 'none';
+            }
+            if (empty) empty.style.display = src ? 'none' : '';
+        }
+
+        async function uploadSelectedCarColorImage(input) {
+            const file = input?.files?.[0];
+            const color = document.getElementById('form-car-color-image-select')?.value || '';
+            if (!file || !color) return;
+            try {
+                const data = await compressImageFile(file);
+                const map = readCarColorImagesForm();
+                map[color] = data;
+                writeCarColorImagesForm(map);
+                previewSelectedCarColorImage();
+            } catch (e) {
+                alert('Không xử lý được ảnh màu xe: ' + (e?.message || e));
+            } finally {
+                if (input) input.value = '';
+            }
+        }
+
+        function removeSelectedCarColorImage() {
+            const color = document.getElementById('form-car-color-image-select')?.value || '';
+            if (!color) return;
+            const map = readCarColorImagesForm();
+            delete map[color];
+            writeCarColorImagesForm(map);
+            previewSelectedCarColorImage();
+        }
+
         function renderColorOptions(car, force=false) {
             const select = document.getElementById('colorSelect');
             if (!select || !car) return;
@@ -1653,6 +1917,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (!force && select.dataset.carId === car.id && select.options.length) {
                 // Cùng xe: không rebuild option để tránh dropdown bị giật/khóa sau khi chọn màu.
                 updateColorSurchargeHint(car);
+                renderQuoteColorSwatches(car);
                 return;
             }
 
@@ -1685,6 +1950,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             quoteAdjustments[car.id].selectedColor = selected;
 
             updateColorSurchargeHint(car);
+            renderQuoteColorSwatches(car);
         }
 
         function updateColorSurchargeHint(car) {
@@ -1719,6 +1985,11 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             saveQuoteAdjustmentsToStorage();
             updateColorSurchargeHint(car);
+            renderQuoteColorSwatches(car);
+
+            const quoteImg = document.getElementById('quote-car-img');
+            if (quoteImg) quoteImg.src = getCarDisplayImage(car) || 'https://placehold.co/800x600?text=No+Image';
+
             updateQuotationUI();
         }
 
@@ -2514,18 +2785,99 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         }
 
         // ================== CAR MANAGER ==================
-        function openCarManager() { renderTable(); toggleModal('carManagerModal', true); }
+        function openCarManager() { renderTable(); toggleModal('carManagerModal', true);  refreshCarColorImageManager(); }
         function closeCarManager() { toggleModal('carManagerModal', false); }
         function renderTable() { document.getElementById('car-table-body').innerHTML = carList.map(car => `<tr class="hover:bg-gray-50 border-b cursor-pointer" onclick="editCar('${car.id}')"><td class="p-2"><img src="${car.image||'https://placehold.co/100x60'}" class="w-16 h-10 object-cover rounded"></td><td class="p-3"><div class="font-bold">${car.name} ${car.version}</div><div class="text-[10px] font-bold text-indigo-600">KEY: ${car.standardName||'Chưa đặt'}</div><div class="text-[10px] font-bold text-amber-700">NHÀ MÁY MAX: ${formatMoney(car.cutLimit||car.discount||0)}</div><div class="text-[10px] font-bold text-blue-700">GỢI Ý ĐẠI LÝ: ${formatMoney(car.dealerPromoSuggested||0)}</div><div class="text-[10px] font-bold text-red-600">LƯƠNG XE: ${formatMoney(car.saleSalary||0)}</div><div class="text-xs text-blue-600">${car.type==='bantai'?'Bán Tải':'Du lịch'} - ${car.year}</div></td><td class="p-3">${formatMoney(car.price)}</td><td class="p-3 text-center"><button onclick="event.stopPropagation(); deleteCar('${car.id}')" class="text-red-500 hover:text-red-700">Xóa</button></td></tr>`).join(''); }
-        function clearCarForm() { document.querySelectorAll('#form-car-id,#form-car-name,#form-car-version,#form-car-year,#form-car-img,#form-car-price,#form-car-standard-name,#form-car-cut-limit,#form-car-sale-salary,#form-car-dealer-promo-suggest,#form-car-bh-tang,#form-car-bh-mua,#form-car-specs,#form-car-ctkm2-desc,#form-car-voucher-desc,#form-car-promo-text').forEach(e=>e.value=''); document.getElementById('form-car-type').value='dulich'; }
-        function saveCar() {
-            const id=document.getElementById('form-car-id').value||'car_'+Date.now(), price=parseMoneyInput(document.getElementById('form-car-price').value), name=document.getElementById('form-car-name').value.trim();
-            if(!name||isNaN(price))return alert('Nhập Tên & Giá!');
-            const nc={id,name,standardName:document.getElementById('form-car-standard-name').value.trim() || name,version:document.getElementById('form-car-version').value.trim(),year:document.getElementById('form-car-year').value.trim(),type:document.getElementById('form-car-type').value,image:document.getElementById('form-car-img').value.trim(),price,cutLimit:parseMoneyInput(document.getElementById('form-car-cut-limit').value)||0,saleSalary:parseMoneyInput(document.getElementById('form-car-sale-salary').value)||0,dealerPromoSuggested:parseMoneyInput(document.getElementById('form-car-dealer-promo-suggest').value)||0,bhTangRate:parseFloat(document.getElementById('form-car-bh-tang').value)||0,bhMuaRate:parseFloat(document.getElementById('form-car-bh-mua').value)||0,specs:document.getElementById('form-car-specs').value.trim(), ctkm2_desc: document.getElementById('form-car-ctkm2-desc').value.trim(), voucher_desc: document.getElementById('form-car-voucher-desc').value.trim(), promoText: document.getElementById('form-car-promo-text').value.trim() };
-            const idx=carList.findIndex(c=>c.id===id); if(idx>=0)carList[idx]=nc; else carList.push(nc);
-            localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList)); renderStandardCarNameList(); renderTable(); renderDropdown(); renderPromosUI(); updateQuotationUI(); clearCarForm();
+        function clearCarForm() {
+            document.querySelectorAll('#form-car-id,#form-car-name,#form-car-version,#form-car-year,#form-car-img,#form-car-price,#form-car-standard-name,#form-car-cut-limit,#form-car-sale-salary,#form-car-dealer-promo-suggest,#form-car-bh-tang,#form-car-bh-mua,#form-car-specs,#form-car-ctkm2-desc,#form-car-voucher-desc,#form-car-promo-text,#form-car-max-power,#form-car-battery-capacity,#form-car-driving-range').forEach(e=>e.value='');
+            document.getElementById('form-car-type').value='dulich';
+            writeCarColorImagesForm({});
+            const p1 = document.getElementById('form-car-img-preview'); if (p1) p1.removeAttribute('src');
+            const p2 = document.getElementById('form-car-color-image-preview'); if (p2) p2.removeAttribute('src');
+            refreshCarColorImageManager();
         }
-        function editCar(id) { const c=carList.find(x=>x.id===id); if(c){document.getElementById('form-car-id').value=c.id; document.getElementById('form-car-name').value=c.name; document.getElementById('form-car-standard-name').value=c.standardName||''; document.getElementById('form-car-version').value=c.version||''; document.getElementById('form-car-year').value=c.year||''; document.getElementById('form-car-type').value=c.type||'dulich'; document.getElementById('form-car-img').value=c.image||''; document.getElementById('form-car-price').value=c.price?Number(c.price).toLocaleString('vi-VN'):''; document.getElementById('form-car-cut-limit').value=(c.cutLimit||c.discount)?Number(c.cutLimit||c.discount).toLocaleString('vi-VN'):''; document.getElementById('form-car-sale-salary').value=c.saleSalary?Number(c.saleSalary).toLocaleString('vi-VN'):''; document.getElementById('form-car-dealer-promo-suggest').value=c.dealerPromoSuggested?Number(c.dealerPromoSuggested).toLocaleString('vi-VN'):''; document.getElementById('form-car-bh-tang').value=c.bhTangRate||''; document.getElementById('form-car-bh-mua').value=c.bhMuaRate||''; document.getElementById('form-car-specs').value=c.specs||''; document.getElementById('form-car-ctkm2-desc').value=c.ctkm2_desc||''; document.getElementById('form-car-voucher-desc').value=c.voucher_desc||''; document.getElementById('form-car-promo-text').value=c.promoText||''; } }
+        function saveCar() {
+            const id = document.getElementById('form-car-id').value || 'car_' + Date.now();
+            const price = parseMoneyInput(document.getElementById('form-car-price').value);
+            const name = document.getElementById('form-car-name').value.trim();
+            if (!name || !price) { alert('Vui lòng nhập Tên xe và Giá niêm yết.'); return; }
+
+            const oldCar = carList.find(c => c.id === id) || {};
+            const nc = {
+                ...oldCar,
+                id,
+                name,
+                standardName: document.getElementById('form-car-standard-name').value.trim() || name,
+                version: document.getElementById('form-car-version').value.trim(),
+                year: document.getElementById('form-car-year').value.trim(),
+                type: document.getElementById('form-car-type').value,
+                image: document.getElementById('form-car-img').value.trim(),
+                colorImages: readCarColorImagesForm(),
+                maxPower: document.getElementById('form-car-max-power').value.trim(),
+                batteryCapacity: document.getElementById('form-car-battery-capacity').value.trim(),
+                drivingRange: document.getElementById('form-car-driving-range').value.trim(),
+                price,
+                cutLimit: parseMoneyInput(document.getElementById('form-car-cut-limit').value) || 0,
+                saleSalary: parseMoneyInput(document.getElementById('form-car-sale-salary').value) || 0,
+                dealerPromoSuggested: parseMoneyInput(document.getElementById('form-car-dealer-promo-suggest').value) || 0,
+                bhTangRate: parseFloat(document.getElementById('form-car-bh-tang').value) || 0,
+                bhMuaRate: parseFloat(document.getElementById('form-car-bh-mua').value) || 0,
+                specs: document.getElementById('form-car-specs').value.trim(),
+                ctkm2_desc: document.getElementById('form-car-ctkm2-desc').value.trim(),
+                voucher_desc: document.getElementById('form-car-voucher-desc').value.trim(),
+                promoText: document.getElementById('form-car-promo-text').value.trim()
+            };
+
+            const idx = carList.findIndex(c => c.id === id);
+            if (idx >= 0) carList[idx] = nc; else carList.push(nc);
+
+            try {
+                localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList));
+            } catch (e) {
+                alert('Ảnh đang làm dữ liệu Local quá lớn. Hãy dùng ảnh nhẹ hơn hoặc xóa bớt ảnh màu rồi lưu lại.');
+                return;
+            }
+
+            renderStandardCarNameList();
+            renderTable();
+            renderDropdown();
+            renderPromosUI();
+            updateQuotationUI();
+            clearCarForm();
+        }
+        function editCar(id) {
+            const c = carList.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('form-car-id').value = c.id;
+            document.getElementById('form-car-name').value = c.name || '';
+            document.getElementById('form-car-standard-name').value = c.standardName || '';
+            document.getElementById('form-car-version').value = c.version || '';
+            document.getElementById('form-car-year').value = c.year || '';
+            document.getElementById('form-car-type').value = c.type || 'dulich';
+            document.getElementById('form-car-img').value = c.image || '';
+            document.getElementById('form-car-price').value = c.price ? Number(c.price).toLocaleString('vi-VN') : '';
+            document.getElementById('form-car-cut-limit').value = (c.cutLimit || c.discount) ? Number(c.cutLimit || c.discount).toLocaleString('vi-VN') : '';
+            document.getElementById('form-car-sale-salary').value = c.saleSalary ? Number(c.saleSalary).toLocaleString('vi-VN') : '';
+            document.getElementById('form-car-dealer-promo-suggest').value = c.dealerPromoSuggested ? Number(c.dealerPromoSuggested).toLocaleString('vi-VN') : '';
+            document.getElementById('form-car-bh-tang').value = c.bhTangRate || '';
+            document.getElementById('form-car-bh-mua').value = c.bhMuaRate || '';
+            document.getElementById('form-car-specs').value = c.specs || '';
+            document.getElementById('form-car-ctkm2-desc').value = c.ctkm2_desc || '';
+            document.getElementById('form-car-voucher-desc').value = c.voucher_desc || '';
+            document.getElementById('form-car-promo-text').value = c.promoText || '';
+            document.getElementById('form-car-max-power').value = c.maxPower || '';
+            document.getElementById('form-car-battery-capacity').value = c.batteryCapacity || '';
+            document.getElementById('form-car-driving-range').value = c.drivingRange || '';
+            writeCarColorImagesForm(c.colorImages || {});
+
+            const preview = document.getElementById('form-car-img-preview');
+            if (preview) {
+                preview.src = c.image || '';
+                preview.style.display = c.image ? '' : 'none';
+            }
+
+            refreshCarColorImageManager();
+        }
         function deleteCar(id) { if(confirm('Xóa?')){carList=carList.filter(c=>c.id!==id); localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList)); renderStandardCarNameList(); renderTable(); renderDropdown(); renderPromosUI(); updateQuotationUI(); clearCarForm();} }
 
         function changePlateColor() { 
@@ -3699,8 +4051,12 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 bk.style.display='none';
             }
 
-            document.getElementById('quote-car-img').src = car.image || 'https://placehold.co/800x600?text=No+Image';
-            document.getElementById('quote-car-specs').innerHTML = (car.specs||'').split('\n').filter(p=>p.trim()).map(s=>`<li class="w-[48%] flex items-start">${SVG_CHECK}<span class="leading-snug flex-1 pt-[1px]">${s}</span></li>`).join('');
+            document.getElementById('quote-car-img').src = getCarDisplayImage(car) || 'https://placehold.co/800x600?text=No+Image';
+            document.getElementById('quote-car-specs').innerHTML = (car.specs||'').split('\n').filter(p=>p.trim()).map(s=>`<li class="flex items-start">${SVG_CHECK}<span class="leading-snug flex-1 pt-[1px]">${s}</span></li>`).join('');
+            document.getElementById('quote-max-power').innerText = car.maxPower || '—';
+            document.getElementById('quote-battery-capacity').innerText = car.batteryCapacity || '—';
+            document.getElementById('quote-driving-range').innerText = car.drivingRange || '—';
+            renderQuoteColorSwatches(car);
 
             // Chi tiết Khuyến mãi & Tri ân:
             // - Nội dung khuyến mãi người dùng nhập theo xe
