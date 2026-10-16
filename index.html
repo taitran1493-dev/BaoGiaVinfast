@@ -925,7 +925,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                 </div>
                                 <div id="plate-wrapper" class="relative bg-gray-100 rounded-md border-2 border-transparent h-10 flex items-center px-3 w-[150px]">
                                     <svg id="plate-icon" class="w-4 h-4 text-gray-500 mr-2 shrink-0" fill="currentColor" viewBox="0 0 576 512"><path d="M0 96l576 0c0-35.3-28.7-64-64-64H64C28.7 32 0 60.7 0 96zm0 32V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V128L0 128zm64 64H256c17.7 0 32 14.3 32 32v96c0 17.7-14.3 32-32 32H64c-17.7 0-32-14.3-32-32V224c0-17.7 14.3-32 32-32zm384-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM320 320c0-17.7 14.3-32 32-32H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H352c-17.7 0-32-14.3-32-32z"/></svg>
-                                    <select id="plateSelect" onchange="changePlateColor(); updateQuotationUI();" class="font-semibold text-gray-700 h-full w-full outline-none">
+                                    <select id="plateSelect" onchange="syncPlateSelection()" class="font-semibold text-gray-700 h-full w-full outline-none">
                                         <option value="trang" selected>Biển trắng</option><option value="vang">Biển vàng</option><option value="congty">Xe Công Ty</option>
                                     </select>
                                 </div>
@@ -956,6 +956,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                         <option value="service">Dịch vụ</option>
                                         <option value="xanhsm">Độc quyền Xanh SM</option>
                                     </select>
+                                    <div id="usage-rule-note" class="hidden text-[8px] font-bold text-rose-600 mt-1 leading-tight"></div>
                                 </div>
                             </div>
                             <div class="quote-fee-option-grid">
@@ -2128,9 +2129,15 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         }
         function closeMaintenanceSchedule() { toggleModal('maintenanceModal', false); }
 
+
         function isCommercialWarrantyUse(adj) {
+            const plate = String(document.getElementById('plateSelect')?.value || 'trang').toLowerCase();
             const usage = String(adj?.chargingUsage || document.getElementById('usageSelect')?.value || 'family').toLowerCase();
-            return usage === 'service' || usage === 'xanhsm';
+            return plate === 'vang' || usage === 'service' || usage === 'xanhsm';
+        }
+
+        function isWarrantyBlockedByUseRule(car, adj) {
+            return isPrivateOnlyRestrictedModel(car) && isCommercialWarrantyUse(adj);
         }
 
         function getWarrantyGroup(car) {
@@ -2143,6 +2150,19 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         }
 
         function getWarrantyPolicy(car, adj) {
+            if (isWarrantyBlockedByUseRule(car, adj)) {
+                return {
+                    blocked: true,
+                    vehicle: 'KHÔNG ÁP DỤNG',
+                    vehicleNote: 'Model này không áp dụng bảo hành khi đăng ký Biển vàng / sử dụng Dịch vụ hoặc Xanh SM.',
+                    battery: 'KHÔNG ÁP DỤNG',
+                    batteryNote: 'Không bảo hành trong trạng thái sử dụng thương mại không được phép.',
+                    seat: 'Không áp dụng',
+                    paint: 'Không áp dụng',
+                    suspension: 'Không áp dụng',
+                    battery12v: 'Không áp dụng'
+                };
+            }
             const g = getWarrantyGroup(car);
             const commercial = isCommercialWarrantyUse(adj);
             const common = { battery12v:'1 năm / không giới hạn km' };
@@ -2199,11 +2219,38 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             };
         }
 
+
         function renderWarrantyInfo(car) {
             if (!car) return;
-            const p = getWarrantyPolicy(car, getQuoteAdjustments(car));
-            const commercial = isCommercialWarrantyUse(getQuoteAdjustments(car));
+            const adj = getQuoteAdjustments(car);
+            const p = getWarrantyPolicy(car, adj);
+            const commercial = isCommercialWarrantyUse(adj);
             const set = (id,v) => { const el=document.getElementById(id); if(el) el.innerText=v || '—'; };
+
+            const panel = document.getElementById('warranty-panel');
+
+            if (p.blocked) {
+                set('warranty-subtitle', '⛔ Không áp dụng bảo hành với Biển vàng / Dịch vụ / Xanh SM');
+                set('warranty-vehicle-main', p.vehicle);
+                set('warranty-vehicle-note', p.vehicleNote);
+                set('warranty-battery-main', p.battery);
+                set('warranty-battery-note', p.batteryNote);
+                set('warranty-12v', p.battery12v);
+                set('warranty-seat', p.seat);
+                set('warranty-paint', p.paint);
+                set('warranty-suspension', p.suspension);
+
+                if (panel) {
+                    panel.classList.remove('border-emerald-200','bg-emerald-50/60');
+                    panel.classList.add('border-rose-300','bg-rose-50');
+                }
+                return;
+            }
+
+            if (panel) {
+                panel.classList.remove('border-rose-300','bg-rose-50');
+                panel.classList.add('border-emerald-200','bg-emerald-50/60');
+            }
 
             set('warranty-subtitle', commercial ? 'Chế độ sử dụng: Dịch vụ / DVTM' : 'Chế độ sử dụng: Tiêu chuẩn / Gia đình');
             set('warranty-vehicle-main', p.vehicle);
@@ -3807,6 +3854,20 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         }
         function deleteCar(id) { if(confirm('Xóa?')){carList=carList.filter(c=>c.id!==id); localStorage.setItem('vinfast_cars_v3',JSON.stringify(carList)); renderStandardCarNameList(); renderTable(); renderDropdown(); renderPromosUI(); updateQuotationUI(); clearCarForm();} }
 
+        function syncPlateSelection() {
+            const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
+            const plate = document.getElementById('plateSelect');
+            if (!car || !plate) return;
+
+            if (isPrivateOnlyRestrictedModel(car) && plate.value === 'vang') {
+                plate.value = 'trang';
+                alert('Dòng xe này không áp dụng đăng ký Biển vàng.');
+            }
+
+            changePlateColor();
+            updateQuotationUI();
+        }
+
         function changePlateColor() { 
             const e=document.getElementById('plateSelect'), w=document.getElementById('plate-wrapper'), i=document.getElementById('plate-icon'); 
             if(e.value==='vang'){
@@ -3823,22 +3884,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return normalizeCarKey(car?.standardName || car?.version || car?.name || '').replace(/\s+/g, ' ');
         }
 
-        function getVehicleUseRule(car) {
+
+        function isPrivateOnlyRestrictedModel(car) {
             const k = compactVehicleKey(car);
-
-            // Tất cả dòng xe đều có thể chọn Biển vàng / Dịch vụ / Xanh SM.
-            // Riêng EC VAN vẫn mặc định Biển vàng + Dịch vụ khi đổi xe.
-            if (k.startsWith('EC VAN')) return 'ecvan';
-            return 'flexible';
-        }
-
-
-        function losesFreeChargingWhenCommercial(car) {
-            const k = compactVehicleKey(car);
-
-            // Chính sách VB 19/09/2026 nêu: VF3, VF7, VF8, VF9, VF MPV 7,
-            // Lạc Hồng không được dùng kinh doanh dịch vụ nếu muốn hưởng ưu đãi sạc.
-            // VF2 được bổ sung theo quy tắc nghiệp vụ đã chốt trong tool.
             return (
                 k.startsWith('VF2') ||
                 k.startsWith('VF3') ||
@@ -3846,8 +3894,29 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 k.startsWith('VF8') ||
                 k.startsWith('VF9') ||
                 k === 'VF MVP 7' ||
+                k === 'VF MPV 7' ||
                 k.startsWith('LẠC HỒNG')
             );
+        }
+
+        function getVehicleUseRule(car) {
+            const k = compactVehicleKey(car);
+
+            // Theo nghiệp vụ cập nhật:
+            // VF2/VF3/VF7/VF8/VF9/VF MVP 7/Lạc Hồng chỉ Biển trắng + Gia đình.
+            if (isPrivateOnlyRestrictedModel(car)) return 'private-only';
+
+            // EC VAN vẫn mặc định Biển vàng + Dịch vụ.
+            if (k.startsWith('EC VAN')) return 'ecvan';
+
+            return 'flexible';
+        }
+
+
+        function losesFreeChargingWhenCommercial(car) {
+            // Nhóm private-only không được hưởng hỗ trợ sạc nếu dữ liệu cũ
+            // hoặc dữ liệu nhập ngoài vẫn rơi vào Biển vàng / Dịch vụ / Xanh SM.
+            return isPrivateOnlyRestrictedModel(car);
         }
 
         function isCommercialUseForCharging(car, adj) {
@@ -3953,6 +4022,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return true;
         }
 
+
         function applyVehicleUseRules(car, forceDefaults=false) {
             if (!car) return;
 
@@ -3962,7 +4032,12 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const usageWrap = document.getElementById('usage-wrapper');
             if (!plate || !usage) return;
 
-            // Không khóa/ẩn Biển vàng hay nhu cầu Dịch vụ/Xanh SM cho bất kỳ dòng xe nào.
+            if (!quoteAdjustments[car.id]) {
+                quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+            }
+            const adj = quoteAdjustments[car.id];
+
+            // Mặc định mở toàn bộ tùy chọn trước.
             Array.from(plate.options).forEach(o => {
                 o.disabled = false;
                 o.hidden = false;
@@ -3972,16 +4047,55 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 o.hidden = false;
             });
             if (usageWrap) usageWrap.style.display = '';
+            const usageNote = document.getElementById('usage-rule-note');
+            if (usageNote) {
+                usageNote.classList.add('hidden');
+                usageNote.innerText = '';
+            }
 
-            // EC VAN vẫn mặc định Biển vàng + Dịch vụ khi vừa đổi sang xe này.
+            if (rule === 'private-only') {
+                if (usageNote) {
+                    usageNote.innerText = 'Chỉ Biển trắng + Gia đình';
+                    usageNote.classList.remove('hidden');
+                }
+                // Không ra Biển vàng.
+                const yellowOpt = Array.from(plate.options).find(o => o.value === 'vang');
+                if (yellowOpt) {
+                    yellowOpt.disabled = true;
+                    yellowOpt.hidden = true;
+                }
+
+                // Không chạy Dịch vụ / Xanh SM.
+                ['service','xanhsm'].forEach(v => {
+                    const opt = Array.from(usage.options).find(o => o.value === v);
+                    if (opt) {
+                        opt.disabled = true;
+                        opt.hidden = true;
+                    }
+                });
+
+                // Sửa luôn dữ liệu legacy/localStorage nếu trước đây đã lưu trạng thái không hợp lệ.
+                if (plate.value === 'vang') plate.value = 'trang';
+                if (usage.value === 'service' || usage.value === 'xanhsm') usage.value = 'family';
+                if (adj.chargingUsage === 'service' || adj.chargingUsage === 'xanhsm') {
+                    adj.chargingUsage = 'family';
+                }
+            }
+
+            // EC VAN vẫn mặc định Biển vàng + Dịch vụ khi vừa đổi xe.
             if (rule === 'ecvan' && forceDefaults) {
                 plate.value = 'vang';
                 usage.value = 'service';
+                adj.chargingUsage = 'service';
+            }
 
-                if (!quoteAdjustments[car.id]) {
-                    quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
-                }
-                quoteAdjustments[car.id].chargingUsage = 'service';
+            // Khi chuyển Model khác, nếu option đang chọn bị hidden/disabled thì trả về giá trị hợp lệ.
+            if (plate.selectedOptions[0]?.disabled || plate.selectedOptions[0]?.hidden) {
+                plate.value = 'trang';
+            }
+            if (usage.selectedOptions[0]?.disabled || usage.selectedOptions[0]?.hidden) {
+                usage.value = 'family';
+                adj.chargingUsage = 'family';
             }
 
             changePlateColor();
@@ -3998,15 +4112,25 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             updateQuotationUI();
         }
 
+
         function syncChargingUsage() {
             const car = carList.find(x => x.id === document.getElementById('carSelect').value);
             if (!car) return;
             if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
-            quoteAdjustments[car.id].chargingUsage = document.getElementById('usageSelect')?.value || 'family';
+
+            const usageEl = document.getElementById('usageSelect');
+            let usage = usageEl?.value || 'family';
+
+            if (isPrivateOnlyRestrictedModel(car) && (usage === 'service' || usage === 'xanhsm')) {
+                usage = 'family';
+                if (usageEl) usageEl.value = 'family';
+                alert('Dòng xe này chỉ áp dụng sử dụng Gia đình, không áp dụng Dịch vụ / Xanh SM.');
+            }
+
+            quoteAdjustments[car.id].chargingUsage = usage;
             saveQuoteAdjustmentsToStorage();
             updateQuotationUI();
         }
-
 
         function getChargingPromotion(car, adj) {
             if (!car) return '';
@@ -5177,7 +5301,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const commercial = isCommercialUseForCharging(car, adj);
 
             if (!hasFreeChargingBenefit(car, adj)) {
-                return 'Không áp dụng ưu đãi hỗ trợ sạc miễn phí: xe vẫn được đăng ký Biển vàng/chạy Dịch vụ, nhưng Model này mất quyền lợi hỗ trợ sạc khi sử dụng cho mục đích thương mại.';
+                return 'Không áp dụng ưu đãi hỗ trợ sạc miễn phí: Model này không áp dụng Biển vàng / Dịch vụ / Xanh SM.';
             }
 
             const now = new Date();
