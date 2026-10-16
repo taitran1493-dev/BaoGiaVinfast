@@ -34,7 +34,30 @@
         }
         #capture-area, #capture-area * { box-sizing: border-box; }
 
-        .capture-grid-main { display: grid; grid-template-columns: minmax(0, 58fr) minmax(0, 42fr); gap: 32px; align-items: center; }
+        .capture-grid-main { display:grid; grid-template-columns:minmax(0, 60fr) minmax(330px, 40fr); gap:20px; align-items:start; }
+        .quote-intro-card { min-width:0; }
+        .quote-price-card { background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%); border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px; box-shadow:0 4px 14px rgba(15,23,42,.04); }
+        .quote-price-row { display:grid; grid-template-columns:max-content minmax(24px,1fr) auto; align-items:center; gap:8px; min-height:30px; }
+        .quote-price-row .dot-leader { margin:0 !important; min-width:18px; }
+        .quote-price-row > span:last-child { white-space:nowrap; text-align:right; }
+        .quote-price-final-row { margin-top:10px; padding-top:12px; border-top:1px solid #dbe4ef; }
+        .quote-price-final-row #quote-price-final { font-size:24px; line-height:1.05; white-space:nowrap; }
+        .quote-primary-row { display:grid !important; grid-template-columns:minmax(0,1.45fr) minmax(0,.85fr); gap:8px !important; margin-top:10px !important; }
+        .quote-primary-row > div { width:auto !important; min-width:0; height:42px !important; padding-left:11px !important; padding-right:10px !important; }
+        .quote-option-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; margin-top:8px; }
+        .quote-fee-option-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin-top:7px; }
+        .quote-option { min-width:0; height:42px; border-radius:8px; padding:0 9px; }
+        .quote-option label { min-width:auto; margin-right:6px; font-size:10px; }
+        .quote-option select { min-width:0; font-size:11px; }
+        .color-option-main { min-height:42px !important; padding:0 9px !important; }
+        .color-option-main select { height:42px !important; }
+        .color-surcharge-hint { padding:3px 9px 5px !important; font-size:9px !important; line-height:1.2 !important; }
+        #bhvc-insurer-quick-select.quote-insurer-compact { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; padding:8px 10px !important; margin-top:8px !important; border-radius:10px !important; }
+        #bhvc-insurer-quick-select.quote-insurer-compact .insurer-title { margin:0 !important; white-space:nowrap; }
+        #bhvc-insurer-quick-select.quote-insurer-compact .insurer-options { gap:6px 14px !important; }
+        #bhvc-insurer-quick-select.quote-insurer-compact .insurer-options label { font-size:11px; white-space:nowrap; }
+        #bhvc-insurer-quick-select.quote-insurer-compact .insurer-help { margin:0 !important; text-align:right; white-space:nowrap; }
+
         .capture-grid-cost { display: grid; grid-template-columns: minmax(0, 42fr) minmax(0, 58fr); gap: 28px; align-items: stretch; }
         .capture-col { min-width: 0; }
 
@@ -157,8 +180,14 @@
             #capture-area header h1 { font-size: 17px !important; }
             #capture-area header p { font-size: 10px !important; }
             #capture-area > header + div { padding: 14px !important; }
-            #capture-area .capture-grid-main, #capture-area .capture-grid-cost { grid-template-columns: 1fr !important; gap: 14px !important; }
+            #capture-area .capture-grid-main, #capture-area .capture-grid-cost { grid-template-columns: 1fr !important; gap: 12px !important; }
             #capture-area .capture-grid-main { align-items: stretch !important; }
+            #capture-area .quote-price-card { padding:13px 14px !important; order:2; }
+            #capture-area .quote-price-row { min-height:28px !important; font-size:13px !important; }
+            #capture-area .quote-price-final-row #quote-price-final { font-size:22px !important; }
+            #capture-area #bhvc-insurer-quick-select.quote-insurer-compact { grid-template-columns:1fr !important; gap:7px !important; padding:9px 10px !important; }
+            #capture-area #bhvc-insurer-quick-select .insurer-help { text-align:left !important; white-space:normal !important; }
+            #capture-area #bhvc-insurer-quick-select .insurer-options { gap:8px 14px !important; }
             #capture-area #quote-car-name { font-size: 24px !important; line-height: 1.12 !important; margin-bottom: 10px !important; }
 
             /* Hàng chọn xe / biển */
@@ -784,9 +813,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 <div class="p-7 space-y-7 bg-white">
                     <!-- Section 1 -->
                     <div class="capture-grid-main">
-                        <div class="capture-col">
-                            <h3 class="text-sm font-bold text-gray-400 uppercase mb-1">Kính gửi khách hàng</h3>
-                            <h2 id="quote-car-name" class="text-3xl font-extrabold text-brand-primary mb-3">Đang tải...</h2>
+                        <div class="capture-col quote-intro-card">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Kính gửi khách hàng</h3>
+                            <h2 id="quote-car-name" class="text-[28px] leading-tight font-extrabold text-brand-primary mb-2">Đang tải...</h2>
                             
                             <div class="quote-primary-row flex gap-3 text-sm mt-4">
                                 <div class="relative bg-gray-100 rounded-md border-2 border-transparent h-10 flex items-center px-3 w-[220px]">
@@ -866,9 +895,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                     </select>
                                 </div>
                             </div>
-                            <div id="bhvc-insurer-quick-select" class="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5">
-                                <div class="text-[10px] font-black uppercase text-blue-800 mb-2">Bảo hiểm phân phối</div>
-                                <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-gray-700">
+                            <div id="bhvc-insurer-quick-select" class="quote-insurer-compact mt-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5">
+                                <div class="insurer-title text-[10px] font-black uppercase text-blue-800 mb-2">Bảo hiểm phân phối</div>
+                                <div class="insurer-options flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-gray-700">
                                     <label class="inline-flex items-center gap-1.5 cursor-pointer">
                                         <input type="checkbox" id="bhvc-check-PJICO" data-bhvc-insurer="PJICO" checked onchange="selectBhvcInsurerCheckbox('PJICO', this)" class="w-4 h-4 accent-blue-600">
                                         <span>PJICO</span>
@@ -886,16 +915,16 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                         <span>BIC</span>
                                     </label>
                                 </div>
-                                <div id="bhvc-insurer-quick-help" class="text-[9px] text-blue-700 mt-1.5">Mặc định PJICO · chỉ áp dụng 1 bảo hiểm tại một thời điểm.</div>
+                                <div id="bhvc-insurer-quick-help" class="insurer-help text-[9px] text-blue-700 mt-1.5">Mặc định PJICO · chỉ áp dụng 1 bảo hiểm tại một thời điểm.</div>
                             </div>
                         </div>
 
-                        <div class="capture-col bg-gray-50 p-5 rounded-lg border border-gray-100 space-y-3 text-[15px]">
-                            <div class="flex justify-between items-end"><span class="font-medium text-gray-600">Giá xe niêm yết</span><div class="dot-leader"></div><span id="quote-price-listed" class="font-bold">0 VNĐ</span></div>
-                            <div class="flex justify-between items-end text-brand-primary"><span class="font-medium">Tổng ưu đãi</span><div class="dot-leader"></div><span id="quote-discount" class="font-bold">- 0 VNĐ</span></div>
-                            <div id="quote-invoice-discount-row" class="hidden flex justify-between items-end text-emerald-700"><span class="font-medium">Giảm trên HĐ Đại lý (CTKM + khung)</span><div class="dot-leader"></div><span id="quote-invoice-discount" class="font-bold">- 0 VNĐ</span></div>
-                            <div class="flex justify-between items-end"><span class="font-medium text-gray-700">Giá Đại lý xuất hóa đơn</span><div class="dot-leader"></div><span id="quote-invoice-price" class="font-black text-emerald-700">0 VNĐ</span></div>
-                            <div class="flex justify-between items-end pt-3 border-t border-gray-200 mt-3"><span class="font-bold text-gray-800 uppercase text-sm">Giá xe theo hóa đơn</span><div class="dot-leader"></div><span id="quote-price-final" class="font-bold text-xl text-brand-primary">0 VNĐ</span></div>
+                        <div class="capture-col quote-price-card text-[14px]">
+                            <div class="quote-price-row"><span class="font-medium text-gray-600">Giá niêm yết</span><div class="dot-leader"></div><span id="quote-price-listed" class="font-bold text-gray-900">0 VNĐ</span></div>
+                            <div class="quote-price-row text-brand-primary"><span class="font-semibold">Tổng ưu đãi</span><div class="dot-leader"></div><span id="quote-discount" class="font-black">- 0 VNĐ</span></div>
+                            <div id="quote-invoice-discount-row" class="hidden quote-price-row text-emerald-700"><span class="font-semibold">Giảm trên HĐ Đại lý</span><div class="dot-leader"></div><span id="quote-invoice-discount" class="font-black">- 0 VNĐ</span></div>
+                            <div class="quote-price-row"><span class="font-medium text-gray-700">Giá Đại lý xuất HĐ</span><div class="dot-leader"></div><span id="quote-invoice-price" class="font-black text-emerald-700">0 VNĐ</span></div>
+                            <div class="quote-price-row quote-price-final-row"><span class="font-black text-gray-900 uppercase text-[12px]">Giá xe theo hóa đơn</span><div class="dot-leader"></div><span id="quote-price-final" class="font-black text-brand-primary">0 VNĐ</span></div>
                         </div>
                     </div>
 
