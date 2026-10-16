@@ -12,6 +12,7 @@
     <!-- THƯ VIỆN XUẤT ẢNH -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -396,7 +397,63 @@
             #charging-promo-panel .grid { grid-template-columns:1fr !important; }
             #charging-promo-summary { font-size:11px !important; line-height:1.5 !important; }
         }
-    </style>
+    
+        /* V72: desktop export clone, tránh dính responsive mobile khi lưu ảnh */
+        #temporary-export-root, #capture-area-clone.export-desktop-clone {
+            transform: none !important;
+            zoom: 1 !important;
+        }
+        #capture-area-clone.export-desktop-clone {
+            font-size: 16px !important;
+            line-height: normal !important;
+        }
+        #capture-area-clone.export-desktop-clone img {
+            object-fit: contain !important;
+        }
+        #capture-area-clone.export-desktop-clone .capture-grid-main {
+            grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr) !important;
+            gap: 18px !important;
+            align-items: stretch !important;
+        }
+        #capture-area-clone.export-desktop-clone .capture-grid-cost {
+            grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+            gap: 18px !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-option-grid {
+            grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+            gap: 8px !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-fee-option-grid {
+            grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+            gap: 8px !important;
+        }
+        #capture-area-clone.export-desktop-clone #quote-promo-list {
+            grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-spec-card {
+            display:flex !important;
+            flex-direction: row !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-spec-card > div {
+            width: auto !important;
+        }
+        #capture-area-clone.export-desktop-clone #quote-car-img {
+            max-height: 340px !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-total-footer {
+            flex-direction: row !important;
+            align-items: center !important;
+        }
+
+        @media (max-width: 767px) {
+            #save-image-btn,
+            #save-pdf-btn {
+                min-height:44px !important;
+                font-size:12px !important;
+                padding:8px 12px !important;
+            }
+        }
+</style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="antialiased text-gray-800 relative bg-gray-100">
@@ -1304,6 +1361,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             <div class="flex gap-2 sm:gap-4">
                 <button onclick="closePreview()" class="bg-gray-700 px-3 sm:px-5 py-2 rounded-lg font-bold text-sm">Đóng</button>
                 <button onclick="savePreviewImage()" id="save-image-btn" class="bg-brand-primary px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">Lưu hình HD</button>
+                <button onclick="savePreviewPdf()" id="save-pdf-btn" class="bg-rose-600 px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">Xuất PDF</button>
             </div>
         </div>
         <div id="preview-scroll-container" class="flex-1 w-full overflow-y-auto overflow-x-auto flex justify-center pb-12">
@@ -5044,73 +5102,99 @@ ${optionText}
             });
         }
 
+        function buildExportClone() {
+            // Chốt toàn bộ phép tính trước khi clone, đặc biệt khi đang chọn BANK.
+            updateQuotationUI();
+
+            const source = document.getElementById('capture-area');
+            if (!source) throw new Error('Không tìm thấy vùng báo giá.');
+
+            const clone = source.cloneNode(true);
+            clone.id = "capture-area-clone";
+            clone.classList.add('export-desktop-clone');
+            clone.style.width = '1024px';
+            clone.style.minWidth = '1024px';
+            clone.style.maxWidth = '1024px';
+            clone.style.margin = '0';
+            clone.style.transform = 'none';
+            clone.style.transformOrigin = 'top left';
+            clone.style.boxSizing = 'border-box';
+            clone.style.position = 'relative';
+            clone.style.left = '0';
+            clone.style.top = '0';
+
+            // PHẢI đồng bộ form trước khi xóa bất kỳ phần tử nào khỏi clone.
+            // Nếu xóa trước, thứ tự select/input giữa source và clone bị lệch,
+            // đặc biệt ở chế độ Bank.
+            syncLiveFormStateToClone(source, clone);
+
+            // Đưa BHVC mua + phụ kiện mua vào Chi tiết Khuyến mãi & Tri ân.
+            const exportCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            if (exportCar) {
+                injectExportPromoDetails(clone, exportCar, calculateQuotation(exportCar));
+            }
+
+            // Riêng ảnh xuất: bỏ phần Chi phí lăn bánh.
+            const runningCostCol = clone.querySelector('.export-hide-running-cost');
+            if (runningCostCol) {
+                const promoGrid = runningCostCol.parentElement;
+                runningCostCol.remove();
+                if (promoGrid) promoGrid.style.gridTemplateColumns = '1fr';
+            }
+
+            // PK mua đã được chuyển vào khuyến mãi nên bỏ bảng riêng trên ảnh.
+            clone.querySelectorAll('.export-hide-accessory-purchase').forEach(el => el.remove());
+
+            // Tab bảng trả góp chỉ dùng để tham khảo, không đưa vào ảnh báo giá.
+            clone.querySelectorAll('.export-hide-loan-schedule').forEach(el => el.remove());
+
+            // Checkbox hãng BHVC dùng để thao tác, không đưa vào ảnh báo giá.
+            clone.querySelectorAll('#bhvc-insurer-quick-select').forEach(el => el.remove());
+
+            // Loại bỏ các phần tử fixed / sticky có thể phá layout khi chụp ảnh.
+            clone.querySelectorAll('*').forEach(el => {
+                const cs = window.getComputedStyle(el);
+                if (cs.position === 'fixed' || cs.position === 'sticky') {
+                    el.style.position = 'static';
+                    el.style.top = 'auto';
+                    el.style.bottom = 'auto';
+                    el.style.left = 'auto';
+                    el.style.right = 'auto';
+                }
+                if (cs.overflow === 'auto' || cs.overflow === 'scroll' || cs.overflowY === 'auto' || cs.overflowY === 'scroll') {
+                    el.style.overflow = 'visible';
+                    el.style.overflowY = 'visible';
+                    if (el.scrollHeight > el.clientHeight) {
+                        el.style.height = 'auto';
+                        el.style.maxHeight = 'none';
+                    }
+                }
+            });
+
+            // Chuẩn hóa ảnh trước khi xuất. Không ép crossorigin trên clone
+            // vì một số link VinFast hiển thị được nhưng không cấp CORS.
+            const liveImages = Array.from(source.querySelectorAll('img'));
+            const cloneImages = Array.from(clone.querySelectorAll('img'));
+            cloneImages.forEach((img, idx) => {
+                img.removeAttribute('crossorigin');
+                img.crossOrigin = null;
+                const live = liveImages[idx];
+                if (live) {
+                    const resolved = live.currentSrc || live.src || '';
+                    if (resolved) img.src = resolved;
+                }
+                img.loading = 'eager';
+                img.decoding = 'sync';
+                img.style.maxWidth = img.style.maxWidth || '100%';
+            });
+
+            styleInputsForPrint(clone);
+            return clone;
+        }
+
         function openPreview() {
             try {
-                // Chốt toàn bộ phép tính trước khi clone, đặc biệt khi đang chọn BANK.
-                updateQuotationUI();
-
-                const source = document.getElementById('capture-area');
-                if (!source) throw new Error('Không tìm thấy vùng báo giá.');
-
-                const clone = source.cloneNode(true);
-                clone.id = "capture-area-clone";
-                clone.style.width = '1024px';
-                clone.style.minWidth = '1024px';
-                clone.style.maxWidth = '1024px';
-                clone.style.margin = '0';
-                clone.style.transform = 'none';
-                clone.style.transformOrigin = 'top left';
-                clone.style.boxSizing = 'border-box';
-
-                // PHẢI đồng bộ form trước khi xóa bất kỳ phần tử nào khỏi clone.
-                // Nếu xóa trước, thứ tự select/input giữa source và clone bị lệch,
-                // đặc biệt ở chế độ Bank.
-                syncLiveFormStateToClone(source, clone);
-
-                // Đưa BHVC mua + phụ kiện mua vào Chi tiết Khuyến mãi & Tri ân.
-                const exportCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
-                if (exportCar) {
-                    injectExportPromoDetails(clone, exportCar, calculateQuotation(exportCar));
-                }
-
-                // Riêng ảnh xuất: bỏ phần Chi phí lăn bánh.
-                const runningCostCol = clone.querySelector('.export-hide-running-cost');
-                if (runningCostCol) {
-                    const promoGrid = runningCostCol.parentElement;
-                    runningCostCol.remove();
-
-                    // Chỉ grid của Chi phí/KM được đổi thành 1 cột.
-                    // Không đụng vào grid 2 cột của Bank.
-                    if (promoGrid) promoGrid.style.gridTemplateColumns = '1fr';
-                }
-
-                // PK mua đã được chuyển vào khuyến mãi nên bỏ bảng riêng trên ảnh.
-                clone.querySelectorAll('.export-hide-accessory-purchase').forEach(el => el.remove());
-
-                // Tab bảng trả góp chỉ dùng để tham khảo, không đưa vào ảnh báo giá.
-                clone.querySelectorAll('.export-hide-loan-schedule').forEach(el => el.remove());
-
-                // Checkbox hãng BHVC dùng để thao tác, không đưa vào ảnh báo giá.
-                clone.querySelectorAll('#bhvc-insurer-quick-select').forEach(el => el.remove());
-
-                // Chuẩn hóa ảnh trước khi xuất. Không ép crossorigin trên clone
-                // vì một số link VinFast hiển thị được nhưng không cấp CORS.
-                const liveImages = Array.from(source.querySelectorAll('img'));
-                const cloneImages = Array.from(clone.querySelectorAll('img'));
-                cloneImages.forEach((img, idx) => {
-                    img.removeAttribute('crossorigin');
-                    img.crossOrigin = null;
-                    const live = liveImages[idx];
-                    if (live) {
-                        const resolved = live.currentSrc || live.src || '';
-                        if (resolved) img.src = resolved;
-                    }
-                    img.loading = 'eager';
-                    img.decoding = 'sync';
-                });
-
-                styleInputsForPrint(clone);
-
+                const clone = buildExportClone();
                 const preview = document.getElementById('preview-container');
                 preview.innerHTML = '';
                 preview.appendChild(clone);
@@ -5121,97 +5205,220 @@ ${optionText}
             }
         }
         function closePreview() { toggleModal('previewModal', false); document.getElementById('preview-container').innerHTML=''; }
+        async function waitExportCloneReady(clone, isMobile=false) {
+            if (document.fonts?.ready) {
+                try { await document.fonts.ready; } catch (_) {}
+            }
+
+            const imgs = Array.from(clone.querySelectorAll('img'));
+            await Promise.all(imgs.map(img => new Promise(resolve => {
+                let finished = false;
+                const done = () => {
+                    if (finished) return;
+                    finished = true;
+                    resolve();
+                };
+
+                try {
+                    if (img.complete && img.naturalWidth > 0) {
+                        if (img.decode) img.decode().then(done).catch(done);
+                        else done();
+                        return;
+                    }
+                } catch (_) {}
+
+                img.onload = () => {
+                    if (img.decode) img.decode().then(done).catch(done);
+                    else done();
+                };
+                img.onerror = done;
+                setTimeout(done, 4500);
+            })));
+
+            await new Promise(resolve =>
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() =>
+                        setTimeout(resolve, isMobile ? 220 : 80)
+                    )
+                )
+            );
+        }
+
+        async function createExportCanvas(target, isMobile=false, scaleOverride=null) {
+            const width = 1024;
+            const height = Math.max(
+                target.scrollHeight,
+                target.offsetHeight,
+                target.getBoundingClientRect().height
+            );
+
+            const scale = scaleOverride || (isMobile ? 1.15 : 1.5);
+
+            return await html2canvas(target, {
+                backgroundColor: '#ffffff',
+                scale,
+                width,
+                height,
+                windowWidth: width,
+                windowHeight: height,
+                useCORS: true,
+                allowTaint: false,
+                imageTimeout: 6000,
+                logging: false,
+                scrollX: 0,
+                scrollY: 0,
+                removeContainer: true
+            });
+        }
+
         async function savePreviewImage() {
-            const tg = document.getElementById('capture-area-clone');
             const btn = document.getElementById('save-image-btn');
-            if (!tg || !btn) return;
+            if (!btn) return;
 
             const originalText = btn.innerHTML;
             const isMobile = window.matchMedia('(max-width: 767px)').matches;
-
             btn.innerHTML = '⏳ Đang xử lý...';
             btn.disabled = true;
 
+            let tempRoot = null;
             try {
+                const clone = buildExportClone();
+
+                // Dựng vùng capture riêng ngoài màn hình, không phụ thuộc preview đang scale trên mobile.
+                tempRoot = document.createElement('div');
+                tempRoot.id = 'temporary-export-root';
+                tempRoot.style.position = 'fixed';
+                tempRoot.style.left = '-20000px';
+                tempRoot.style.top = '0';
+                tempRoot.style.width = '1024px';
+                tempRoot.style.minWidth = '1024px';
+                tempRoot.style.maxWidth = '1024px';
+                tempRoot.style.padding = '0';
+                tempRoot.style.margin = '0';
+                tempRoot.style.background = '#ffffff';
+                tempRoot.style.zIndex = '-1';
+                tempRoot.style.opacity = '1';
+                tempRoot.style.transform = 'none';
+                tempRoot.style.pointerEvents = 'none';
+                tempRoot.appendChild(clone);
+                document.body.appendChild(tempRoot);
+
                 if (document.fonts?.ready) {
                     try { await document.fonts.ready; } catch (_) {}
                 }
 
-                // Đợi ảnh tải, nhưng không treo vô hạn khi link ngoài bị chặn.
-                const imgs = Array.from(tg.querySelectorAll('img'));
+                // Đợi ảnh tải / decode để tránh vùng ảnh trống khi export.
+                const imgs = Array.from(clone.querySelectorAll('img'));
                 await Promise.all(imgs.map(img => new Promise(resolve => {
-                    if (img.complete) return resolve();
                     let finished = false;
                     const done = () => {
                         if (finished) return;
                         finished = true;
                         resolve();
                     };
-                    img.onload = done;
+
+                    try {
+                        if (img.complete && img.naturalWidth > 0) {
+                            if (img.decode) {
+                                img.decode().then(done).catch(done);
+                            } else {
+                                done();
+                            }
+                            return;
+                        }
+                    } catch (_) {}
+
+                    img.onload = () => {
+                        if (img.decode) img.decode().then(done).catch(done);
+                        else done();
+                    };
                     img.onerror = done;
-                    setTimeout(done, 3500);
+                    setTimeout(done, 4500);
                 })));
 
-                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                // Chờ browser hoàn tất layout nhiều frame để tránh text chồng/nhảy dòng.
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, isMobile ? 220 : 80))));
 
+                const target = clone;
                 const width = 1024;
                 const height = Math.max(
-                    tg.scrollHeight,
-                    tg.offsetHeight,
-                    tg.getBoundingClientRect().height
+                    target.scrollHeight,
+                    target.offsetHeight,
+                    target.getBoundingClientRect().height
                 );
-
-                // Mobile ưu tiên độ ổn định/bộ nhớ.
-                // Desktop vẫn xuất nét cao hơn.
-                const pixelRatio = isMobile ? 1 : 1.7;
 
                 let dataUrl = '';
                 let firstError = null;
 
-                // Cách 1: html-to-image
-                try {
-                    dataUrl = await htmlToImage.toPng(tg, {
-                        backgroundColor: '#ffffff',
-                        width,
-                        height,
-                        pixelRatio,
-                        cacheBust: true,
-                        skipAutoScale: false
-                    });
-                } catch (err) {
-                    firstError = err;
-                    console.warn('html-to-image failed, fallback html2canvas:', err);
-                }
-
-                // Cách 2: fallback html2canvas nếu mobile/browser không chịu html-to-image.
-                if (!dataUrl) {
+                // Mobile ưu tiên html2canvas trước để giảm lỗi layout khi trang đang responsive.
+                if (isMobile) {
                     try {
-                        const canvas = await html2canvas(tg, {
+                        const canvas = await html2canvas(target, {
                             backgroundColor: '#ffffff',
-                            scale: isMobile ? 1 : 1.5,
+                            scale: 1.2,
                             width,
                             height,
                             windowWidth: width,
+                            windowHeight: height,
                             useCORS: true,
                             allowTaint: false,
-                            imageTimeout: 4000,
+                            imageTimeout: 6000,
                             logging: false,
                             scrollX: 0,
-                            scrollY: 0
+                            scrollY: 0,
+                            removeContainer: true
                         });
-
                         dataUrl = canvas.toDataURL('image/png', 1.0);
-                    } catch (err2) {
-                        console.error('html2canvas fallback failed:', err2);
-                        throw new Error(
-                            'Không render được ảnh trên trình duyệt này. ' +
-                            (err2?.message || firstError?.message || '')
-                        );
+                    } catch (err) {
+                        firstError = err;
+                        console.warn('html2canvas mobile export failed, fallback html-to-image:', err);
                     }
                 }
 
+                if (!dataUrl) {
+                    try {
+                        dataUrl = await htmlToImage.toPng(target, {
+                            backgroundColor: '#ffffff',
+                            width,
+                            height,
+                            pixelRatio: isMobile ? 1 : 1.8,
+                            cacheBust: true,
+                            skipAutoScale: false,
+                            canvasWidth: width,
+                            canvasHeight: height,
+                            style: {
+                                transform: 'none',
+                                margin: '0',
+                                width: '1024px'
+                            }
+                        });
+                    } catch (err) {
+                        if (!firstError) firstError = err;
+                        console.warn('html-to-image export failed, fallback html2canvas:', err);
+                    }
+                }
+
+                if (!dataUrl) {
+                    const canvas = await html2canvas(target, {
+                        backgroundColor: '#ffffff',
+                        scale: isMobile ? 1 : 1.5,
+                        width,
+                        height,
+                        windowWidth: width,
+                        windowHeight: height,
+                        useCORS: true,
+                        allowTaint: false,
+                        imageTimeout: 6000,
+                        logging: false,
+                        scrollX: 0,
+                        scrollY: 0,
+                        removeContainer: true
+                    });
+                    dataUrl = canvas.toDataURL('image/png', 1.0);
+                }
+
                 if (!dataUrl || !dataUrl.startsWith('data:image')) {
-                    throw new Error('Không tạo được dữ liệu PNG.');
+                    throw new Error('Không tạo được dữ liệu PNG hợp lệ.');
                 }
 
                 const a = document.createElement('a');
@@ -5220,19 +5427,148 @@ ${optionText}
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
-
             } catch (e) {
                 console.error('Save image error:', e);
                 alert(
                     'Không thể lưu ảnh báo giá trên thiết bị này.\n\n' +
                     'Chi tiết: ' + (e?.message || e) +
-                    '\n\nNếu ảnh xe dùng link ngoài, hãy chờ ảnh tải xong rồi thử lại.'
+                    '\n\nNếu đang dùng điện thoại, hãy chờ ảnh xe tải xong rồi thử lại.'
                 );
             } finally {
+                if (tempRoot && tempRoot.parentNode) tempRoot.parentNode.removeChild(tempRoot);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
+
+
+        async function savePreviewPdf() {
+            const btn = document.getElementById('save-pdf-btn');
+            if (!btn) return;
+
+            const originalText = btn.innerHTML;
+            const isMobile = window.matchMedia('(max-width: 767px)').matches;
+            btn.innerHTML = '⏳ Đang tạo PDF...';
+            btn.disabled = true;
+
+            let tempRoot = null;
+
+            try {
+                if (!window.jspdf?.jsPDF) {
+                    throw new Error('Thư viện PDF chưa tải xong. Vui lòng thử lại sau vài giây.');
+                }
+
+                const clone = buildExportClone();
+
+                tempRoot = document.createElement('div');
+                tempRoot.id = 'temporary-pdf-export-root';
+                tempRoot.style.position = 'fixed';
+                tempRoot.style.left = '-20000px';
+                tempRoot.style.top = '0';
+                tempRoot.style.width = '1024px';
+                tempRoot.style.minWidth = '1024px';
+                tempRoot.style.maxWidth = '1024px';
+                tempRoot.style.padding = '0';
+                tempRoot.style.margin = '0';
+                tempRoot.style.background = '#ffffff';
+                tempRoot.style.zIndex = '-1';
+                tempRoot.style.opacity = '1';
+                tempRoot.style.transform = 'none';
+                tempRoot.style.pointerEvents = 'none';
+                tempRoot.appendChild(clone);
+                document.body.appendChild(tempRoot);
+
+                await waitExportCloneReady(clone, isMobile);
+
+                // PDF dùng canvas riêng để không phụ thuộc preview đang scale.
+                const canvas = await createExportCanvas(
+                    clone,
+                    isMobile,
+                    isMobile ? 1.1 : 1.45
+                );
+
+                const { jsPDF } = window.jspdf;
+
+                // A4 dọc: 210 x 297 mm
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4',
+                    compress: true
+                });
+
+                const pageWidth = 210;
+                const pageHeight = 297;
+                const margin = 6;
+                const usableWidth = pageWidth - margin * 2;
+                const usableHeight = pageHeight - margin * 2;
+
+                const pxPerMm = canvas.width / usableWidth;
+                const pageSlicePx = Math.floor(usableHeight * pxPerMm);
+
+                let yPx = 0;
+                let pageIndex = 0;
+
+                while (yPx < canvas.height) {
+                    const remaining = canvas.height - yPx;
+                    const sliceHeight = Math.min(pageSlicePx, remaining);
+
+                    const pageCanvas = document.createElement('canvas');
+                    pageCanvas.width = canvas.width;
+                    pageCanvas.height = sliceHeight;
+
+                    const ctx = pageCanvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+                    ctx.drawImage(
+                        canvas,
+                        0, yPx, canvas.width, sliceHeight,
+                        0, 0, canvas.width, sliceHeight
+                    );
+
+                    const imgData = pageCanvas.toDataURL('image/jpeg', 0.94);
+                    const sliceHeightMm = sliceHeight / pxPerMm;
+
+                    if (pageIndex > 0) pdf.addPage('a4', 'portrait');
+
+                    pdf.addImage(
+                        imgData,
+                        'JPEG',
+                        margin,
+                        margin,
+                        usableWidth,
+                        sliceHeightMm,
+                        undefined,
+                        'FAST'
+                    );
+
+                    yPx += sliceHeight;
+                    pageIndex += 1;
+                }
+
+                const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+                const safeName = String(car?.name || 'BaoGia_VinFast')
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+                    .replace(/^_+|_+$/g, '');
+
+                pdf.save(`${safeName || 'BaoGia_VinFast'}_BaoGia.pdf`);
+
+            } catch (e) {
+                console.error('PDF export error:', e);
+                alert(
+                    'Không thể xuất PDF.\n\n' +
+                    'Chi tiết: ' + (e?.message || e) +
+                    '\n\nHãy chờ ảnh xe tải xong rồi thử lại.'
+                );
+            } finally {
+                if (tempRoot?.parentNode) tempRoot.parentNode.removeChild(tempRoot);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
 
         // ================== CÁC PHÍ BỔ SUNG & BANK ==================
 
