@@ -5446,14 +5446,14 @@ ${optionText}
 
         function openPreview() {
             try {
-                const clone = getExportCloneByMode(mode);
+                const clone = buildExportClone();
                 const preview = document.getElementById('preview-container');
                 preview.innerHTML = '';
                 preview.appendChild(clone);
                 toggleModal('previewModal', true);
             } catch (e) {
                 console.error('Preview error:', e);
-                alert('Không thể tạo bản xem trước. Vui lòng thử lại.');
+                alert('Không thể tạo bản xem trước.\n\nChi tiết: ' + (e?.message || e));
             }
         }
         function closePreview() { toggleModal('previewModal', false); document.getElementById('preview-container').innerHTML=''; }
@@ -5540,7 +5540,7 @@ ${optionText}
 
             let tempRoot = null;
             try {
-                const clone = buildExportClone();
+                const clone = getExportCloneByMode(mode);
 
                 // Dựng vùng capture riêng ngoài màn hình, không phụ thuộc preview đang scale trên mobile.
                 tempRoot = document.createElement('div');
