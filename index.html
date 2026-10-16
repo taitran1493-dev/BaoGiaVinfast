@@ -635,23 +635,8 @@
             }
         }
 
-        .maintenance-table { width:100%; border-collapse:collapse; background:white; font-size:12px; color:#111827; }
-        .maintenance-table th, .maintenance-table td { border:1px solid #111827; padding:5px 6px; vertical-align:middle; }
-        .maintenance-table thead th { background:#dfe7ea; font-weight:800; text-align:center; }
-        .maintenance-table thead tr:first-child th { background:#fff; }
-        .maintenance-table .maintenance-name-head { text-align:left; min-width:330px; }
-        .maintenance-table .maintenance-legend { text-align:left; line-height:1.8; min-width:330px; }
-        .maintenance-table .maintenance-legend span { font-weight:900; }
-        .maintenance-table .maintenance-km { min-width:54px; writing-mode:vertical-rl; transform:rotate(180deg); height:82px; }
-        .maintenance-table .maintenance-item { min-width:330px; text-align:left; line-height:1.35; }
-        .maintenance-table .maintenance-mark { width:54px; text-align:center; font-size:15px; }
-        .maintenance-table .maintenance-mark.replace { font-size:18px; font-weight:900; }
-        .maintenance-table .maintenance-note { text-align:center; font-size:13px; line-height:1.45; }
-        .maintenance-table .maintenance-section td { background:#dfe7ea; font-weight:900; text-align:left; font-size:13px; }
         @media (max-width:767px) {
-            #maintenanceModal { padding:6px !important; }
-            .maintenance-table { font-size:11px; }
-            .maintenance-table th, .maintenance-table td { padding:4px; }
+            #maintenanceModal { padding:8px !important; }
         }
 </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1045,7 +1030,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                 <div id="warranty-subtitle" class="text-[10px] text-emerald-700 font-bold mt-0.5"></div>
                             </div>
                             <div class="flex flex-wrap gap-2 justify-end">
-                                <button type="button" onclick="openMaintenanceSchedule()" class="text-[10px] font-black text-blue-700 bg-white border border-blue-300 rounded-lg px-3 py-1.5">Lịch bảo dưỡng</button>
+                                <button type="button" onclick="openMaintenanceSchedule()" class="text-[10px] font-black text-blue-700 bg-white border border-blue-300 rounded-lg px-3 py-1.5">Mốc bảo dưỡng</button>
                                 <button type="button" onclick="toggleWarrantyDetails()" class="text-[10px] font-black text-emerald-800 bg-white border border-emerald-300 rounded-lg px-3 py-1.5">Xem chi tiết</button>
                             </div>
                         </div>
@@ -1560,25 +1545,20 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         </div>
     </div>
 
-    <!-- LỊCH BẢO DƯỠNG -->
+    <!-- LỊCH BẢO DƯỠNG TÓM TẮT -->
     <div id="maintenanceModal" class="fixed inset-0 bg-gray-900/80 z-[70] hidden flex-col items-center justify-center p-3 sm:p-6">
-        <div class="w-full max-w-[1180px] max-h-[94vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div class="w-full max-w-[680px] max-h-[92vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div class="px-4 sm:px-6 py-4 border-b bg-slate-50 flex items-start justify-between gap-4 shrink-0">
                 <div class="min-w-0">
-                    <div class="text-lg sm:text-2xl font-black text-gray-900">🔧 Lịch bảo dưỡng</div>
+                    <div class="text-lg sm:text-2xl font-black text-gray-900">🔧 Mốc bảo dưỡng</div>
                     <div id="maintenance-model-title" class="text-sm font-black text-blue-700 mt-1">—</div>
                     <div id="maintenance-source-note" class="text-[10px] sm:text-xs text-gray-500 mt-1">—</div>
                 </div>
                 <button type="button" onclick="closeMaintenanceSchedule()" class="w-10 h-10 rounded-full bg-gray-800 text-white text-xl font-black shrink-0">×</button>
             </div>
-            <div class="px-4 sm:px-6 py-3 bg-white border-b flex flex-wrap gap-x-5 gap-y-2 text-[11px] sm:text-xs font-bold shrink-0">
-                <span>○ Kiểm tra, vệ sinh, điều chỉnh hoặc thay thế nếu cần</span>
-                <span>● Thay thế hoặc bảo dưỡng</span>
-                <span class="text-blue-700">Chu kỳ: 15.000 km / năm, tối đa 10 năm hoặc 150.000 km</span>
-            </div>
-            <div class="flex-1 overflow-auto p-3 sm:p-5 bg-gray-50">
-                <div id="maintenance-table-wrap" class="min-w-[920px]"></div>
-                <div id="maintenance-footnote" class="mt-4 text-[10px] sm:text-xs text-gray-600 leading-relaxed"></div>
+            <div class="flex-1 overflow-auto p-4 sm:p-6 bg-gray-50">
+                <div id="maintenance-summary-wrap" class="space-y-3"></div>
+                <div id="maintenance-footnote" class="mt-4 text-[10px] sm:text-xs text-gray-500 leading-relaxed"></div>
             </div>
         </div>
     </div>
@@ -1999,135 +1979,99 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             'Kiểm tra gầm xe'
         ];
 
-        function maintenanceMarks(mark='○') {
-            return Array(10).fill(mark);
-        }
-        function maintenanceAt(indexes, mark='○') {
-            return Array.from({length:10}, (_,i) => indexes.includes(i+1) ? mark : '');
-        }
-
-        const MAINTENANCE_SCHEDULES = {
+        const MAINTENANCE_SUMMARIES = {
             generic: {
-                title: 'Lịch bảo dưỡng xe',
-                source: 'Bảng chung từ tài liệu hình ảnh bạn cung cấp; ảnh nguồn không ghi rõ tên Model.',
-                rows: [
-                    {name:'Lọc gió điều hòa', marks:maintenanceMarks('●')},
-                    {name:'Hệ thống điều hòa', marks:maintenanceAt([2,4,6,8],'○'), last:'●'},
-                    {name:'Dầu phanh', note:'Thay thế sau mỗi 2 năm'},
-                    {section:'Các hạng mục kiểm tra chung'},
-                    ...MAINTENANCE_COMMON_ITEMS.map(name=>({name, marks:maintenanceMarks('○')}))
+                title: 'Lịch bảo dưỡng định kỳ',
+                source: 'Tóm tắt từ bảng lịch bảo dưỡng bạn cung cấp.',
+                items: [
+                    {label:'Mốc định kỳ', value:'15.000 km hoặc 1 năm, tùy điều kiện nào đến trước'},
+                    {label:'Lọc gió điều hòa', value:'Thay/bảo dưỡng theo từng mốc định kỳ'},
+                    {label:'Hệ thống điều hòa', value:'Kiểm tra theo chu kỳ; mốc 150.000 km có thay thế theo bảng'},
+                    {label:'Dầu phanh', value:'Thay sau mỗi 2 năm'},
+                    {label:'Chu kỳ lặp lại', value:'10 năm hoặc 150.000 km'}
                 ]
             },
             vf5: {
-                title: 'Lịch trình bảo dưỡng - VF5',
-                source: 'Theo ảnh “Lịch trình bảo dưỡng - VF5” bạn cung cấp.',
-                rows: [
-                    {name:'Lọc gió điều hòa', marks:maintenanceMarks('●')},
-                    {name:'Hệ thống điều hòa', marks:maintenanceAt([2,4,6,8],'○'), last:'●'},
-                    {name:'Pin bộ T-BOX', note:'Thay thế sau mỗi 6 năm'},
-                    {name:'Dung dịch làm mát cho Pin điện áp cao / Động cơ điện', marks:maintenanceAt([1,2,3,4,5,6,7,8,9],'○'), last:'●'},
-                    {name:'Dầu phanh', note:'Thay thế sau mỗi 2 năm'},
-                    {section:'Các hạng mục kiểm tra chung'},
-                    ...MAINTENANCE_COMMON_ITEMS.map(name=>({name, marks:maintenanceMarks('○')})),
-                    {name:'Kiểm tra vệ sinh dàn nóng điều hòa', marks:maintenanceMarks('○'), insertBefore:'Pin điện áp cao'}
+                title: 'Lịch bảo dưỡng VF5',
+                source: 'Tóm tắt từ bảng “Lịch trình bảo dưỡng - VF5” bạn cung cấp.',
+                items: [
+                    {label:'Mốc định kỳ', value:'15.000 km hoặc 1 năm'},
+                    {label:'Pin bộ T-BOX', value:'Thay sau mỗi 6 năm'},
+                    {label:'Dung dịch làm mát pin/động cơ điện', value:'Kiểm tra theo các mốc; thay tại 150.000 km theo bảng'},
+                    {label:'Dầu phanh', value:'Thay sau mỗi 2 năm'},
+                    {label:'Chu kỳ lặp lại', value:'10 năm hoặc 150.000 km'}
                 ]
             },
             herio: {
-                title: 'Lịch bảo dưỡng xe Herio Green',
-                source: 'Theo ảnh màn hình “Bảo dưỡng xe Herio Green” bạn cung cấp.',
-                rows: [
-                    {name:'Lọc gió điều hòa', marks:maintenanceMarks('●')},
-                    {name:'Hệ thống điều hòa', marks:maintenanceAt([2,4,6,8],'○'), last:'●'},
-                    {name:'Dung dịch làm mát cho Pin điện áp cao / Động cơ điện', marks:maintenanceAt([1,2,3,4,5,6,7,8,9],'○'), last:'●'},
-                    {name:'Dầu phanh', note:'Thay thế sau mỗi 2 năm'},
-                    {section:'Các hạng mục kiểm tra chung'},
-                    ...MAINTENANCE_COMMON_ITEMS.map(name=>({name, marks:maintenanceMarks('○')}))
+                title: 'Lịch bảo dưỡng Herio Green',
+                source: 'Tóm tắt từ ảnh lịch bảo dưỡng Herio Green bạn cung cấp.',
+                items: [
+                    {label:'Mốc định kỳ', value:'15.000 km hoặc 1 năm'},
+                    {label:'Lọc gió điều hòa', value:'Thay/bảo dưỡng theo từng mốc định kỳ'},
+                    {label:'Dung dịch làm mát pin/động cơ điện', value:'Kiểm tra định kỳ; thay tại 150.000 km theo bảng'},
+                    {label:'Dầu phanh', value:'Thay sau mỗi 2 năm'},
+                    {label:'Chu kỳ lặp lại', value:'10 năm hoặc 150.000 km'}
                 ]
             },
             limo: {
-                title: 'Lịch bảo dưỡng xe Limo Green / VF Limo',
-                source: 'Theo bảng “Lịch bảo dưỡng xe Limo Green/VF Limo” và ảnh màn hình VF MPV 7 bạn cung cấp.',
-                rows: [
-                    {name:'Lọc gió điều hòa', marks:maintenanceMarks('●')},
-                    {name:'Hệ thống điều hòa', marks:maintenanceAt([2,4,6,8],'○'), last:'●'},
-                    {name:'Nước làm mát động cơ và Pin cao áp', marks:maintenanceAt([2,4,6,8],'○'), last:'●'},
-                    {name:'Dầu phanh', note:'Thay thế sau mỗi 2 năm'},
-                    {name:'Dầu bộ truyền động', note:'Thay thế lần đầu: 6.000 km hoặc 6 tháng\nThay thế lần tiếp theo: 45.000 km hoặc 3 năm'},
-                    {section:'Các hạng mục kiểm tra chung'},
-                    ...MAINTENANCE_COMMON_ITEMS.map(name=>({name, marks:maintenanceMarks('○')}))
+                title: 'Lịch bảo dưỡng Limo Green / VF MPV 7',
+                source: 'Tóm tắt từ bảng Limo Green/VF Limo và VF MPV 7 bạn cung cấp.',
+                items: [
+                    {label:'Bảo dưỡng đầu tiên', value:'6.000 km'},
+                    {label:'Mốc định kỳ tiếp theo', value:'Theo lịch 15.000 km / năm trong bảng bảo dưỡng'},
+                    {label:'Dầu bộ truyền động', value:'Lần đầu 6.000 km hoặc 6 tháng; lần tiếp theo 45.000 km hoặc 3 năm'},
+                    {label:'Dầu phanh', value:'Thay sau mỗi 2 năm'},
+                    {label:'Chu kỳ lặp lại', value:'Tối đa 10 năm hoặc 150.000 km'}
                 ]
             }
         };
 
-        function normalizeMaintenanceRows(schedule) {
-            const rows = [...(schedule?.rows || [])];
-            // Đưa dòng bổ sung đúng vị trí nếu có insertBefore.
-            const additions = rows.filter(r => r.insertBefore);
-            const base = rows.filter(r => !r.insertBefore);
-            additions.forEach(add => {
-                const idx = base.findIndex(r => r.name === add.insertBefore);
-                if (idx >= 0) base.splice(idx,0,{...add,insertBefore:undefined});
-                else base.push({...add,insertBefore:undefined});
-            });
-            return base;
-        }
-
-        function getMaintenanceScheduleForCar(car) {
+        function getMaintenanceSummaryForCar(car) {
             const k = compactVehicleKey(car);
-            if (k.startsWith('VF5')) return MAINTENANCE_SCHEDULES.vf5;
-            if (k.includes('HERIO GREEN')) return MAINTENANCE_SCHEDULES.herio;
-            if (k.includes('LIMO GREEN') || k.includes('VF LIMO') || k.includes('VF MVP 7') || k.includes('VF MPV 7')) return MAINTENANCE_SCHEDULES.limo;
-            return MAINTENANCE_SCHEDULES.generic;
+            if (k.startsWith('VF5')) return MAINTENANCE_SUMMARIES.vf5;
+            if (k.includes('HERIO GREEN')) return MAINTENANCE_SUMMARIES.herio;
+            if (
+                k.includes('LIMO GREEN') ||
+                k.includes('VF LIMO') ||
+                k.includes('VF MVP 7') ||
+                k.includes('VF MPV 7')
+            ) return MAINTENANCE_SUMMARIES.limo;
+            return MAINTENANCE_SUMMARIES.generic;
         }
 
-        function renderMaintenanceTable(car) {
-            const schedule = getMaintenanceScheduleForCar(car);
+        function renderMaintenanceSummary(car) {
+            const schedule = getMaintenanceSummaryForCar(car);
             const title = document.getElementById('maintenance-model-title');
             const source = document.getElementById('maintenance-source-note');
-            const wrap = document.getElementById('maintenance-table-wrap');
+            const wrap = document.getElementById('maintenance-summary-wrap');
             const foot = document.getElementById('maintenance-footnote');
             if (!wrap) return;
 
             if (title) title.textContent = `${schedule.title} · ${car?.name || ''} ${car?.version || ''}`.trim();
             if (source) source.textContent = schedule.source || '';
 
-            const rows = normalizeMaintenanceRows(schedule);
-            const headerKm = MAINTENANCE_KM.map(k=>`<th class="maintenance-km">${k}</th>`).join('');
-            const headerYears = Array.from({length:10},(_,i)=>`<th>${i+1}</th>`).join('');
-            let body = '';
-            rows.forEach(r => {
-                if (r.section) {
-                    body += `<tr class="maintenance-section"><td colspan="11">${r.section}</td></tr>`;
-                    return;
-                }
-                if (r.note) {
-                    body += `<tr><td class="maintenance-item">${r.name}</td><td colspan="10" class="maintenance-note">${String(r.note).replace(/\n/g,'<br>')}</td></tr>`;
-                    return;
-                }
-                const marks = [...(r.marks || Array(10).fill(''))];
-                if (r.last) marks[9] = r.last;
-                body += `<tr><td class="maintenance-item">${r.name}</td>${marks.map(v=>`<td class="maintenance-mark ${v==='●'?'replace':''}">${v||''}</td>`).join('')}</tr>`;
-            });
+            wrap.innerHTML = schedule.items.map((item, idx) => `
+                <div class="rounded-xl border ${idx===0?'border-blue-200 bg-blue-50':'border-gray-200 bg-white'} px-4 py-3">
+                    <div class="text-[10px] font-black uppercase ${idx===0?'text-blue-700':'text-gray-500'}">${item.label}</div>
+                    <div class="mt-1 text-sm sm:text-base font-black text-gray-900 leading-snug">${item.value}</div>
+                </div>
+            `).join('');
 
-            wrap.innerHTML = `
-                <table class="maintenance-table">
-                    <thead>
-                        <tr><th class="maintenance-name-head">${schedule.title}</th><th colspan="10">Số năm hoặc quãng đường di chuyển tùy vào điều kiện nào đến trước</th></tr>
-                        <tr><th rowspan="2" class="maintenance-legend">○ Kiểm tra và Điều chỉnh/Vệ sinh/Thay thế nếu cần<br><span>● Thay thế hoặc sửa chữa/bảo dưỡng</span></th>${headerKm}</tr>
-                        <tr>${headerYears}</tr>
-                    </thead>
-                    <tbody>${body}</tbody>
-                </table>`;
-            if (foot) foot.innerHTML = `* Chỉ đảo vị trí của các bánh xe và không cần cân chỉnh bánh xe.<br>Lặp lại chu kỳ bảo dưỡng sau mỗi 10 năm hoặc 150.000 km, tùy điều kiện nào đến trước.`;
+            if (foot) {
+                foot.innerHTML = `* Các mốc trên là bản tóm tắt để tư vấn nhanh. Khi bảo dưỡng thực tế, ưu tiên tài liệu/hướng dẫn dịch vụ chính thức của đúng Model và điều kiện nào đến trước.`;
+            }
         }
 
         function openMaintenanceSchedule() {
             const car = carList.find(c => c.id === document.getElementById('carSelect')?.value);
             if (!car) return;
-            renderMaintenanceTable(car);
+            renderMaintenanceSummary(car);
             toggleModal('maintenanceModal', true);
         }
-        function closeMaintenanceSchedule() { toggleModal('maintenanceModal', false); }
+
+        function closeMaintenanceSchedule() {
+            toggleModal('maintenanceModal', false);
+        }
 
 
         function isCommercialWarrantyUse(adj) {
