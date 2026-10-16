@@ -522,9 +522,26 @@
             flex-direction:row !important;
             align-items:center !important;
         }
+        #capture-area-clone.export-desktop-clone #charging-promo-panel,
+        #capture-area-clone.export-desktop-clone #warranty-panel,
+        #capture-area-clone.export-desktop-clone .quote-spec-card {
+            overflow: visible !important;
+        }
+        #capture-area-clone.export-desktop-clone #charging-promo-summary,
+        #capture-area-clone.export-desktop-clone #warranty-subtitle,
+        #capture-area-clone.export-desktop-clone #quote-car-specs li {
+            overflow-wrap: anywhere !important;
+            word-break: break-word !important;
+        }
+        #capture-area-clone.export-focus-clone {
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
         @media (max-width: 767px) {
             #save-image-btn,
-            #save-pdf-btn {
+            #save-pdf-btn,
+            #save-image-focus-btn,
+            #save-pdf-focus-btn {
                 min-height:44px !important;
                 font-size:12px !important;
                 padding:8px 12px !important;
@@ -1433,12 +1450,17 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
     <!-- 6. PREVIEW MODAL -->
     <div id="previewModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 hidden flex-col items-center pt-8 pb-4">
         <!-- Nội dung như cũ -->
-        <div class="w-[1024px] max-w-[100vw] flex justify-between items-center text-white mb-4 px-4 shrink-0">
-            <h2 class="text-xl sm:text-2xl font-bold">Xem trước Báo giá</h2>
-            <div class="flex gap-2 sm:gap-4">
+        <div class="w-[1024px] max-w-[100vw] flex flex-col gap-3 md:flex-row md:justify-between md:items-center text-white mb-4 px-4 shrink-0">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-bold">Xem trước Báo giá</h2>
+                <div class="text-[11px] text-gray-300 mt-1">Có thể xuất toàn bộ báo giá hoặc chỉ xuất khối giữa: Ưu đãi sạc + Bảo hành + Thông tin xe.</div>
+            </div>
+            <div class="flex flex-wrap gap-2 sm:gap-3">
                 <button onclick="closePreview()" class="bg-gray-700 px-3 sm:px-5 py-2 rounded-lg font-bold text-sm">Đóng</button>
-                <button onclick="savePreviewImage()" id="save-image-btn" class="bg-brand-primary px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">Lưu hình HD</button>
-                <button onclick="savePreviewPdf()" id="save-pdf-btn" class="bg-rose-600 px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">Xuất PDF</button>
+                <button onclick="savePreviewImage('full', this)" id="save-image-btn" class="bg-brand-primary px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">Lưu hình HD</button>
+                <button onclick="savePreviewPdf('full', this)" id="save-pdf-btn" class="bg-rose-600 px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">Xuất PDF</button>
+                <button onclick="savePreviewImage('focus', this)" id="save-image-focus-btn" class="bg-cyan-600 px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">Lưu phần giữa</button>
+                <button onclick="savePreviewPdf('focus', this)" id="save-pdf-focus-btn" class="bg-amber-600 px-4 sm:px-6 py-2 rounded-lg font-bold text-sm">PDF phần giữa</button>
             </div>
         </div>
         <div id="preview-scroll-container" class="flex-1 w-full overflow-y-auto overflow-x-auto flex justify-center pb-12">
@@ -5299,13 +5321,132 @@ ${optionText}
                 img.style.maxWidth = img.style.maxWidth || '100%';
             });
 
+            applyExportTextLayout(clone, 'full');
             styleInputsForPrint(clone);
             return clone;
         }
 
+        function applyExportTextLayout(clone, mode = 'full') {
+            if (!clone) return;
+            try {
+                clone.style.textRendering = 'geometricPrecision';
+                clone.style.webkitFontSmoothing = 'antialiased';
+
+                const chargingPanel = clone.querySelector('#charging-promo-panel');
+                if (chargingPanel) {
+                    const outerHeader = chargingPanel.firstElementChild;
+                    const headerRow = outerHeader ? outerHeader.querySelector('.flex') : null;
+                    if (headerRow) {
+                        headerRow.style.display = 'grid';
+                        headerRow.style.gridTemplateColumns = 'minmax(0,1fr) auto';
+                        headerRow.style.columnGap = '12px';
+                        headerRow.style.alignItems = 'start';
+                        if (headerRow.children[0]) headerRow.children[0].style.minWidth = '0';
+                        if (headerRow.children[1]) headerRow.children[1].style.whiteSpace = 'nowrap';
+                    }
+                    const title = headerRow?.children?.[0]?.children?.[0];
+                    if (title) {
+                        title.style.fontSize = '16px';
+                        title.style.lineHeight = '1.25';
+                        title.style.whiteSpace = 'normal';
+                    }
+                    const summary = clone.querySelector('#charging-promo-summary');
+                    if (summary) {
+                        summary.style.fontSize = '14px';
+                        summary.style.lineHeight = '1.5';
+                        summary.style.wordBreak = 'break-word';
+                    }
+                    chargingPanel.querySelectorAll('div, span, p').forEach(el => {
+                        if (el.id === 'charging-promo-summary') return;
+                        el.style.lineHeight = el.style.lineHeight || '1.4';
+                    });
+                }
+
+                const warrantyPanel = clone.querySelector('#warranty-panel');
+                if (warrantyPanel) {
+                    const header = warrantyPanel.firstElementChild;
+                    if (header) {
+                        header.style.display = 'grid';
+                        header.style.gridTemplateColumns = 'minmax(0,1fr) auto';
+                        header.style.columnGap = '12px';
+                        header.style.alignItems = 'start';
+                        if (header.children[0]) header.children[0].style.minWidth = '0';
+                        if (header.children[1]) header.children[1].style.whiteSpace = 'nowrap';
+                    }
+                    const title = header?.children?.[0]?.children?.[0];
+                    if (title) {
+                        title.style.fontSize = '16px';
+                        title.style.lineHeight = '1.25';
+                        title.style.whiteSpace = 'normal';
+                    }
+                    const subtitle = clone.querySelector('#warranty-subtitle');
+                    if (subtitle) {
+                        subtitle.style.fontSize = '12px';
+                        subtitle.style.lineHeight = '1.45';
+                    }
+                    warrantyPanel.querySelectorAll('div, span, p, button').forEach(el => {
+                        if (el.id === 'warranty-subtitle') return;
+                        el.style.lineHeight = el.style.lineHeight || '1.4';
+                    });
+                }
+
+                const specTitle = clone.querySelector('.quote-spec-card h3');
+                if (specTitle) {
+                    specTitle.style.fontSize = '15px';
+                    specTitle.style.lineHeight = '1.25';
+                }
+                clone.querySelectorAll('#quote-car-specs li').forEach(li => {
+                    li.style.lineHeight = '1.5';
+                    li.style.marginBottom = '8px';
+                });
+                clone.querySelectorAll('#quote-max-power, #quote-battery-capacity, #quote-driving-range').forEach(el => {
+                    el.style.lineHeight = '1.15';
+                });
+
+                if (mode === 'focus') {
+                    clone.style.padding = '28px';
+                    clone.style.boxShadow = 'none';
+                    clone.style.borderRadius = '0';
+                    clone.querySelectorAll('#charging-promo-panel, #warranty-panel, .quote-spec-card').forEach((el, idx, arr) => {
+                        el.style.marginBottom = idx === arr.length - 1 ? '0' : '18px';
+                    });
+                }
+            } catch (err) {
+                console.warn('applyExportTextLayout error:', err);
+            }
+        }
+
+        function buildFocusedExportClone() {
+            const fullClone = buildExportClone();
+            const focused = document.createElement('div');
+            focused.id = 'capture-area-clone';
+            focused.className = 'export-desktop-clone export-focus-clone bg-white';
+            focused.style.width = '1024px';
+            focused.style.minWidth = '1024px';
+            focused.style.maxWidth = '1024px';
+            focused.style.margin = '0';
+            focused.style.padding = '28px';
+            focused.style.background = '#ffffff';
+            focused.style.boxSizing = 'border-box';
+            focused.style.position = 'relative';
+            focused.style.left = '0';
+            focused.style.top = '0';
+
+            const charging = fullClone.querySelector('#charging-promo-panel');
+            const warranty = fullClone.querySelector('#warranty-panel');
+            const specCard = fullClone.querySelector('.quote-spec-card');
+            [charging, warranty, specCard].forEach(node => { if (node) focused.appendChild(node); });
+            applyExportTextLayout(focused, 'focus');
+            return focused;
+        }
+
+        function getExportCloneByMode(mode = 'full') {
+            return mode === 'focus' ? buildFocusedExportClone() : buildExportClone();
+        }
+
         function openPreview() {
             try {
-                const clone = buildExportClone();
+                const clone = getExportCloneByMode(mode);
                 const preview = document.getElementById('preview-container');
                 preview.innerHTML = '';
                 preview.appendChild(clone);
@@ -5388,8 +5529,8 @@ ${optionText}
             });
         }
 
-        async function savePreviewImage() {
-            const btn = document.getElementById('save-image-btn');
+        async function savePreviewImage(mode = 'full', triggerEl = null) {
+            const btn = triggerEl || document.getElementById(mode === 'focus' ? 'save-image-focus-btn' : 'save-image-btn');
             if (!btn) return;
 
             const originalText = btn.innerHTML;
@@ -5512,7 +5653,7 @@ ${optionText}
 
                 const a = document.createElement('a');
                 a.href = dataUrl;
-                a.download = 'BaoGia_Ucar_HD.png';
+                a.download = mode === 'focus' ? 'BaoGia_Ucar_PhanGiua.png' : 'BaoGia_Ucar_HD.png';
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -5531,8 +5672,8 @@ ${optionText}
         }
 
 
-        async function savePreviewPdf() {
-            const btn = document.getElementById('save-pdf-btn');
+        async function savePreviewPdf(mode = 'full', triggerEl = null) {
+            const btn = triggerEl || document.getElementById(mode === 'focus' ? 'save-pdf-focus-btn' : 'save-pdf-btn');
             if (!btn) return;
 
             const originalText = btn.innerHTML;
@@ -5547,7 +5688,7 @@ ${optionText}
                     throw new Error('Thư viện PDF chưa tải xong. Vui lòng thử lại sau vài giây.');
                 }
 
-                const clone = buildExportClone();
+                const clone = getExportCloneByMode(mode);
 
                 tempRoot = document.createElement('div');
                 tempRoot.id = 'temporary-pdf-export-root';
@@ -5638,7 +5779,7 @@ ${optionText}
                     .replace(/[^a-zA-Z0-9_-]+/g, '_')
                     .replace(/^_+|_+$/g, '');
 
-                pdf.save(`${safeName || 'BaoGia_VinFast'}_BaoGia.pdf`);
+                pdf.save(mode === 'focus' ? `${safeName || 'BaoGia_VinFast'}_ThongTinXe.pdf` : `${safeName || 'BaoGia_VinFast'}_BaoGia.pdf`);
 
             } catch (e) {
                 console.error('PDF export error:', e);
