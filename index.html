@@ -1069,7 +1069,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     <div class="quote-spec-card border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] min-h-[300px]">
                             <div class="bg-slate-50 flex items-center justify-center p-5 min-w-0 overflow-hidden">
-                                <img id="quote-car-img" referrerpolicy="no-referrer-when-downgrade" onerror="handleQuoteCarImageError(this)" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
+                                <img id="quote-car-img" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="handleQuoteCarImageError(this)" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
                             </div>
                             <div class="p-5 border-t lg:border-t-0 lg:border-l border-gray-100 bg-white">
                                 <div class="flex items-center justify-between gap-3">
@@ -2436,6 +2436,10 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             img.dataset.colorName = selectedColor;
             img.dataset.fallbackSrc = modelSrc;
             img.dataset.requestedSrc = src;
+            img.crossOrigin = 'anonymous';
+            img.setAttribute('crossorigin', 'anonymous');
+            img.referrerPolicy = 'no-referrer';
+            img.onload = function() { warmQuoteImageExportCache(this); };
             img.onerror = function() { handleQuoteCarImageError(this); };
             img.src = src;
         }
@@ -5587,6 +5591,246 @@ ${optionText}
             });
         }
 
+
+        function isInlineImageSrc(src) {
+            return /^data:image\//i.test(String(src || '')) || /^blob:/i.test(String(src || ''));
+        }
+
+        function buildExportSafeImageUrl(src) {
+            const raw = String(src || '').trim();
+            if (!raw) return '';
+
+            if (isInlineImageSrc(raw)) return raw;
+
+            try {
+                const u = new URL(raw, window.location.href);
+                if (u.origin === window.location.origin) return u.href;
+                if (!/^https?:$/i.test(u.protocol)) return u.href;
+
+                // Dùng proxy ảnh có CORS để html2canvas/html-to-image render ổn định hơn.
+                const withoutProtocol = u.href.replace(/^https?:\/\//i, '');
+                return 'https://images.weserv.nl/?url=' + encodeURIComponent(withoutProtocol) + '&output=png';
+            } catch (_) {
+                return raw;
+            }
+        }
+
+        function resolveExportImageCandidate(primarySrc, liveSrc, fallbackSrc) {
+            const first = String(primarySrc || '').trim();
+            const second = String(liveSrc || '').trim();
+            const third = String(fallbackSrc || '').trim();
+
+            const original = first || second || third || '';
+            return {
+                original,
+                exportable: buildExportSafeImageUrl(original),
+                fallback: buildExportSafeImageUrl(third || second || first || '')
+            };
+        }
+
+        function applyCloneImageForExport(img, primarySrc = '', fallbackSrc = '') {
+            if (!img) return;
+
+            const liveSrc = img.currentSrc || img.src || '';
+            const chosen = resolveExportImageCandidate(primarySrc, liveSrc, fallbackSrc);
+            const cachedData = getCachedExportImageData(primarySrc, liveSrc, fallbackSrc, chosen.original, chosen.exportable, chosen.fallback);
+            img.dataset.originalSrc = chosen.original || '';
+            img.dataset.exportSrc = cachedData || chosen.exportable || '';
+            img.dataset.fallbackSrc = getCachedExportImageData(fallbackSrc, chosen.fallback, chosen.original) || chosen.fallback || fallbackSrc || '';
+
+            img.crossOrigin = 'anonymous';
+            img.setAttribute('crossorigin', 'anonymous');
+            img.referrerPolicy = 'no-referrer';
+
+            const finalSrc = cachedData || chosen.exportable || chosen.original || chosen.fallback || '';
+            if (finalSrc) img.src = finalSrc;
+
+            img.onerror = function () {
+                const step = Number(this.dataset._exportFallbackStep || '0');
+                const original = this.dataset.originalSrc || '';
+                const fallback = this.dataset.fallbackSrc || '';
+
+                if (step < 1 && original && this.src !== original) {
+                    this.dataset._exportFallbackStep = '1';
+                    this.src = original;
+                    return;
+                }
+
+                if (step < 2 && fallback && this.src !== fallback) {
+                    this.dataset._exportFallbackStep = '2';
+                    this.src = fallback;
+                    return;
+                }
+
+                this.onerror = null;
+                this.src = 'https://placehold.co/900x560?text=Khong+tai+duoc+anh+xe';
+                this.style.opacity = '1';
+            };
+        }
+
+
+
+        const exportImageDataCache = new Map();
+
+        function normalizeImageCacheKey(src) {
+            const raw = String(src || '').trim();
+            if (!raw) return '';
+            try {
+                return new URL(raw, window.location.href).href;
+            } catch (_) {
+                return raw;
+            }
+        }
+
+        function setCachedExportImageData(src, dataUrl) {
+            const key = normalizeImageCacheKey(src);
+            if (!key || !dataUrl || !/^data:image\//i.test(String(dataUrl))) return;
+            exportImageDataCache.set(key, dataUrl);
+        }
+
+        function getCachedExportImageData(...sources) {
+            for (const src of sources) {
+                const key = normalizeImageCacheKey(src);
+                if (key && exportImageDataCache.has(key)) {
+                    return exportImageDataCache.get(key);
+                }
+            }
+            return '';
+        }
+
+        function blobToDataUrl(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result || '');
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function imageElementToDataUrl(img) {
+            if (!img || !img.naturalWidth || !img.naturalHeight) return '';
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                return canvas.toDataURL('image/png', 1.0);
+            } catch (_) {
+                return '';
+            }
+        }
+
+        async function fetchImageAsDataUrl(src) {
+            const raw = String(src || '').trim();
+            if (!raw) return '';
+            if (isInlineImageSrc(raw)) return raw;
+
+            const candidates = [];
+            const pushCandidate = (u) => {
+                const val = String(u || '').trim();
+                if (val && !candidates.includes(val)) candidates.push(val);
+            };
+
+            pushCandidate(raw);
+            pushCandidate(buildExportSafeImageUrl(raw));
+            try {
+                const abs = new URL(raw, window.location.href).href;
+                pushCandidate('https://corsproxy.io/?' + encodeURIComponent(abs));
+                pushCandidate('https://api.allorigins.win/raw?url=' + encodeURIComponent(abs));
+            } catch (_) {}
+
+            for (const url of candidates) {
+                try {
+                    const res = await fetch(url, {
+                        mode: 'cors',
+                        cache: 'force-cache',
+                        credentials: 'omit',
+                        referrerPolicy: 'no-referrer'
+                    });
+                    if (!res.ok) continue;
+                    const blob = await res.blob();
+                    if (!blob || !String(blob.type || '').startsWith('image/')) continue;
+                    const dataUrl = await blobToDataUrl(blob);
+                    if (dataUrl) {
+                        setCachedExportImageData(raw, dataUrl);
+                        setCachedExportImageData(url, dataUrl);
+                        return dataUrl;
+                    }
+                } catch (_) {}
+            }
+            return '';
+        }
+
+        async function cacheImageForExport(src, imgEl = null) {
+            const raw = String(src || '').trim();
+            if (!raw) return '';
+            const cached = getCachedExportImageData(raw);
+            if (cached) return cached;
+
+            if (imgEl) {
+                const fromCanvas = imageElementToDataUrl(imgEl);
+                if (fromCanvas) {
+                    setCachedExportImageData(raw, fromCanvas);
+                    const current = imgEl.currentSrc || imgEl.src || '';
+                    if (current) setCachedExportImageData(current, fromCanvas);
+                    return fromCanvas;
+                }
+            }
+
+            return await fetchImageAsDataUrl(raw);
+        }
+
+        function warmQuoteImageExportCache(img) {
+            if (!img) return;
+            const requested = img.dataset.requestedSrc || '';
+            const current = img.currentSrc || img.src || '';
+            const fallback = img.dataset.fallbackSrc || '';
+            const localData = imageElementToDataUrl(img);
+            if (localData) {
+                [requested, current, fallback].forEach(src => setCachedExportImageData(src, localData));
+                return;
+            }
+            Promise.resolve()
+                .then(() => cacheImageForExport(requested, img))
+                .then(data => data || cacheImageForExport(current))
+                .then(data => data || cacheImageForExport(fallback))
+                .catch(() => {});
+        }
+
+        async function ensureQuoteImageReadyForExport(car = null) {
+            const activeCar = car || carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            const img = document.getElementById('quote-car-img');
+            if (!activeCar || !img) return '';
+
+            const candidateSources = [
+                img.dataset.requestedSrc,
+                img.currentSrc,
+                img.src,
+                getCarDisplayImage(activeCar),
+                activeCar.image,
+                img.dataset.fallbackSrc
+            ].filter(Boolean);
+
+            const cached = getCachedExportImageData(...candidateSources);
+            if (cached) return cached;
+
+            const direct = imageElementToDataUrl(img);
+            if (direct) {
+                candidateSources.forEach(src => setCachedExportImageData(src, direct));
+                return direct;
+            }
+
+            for (const src of candidateSources) {
+                const data = await cacheImageForExport(src, src === img.currentSrc || src === img.src ? img : null);
+                if (data) {
+                    candidateSources.forEach(key => setCachedExportImageData(key, data));
+                    return data;
+                }
+            }
+            return '';
+        }
+
         function buildExportClone() {
             // Chốt toàn bộ phép tính trước khi clone, đặc biệt khi đang chọn BANK.
             updateQuotationUI();
@@ -5674,33 +5918,28 @@ ${optionText}
             }
 
             // Ảnh xe phải lấy đúng Model + màu đang chọn tại thời điểm xuất.
+            // Đồng thời chuyển sang URL export an toàn hơn để tránh mất ảnh khi html2canvas render.
             const liveQuoteImg = source.querySelector('#quote-car-img');
             const cloneQuoteImg = clone.querySelector('#quote-car-img');
             if (cloneQuoteImg) {
                 const selectedSrc = exportCar ? getCarDisplayImage(exportCar) : '';
                 const resolvedLiveSrc = liveQuoteImg?.currentSrc || liveQuoteImg?.src || '';
                 const modelFallback = exportCar?.image || '';
-                const finalSrc = selectedSrc || resolvedLiveSrc || modelFallback;
-                cloneQuoteImg.removeAttribute('crossorigin');
-                cloneQuoteImg.crossOrigin = null;
-                cloneQuoteImg.referrerPolicy = 'no-referrer-when-downgrade';
-                if (finalSrc) cloneQuoteImg.src = finalSrc;
+                applyCloneImageForExport(cloneQuoteImg, selectedSrc || resolvedLiveSrc, modelFallback);
                 cloneQuoteImg.style.display = 'block';
                 cloneQuoteImg.style.maxWidth = '96%';
                 cloneQuoteImg.style.maxHeight = '340px';
                 cloneQuoteImg.style.margin = 'auto';
             }
 
-            // Chuẩn hóa các ảnh còn lại trước khi xuất. Không ép crossorigin trên clone.
+            // Chuẩn hóa các ảnh còn lại trước khi xuất.
             const liveImages = Array.from(source.querySelectorAll('img'));
             const cloneImages = Array.from(clone.querySelectorAll('img'));
             cloneImages.forEach((img, idx) => {
-                img.removeAttribute('crossorigin');
-                img.crossOrigin = null;
                 const live = liveImages[idx];
-                if (live && img.id !== 'quote-car-img') {
-                    const resolved = live.currentSrc || live.src || '';
-                    if (resolved) img.src = resolved;
+                if (img.id !== 'quote-car-img') {
+                    const resolved = live?.currentSrc || live?.src || img.currentSrc || img.src || '';
+                    applyCloneImageForExport(img, resolved, resolved);
                 }
                 img.loading = 'eager';
                 img.decoding = 'sync';
@@ -5832,8 +6071,10 @@ ${optionText}
             return mode === 'focus' ? buildFocusedExportClone() : buildExportClone();
         }
 
-        function openPreview() {
+        async function openPreview() {
             try {
+                const exportCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+                try { await ensureQuoteImageReadyForExport(exportCar); } catch (_) {}
                 const clone = buildExportClone();
                 const preview = document.getElementById('preview-container');
                 preview.innerHTML = '';
@@ -5872,7 +6113,7 @@ ${optionText}
                     else done();
                 };
                 img.onerror = done;
-                setTimeout(done, 4500);
+                setTimeout(done, 7000);
             })));
 
             await new Promise(resolve =>
@@ -5928,6 +6169,8 @@ ${optionText}
 
             let tempRoot = null;
             try {
+                const exportCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+                try { await ensureQuoteImageReadyForExport(exportCar); } catch (_) {}
                 const clone = getExportCloneByMode(mode);
 
                 // Dựng vùng capture riêng ngoài màn hình, không phụ thuộc preview đang scale trên mobile.
@@ -5979,7 +6222,7 @@ ${optionText}
                         else done();
                     };
                     img.onerror = done;
-                    setTimeout(done, 4500);
+                    setTimeout(done, 7000);
                 })));
 
                 // Chờ browser hoàn tất layout nhiều frame để tránh text chồng/nhảy dòng.
@@ -6036,7 +6279,7 @@ ${optionText}
                 }
 
                 if (!dataUrl || !dataUrl.startsWith('data:image')) {
-                    throw new Error('Không tạo được dữ liệu PNG hợp lệ.');
+                    throw new Error('Không tạo được dữ liệu PNG hợp lệ. Có thể link ảnh xe ngoài chưa chuyển được sang dạng an toàn để xuất.');
                 }
 
                 const a = document.createElement('a');
@@ -6050,7 +6293,7 @@ ${optionText}
                 alert(
                     'Không thể lưu ảnh báo giá trên thiết bị này.\n\n' +
                     'Chi tiết: ' + (e?.message || e) +
-                    '\n\nNếu đang dùng điện thoại, hãy chờ ảnh xe tải xong rồi thử lại.'
+                    '\n\nNếu đang dùng điện thoại, hãy chờ ảnh xe tải xong rồi thử lại. Nếu ảnh lấy từ link ngoài, hệ thống sẽ tự thử đường dẫn export an toàn hơn.'
                 );
             } finally {
                 if (tempRoot && tempRoot.parentNode) tempRoot.parentNode.removeChild(tempRoot);
@@ -6076,6 +6319,8 @@ ${optionText}
                     throw new Error('Thư viện PDF chưa tải xong. Vui lòng thử lại sau vài giây.');
                 }
 
+                const exportCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+                try { await ensureQuoteImageReadyForExport(exportCar); } catch (_) {}
                 const clone = getExportCloneByMode(mode);
 
                 tempRoot = document.createElement('div');
