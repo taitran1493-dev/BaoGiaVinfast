@@ -34,14 +34,51 @@
         }
         #capture-area, #capture-area * { box-sizing: border-box; }
 
-        .capture-grid-main { display:grid; grid-template-columns:minmax(0, 60fr) minmax(330px, 40fr); gap:20px; align-items:start; }
+        .capture-grid-main { display:grid; grid-template-columns:minmax(0, 54fr) minmax(410px, 46fr); gap:18px; align-items:start; }
         .quote-intro-card { min-width:0; }
-        .quote-price-card { background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%); border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px; box-shadow:0 4px 14px rgba(15,23,42,.04); }
-        .quote-price-row { display:grid; grid-template-columns:max-content minmax(24px,1fr) auto; align-items:center; gap:8px; min-height:30px; }
-        .quote-price-row .dot-leader { margin:0 !important; min-width:18px; }
-        .quote-price-row > span:last-child { white-space:nowrap; text-align:right; }
-        .quote-price-final-row { margin-top:10px; padding-top:12px; border-top:1px solid #dbe4ef; }
-        .quote-price-final-row #quote-price-final { font-size:24px; line-height:1.05; white-space:nowrap; }
+        .quote-price-card {
+            background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%);
+            border:1px solid #dfe6ef;
+            border-radius:14px;
+            padding:17px 18px;
+            box-shadow:0 4px 14px rgba(15,23,42,.04);
+            min-width:0;
+        }
+        .quote-price-row {
+            display:grid;
+            grid-template-columns:max-content minmax(18px,1fr) max-content;
+            align-items:center;
+            gap:8px;
+            min-height:33px;
+            font-size:15px;
+            line-height:1.25;
+        }
+        .quote-price-row .dot-leader { margin:0 !important; min-width:14px; }
+        .quote-price-row > span:first-child { min-width:0; }
+        .quote-price-row > span:last-child {
+            white-space:nowrap;
+            text-align:right;
+            font-size:16px;
+            line-height:1.15;
+            letter-spacing:-0.01em;
+        }
+        .quote-price-final-row {
+            margin-top:11px;
+            padding-top:13px;
+            border-top:1px solid #dbe4ef;
+            grid-template-columns:max-content minmax(12px,1fr) max-content;
+        }
+        .quote-price-final-row > span:first-child {
+            font-size:13px !important;
+            line-height:1.2;
+            white-space:nowrap;
+        }
+        .quote-price-final-row #quote-price-final {
+            font-size:27px;
+            line-height:1;
+            white-space:nowrap;
+            letter-spacing:-0.025em;
+        }
         .quote-primary-row { display:grid !important; grid-template-columns:minmax(0,1.45fr) minmax(0,.85fr); gap:8px !important; margin-top:10px !important; }
         .quote-primary-row > div { width:auto !important; min-width:0; height:42px !important; padding-left:11px !important; padding-right:10px !important; }
         .quote-option-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; margin-top:8px; }
@@ -182,9 +219,12 @@
             #capture-area > header + div { padding: 14px !important; }
             #capture-area .capture-grid-main, #capture-area .capture-grid-cost { grid-template-columns: 1fr !important; gap: 12px !important; }
             #capture-area .capture-grid-main { align-items: stretch !important; }
-            #capture-area .quote-price-card { padding:13px 14px !important; order:2; }
-            #capture-area .quote-price-row { min-height:28px !important; font-size:13px !important; }
-            #capture-area .quote-price-final-row #quote-price-final { font-size:22px !important; }
+            #capture-area .quote-price-card { padding:14px 14px !important; order:2; }
+            #capture-area .quote-price-row { min-height:31px !important; font-size:13px !important; gap:6px !important; }
+            #capture-area .quote-price-row > span:last-child { font-size:14px !important; }
+            #capture-area .quote-price-final-row { grid-template-columns:auto 1fr auto !important; }
+            #capture-area .quote-price-final-row > span:first-child { font-size:11px !important; }
+            #capture-area .quote-price-final-row #quote-price-final { font-size:23px !important; }
             #capture-area #bhvc-insurer-quick-select.quote-insurer-compact { grid-template-columns:1fr !important; gap:7px !important; padding:9px 10px !important; }
             #capture-area #bhvc-insurer-quick-select .insurer-help { text-align:left !important; white-space:normal !important; }
             #capture-area #bhvc-insurer-quick-select .insurer-options { gap:8px 14px !important; }
@@ -449,9 +489,27 @@
         }
         #capture-area-clone.export-desktop-clone .capture-grid-main {
             display:grid !important;
-            grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr) !important;
+            grid-template-columns:minmax(0,54fr) minmax(410px,46fr) !important;
             gap:18px !important;
-            align-items:stretch !important;
+            align-items:start !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-price-card {
+            min-width:0 !important;
+            padding:17px 18px !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-price-row {
+            min-height:33px !important;
+            font-size:15px !important;
+            line-height:1.25 !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-price-row > span:last-child {
+            font-size:16px !important;
+            white-space:nowrap !important;
+        }
+        #capture-area-clone.export-desktop-clone .quote-price-final-row #quote-price-final {
+            font-size:27px !important;
+            line-height:1 !important;
+            white-space:nowrap !important;
         }
         #capture-area-clone.export-desktop-clone .capture-grid-cost {
             display:grid !important;
