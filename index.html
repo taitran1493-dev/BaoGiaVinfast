@@ -89,11 +89,14 @@
         .color-option-main { min-height:42px !important; padding:0 9px !important; }
         .color-option-main select { height:42px !important; }
         .color-surcharge-hint { padding:3px 9px 5px !important; font-size:9px !important; line-height:1.2 !important; }
-        #bhvc-insurer-quick-select.quote-insurer-compact { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; padding:8px 10px !important; margin-top:8px !important; border-radius:10px !important; }
-        #bhvc-insurer-quick-select.quote-insurer-compact .insurer-title { margin:0 !important; white-space:nowrap; }
-        #bhvc-insurer-quick-select.quote-insurer-compact .insurer-options { gap:6px 14px !important; }
-        #bhvc-insurer-quick-select.quote-insurer-compact .insurer-options label { font-size:11px; white-space:nowrap; }
-        #bhvc-insurer-quick-select.quote-insurer-compact .insurer-help { margin:0 !important; text-align:right; white-space:nowrap; }
+
+        #bhvc-insurer-quick-select.left-insurer-select { width:100%; box-sizing:border-box; }
+        #bhvc-insurer-quick-select.left-insurer-select .insurer-options label { min-height:28px; padding:4px 6px; border-radius:7px; background:rgba(255,255,255,.7); }
+        #bhvc-insurer-quick-select.left-insurer-select .insurer-options input { flex:0 0 auto; }
+        #bhvc-insurer-quick-select.left-insurer-select .insurer-help { line-height:1.35; }
+
+        .quote-price-row > span:last-child { min-width:0; max-width:100%; }
+        .quote-price-final-row #quote-price-final { display:block; max-width:100%; }
 
         .capture-grid-cost { display: grid; grid-template-columns: minmax(0, 42fr) minmax(0, 58fr); gap: 28px; align-items: stretch; }
         .capture-col { min-width: 0; }
@@ -225,9 +228,6 @@
             #capture-area .quote-price-final-row { grid-template-columns:auto 1fr auto !important; }
             #capture-area .quote-price-final-row > span:first-child { font-size:11px !important; }
             #capture-area .quote-price-final-row #quote-price-final { font-size:23px !important; }
-            #capture-area #bhvc-insurer-quick-select.quote-insurer-compact { grid-template-columns:1fr !important; gap:7px !important; padding:9px 10px !important; }
-            #capture-area #bhvc-insurer-quick-select .insurer-help { text-align:left !important; white-space:normal !important; }
-            #capture-area #bhvc-insurer-quick-select .insurer-options { gap:8px 14px !important; }
             #capture-area #quote-car-name { font-size: 24px !important; line-height: 1.12 !important; margin-bottom: 10px !important; }
 
             /* Hàng chọn xe / biển */
@@ -824,7 +824,31 @@
                     <div><h3 class="font-black text-gray-800 text-[15px] uppercase">Bảo Hiểm & Phụ Kiện</h3></div>
                 </div>
                 <!-- BHVC -->
-                <div id="left-bhvc-panel" class="flex flex-col gap-2 mb-4"></div>
+                <div id="left-bhvc-panel" class="flex flex-col gap-2 mb-3"></div>
+
+                            <div id="bhvc-insurer-quick-select" class="left-insurer-select rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 mb-4">
+                                <div class="insurer-title text-[11px] font-black uppercase text-blue-800 mb-2">Bảo hiểm phân phối</div>
+                                <div class="insurer-options grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold text-gray-700">
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-PJICO" data-bhvc-insurer="PJICO" checked onchange="selectBhvcInsurerCheckbox('PJICO', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>PJICO</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-DBV" data-bhvc-insurer="DBV" onchange="selectBhvcInsurerCheckbox('DBV', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>DBV (BT)</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-MIC" data-bhvc-insurer="MIC" onchange="selectBhvcInsurerCheckbox('MIC', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>MIC</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-BIC" data-bhvc-insurer="BIC" onchange="selectBhvcInsurerCheckbox('BIC', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>BIC</span>
+                                    </label>
+                                </div>
+                                <div id="bhvc-insurer-quick-help" class="insurer-help text-[9px] text-blue-700 mt-2">Mặc định PJICO · chỉ áp dụng 1 bảo hiểm tại một thời điểm.</div>
+                            </div>
+
                 <hr class="border-gray-100 mb-4">
                 <!-- Phụ Kiện -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mb-4">
@@ -953,28 +977,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                     </select>
                                 </div>
                             </div>
-                            <div id="bhvc-insurer-quick-select" class="quote-insurer-compact mt-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5">
-                                <div class="insurer-title text-[10px] font-black uppercase text-blue-800 mb-2">Bảo hiểm phân phối</div>
-                                <div class="insurer-options flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-gray-700">
-                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
-                                        <input type="checkbox" id="bhvc-check-PJICO" data-bhvc-insurer="PJICO" checked onchange="selectBhvcInsurerCheckbox('PJICO', this)" class="w-4 h-4 accent-blue-600">
-                                        <span>PJICO</span>
-                                    </label>
-                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
-                                        <input type="checkbox" id="bhvc-check-DBV" data-bhvc-insurer="DBV" onchange="selectBhvcInsurerCheckbox('DBV', this)" class="w-4 h-4 accent-blue-600">
-                                        <span>DBV (BT)</span>
-                                    </label>
-                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
-                                        <input type="checkbox" id="bhvc-check-MIC" data-bhvc-insurer="MIC" onchange="selectBhvcInsurerCheckbox('MIC', this)" class="w-4 h-4 accent-blue-600">
-                                        <span>MIC</span>
-                                    </label>
-                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
-                                        <input type="checkbox" id="bhvc-check-BIC" data-bhvc-insurer="BIC" onchange="selectBhvcInsurerCheckbox('BIC', this)" class="w-4 h-4 accent-blue-600">
-                                        <span>BIC</span>
-                                    </label>
-                                </div>
-                                <div id="bhvc-insurer-quick-help" class="insurer-help text-[9px] text-blue-700 mt-1.5">Mặc định PJICO · chỉ áp dụng 1 bảo hiểm tại một thời điểm.</div>
-                            </div>
+
                         </div>
 
                         <div class="capture-col quote-price-card text-[14px]">
@@ -4597,6 +4600,38 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return { car, adj, baseListPrice, colorInfo, colorSurcharge, listPrice, tax, totalDiscount, invoiceDiscount, paymentDiscount, invoicePrice, bhvcBase: invoicePrice, loanBase: invoicePrice, dealerExtraInvoice, dealerExtraOverflow, catMauInvoice, catMauOverflow, promoDetails, bu, finalP, tnds, dBo, phiDangKy, phiDangKiem, totReg, netReg, totOnRoad: invoicePrice+netReg, loan, down, totB, avgM, isBank: pay==='BANK', bhType: adj.bhvcType, bhVal: calculatedBhValue, effBh: effectiveBhValueForReg, aTang: accTang, aMua, totAcc, comboGiftDetails, comboGiftReferenceTotal, comboGiftItemNames };
         }
 
+        function fitQuotePriceText(root=document) {
+            const rows = Array.from(root.querySelectorAll('.quote-price-row'));
+            rows.forEach(row => {
+                const value = row.querySelector(':scope > span:last-child');
+                const label = row.querySelector(':scope > span:first-child');
+                if (!value || !label) return;
+
+                const isFinal = row.classList.contains('quote-price-final-row') || value.id === 'quote-price-final';
+                const maxFont = isFinal ? 27 : 16;
+                const minFont = isFinal ? 19 : 12;
+                value.style.fontSize = `${maxFont}px`;
+                value.style.whiteSpace = 'nowrap';
+                value.style.letterSpacing = isFinal ? '-0.025em' : '-0.01em';
+
+                const rowWidth = row.getBoundingClientRect().width;
+                const labelWidth = label.getBoundingClientRect().width;
+                const gapAllowance = isFinal ? 32 : 44;
+                const available = Math.max(90, rowWidth - labelWidth - gapAllowance);
+                value.style.maxWidth = `${available}px`;
+
+                let size = maxFont;
+                while (size > minFont && value.scrollWidth > available + 1) {
+                    size -= 0.5;
+                    value.style.fontSize = `${size}px`;
+                }
+            });
+        }
+
+        function scheduleQuotePriceFit(root=document) {
+            requestAnimationFrame(() => requestAnimationFrame(() => fitQuotePriceText(root)));
+        }
+
         function updateQuotationUI() {
             const carId = document.getElementById('carSelect').value; const car = carList.find(c => c.id === carId); if (!car) return;
             applyVehicleUseRules(car, false);
@@ -4933,6 +4968,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             } else {
                 acC.style.display = 'none';
             }
+            scheduleQuotePriceFit(document);
         }
 
         // ================== QUOTE INFO ==================
@@ -5410,6 +5446,7 @@ ${optionText}
 
             applyExportTextLayout(clone, 'full');
             styleInputsForPrint(clone);
+            fitQuotePriceText(clone);
             return clone;
         }
 
@@ -5524,6 +5561,7 @@ ${optionText}
             const specCard = fullClone.querySelector('.quote-spec-card');
             [charging, warranty, specCard].forEach(node => { if (node) focused.appendChild(node); });
             applyExportTextLayout(focused, 'focus');
+            fitQuotePriceText(focused);
             return focused;
         }
 
