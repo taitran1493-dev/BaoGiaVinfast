@@ -1069,7 +1069,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                     <div class="quote-spec-card border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] min-h-[300px]">
                             <div class="bg-slate-50 flex items-center justify-center p-5 min-w-0 overflow-hidden">
-                                <img id="quote-car-img" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="handleQuoteCarImageError(this)" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
+                                <img id="quote-car-img" onerror="handleQuoteCarImageError(this)" class="max-w-full max-h-[330px] object-contain drop-shadow-xl" />
                             </div>
                             <div class="p-5 border-t lg:border-t-0 lg:border-l border-gray-100 bg-white">
                                 <div class="flex items-center justify-between gap-3">
@@ -2436,9 +2436,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             img.dataset.colorName = selectedColor;
             img.dataset.fallbackSrc = modelSrc;
             img.dataset.requestedSrc = src;
-            img.crossOrigin = 'anonymous';
-            img.setAttribute('crossorigin', 'anonymous');
-            img.referrerPolicy = 'no-referrer';
+            img.removeAttribute('crossorigin');
+            img.removeAttribute('referrerpolicy');
+            try { img.crossOrigin = null; } catch (_) {}
             img.onload = function() { warmQuoteImageExportCache(this); };
             img.onerror = function() { handleQuoteCarImageError(this); };
             img.src = src;
