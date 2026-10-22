@@ -686,7 +686,7 @@
             </div>
 
             <div class="live-fee-row">
-                <div class="live-field"><label>Loại Bảo hiểm dân sự</label><select id="live-civil-preset" onchange="applyCivilPreset()"><option value="family5">Gia đình 5 chỗ / Biển trắng — 530.700 VNĐ</option><option value="family7">Gia đình 7 chỗ / Biển trắng — 1.013.400 VNĐ</option><option value="taxi5">Taxi 5 chỗ / Biển vàng — 1.443.720 VNĐ</option><option value="taxi7">Taxi 7 chỗ / Biển vàng — 2.049.600 VNĐ</option><option value="business5">KD UDCN 5 chỗ / Biển vàng — 861.600 VNĐ</option><option value="business7">KD UDCN 7 chỗ / Biển vàng — 1.218.000 VNĐ</option><option value="custom">Tùy chỉnh</option></select><div class="live-help">Phí tai nạn đã được tính trong tổng BHDS theo mức chọn.</div></div>
+                <div class="live-field"><label>Loại Bảo hiểm dân sự</label><select id="live-civil-preset" onchange="applyCivilPreset()"><option value="family4">Gia đình 4 chỗ / Biển trắng — 520.700 VNĐ</option><option value="family5">Gia đình 5 chỗ / Biển trắng — 530.700 VNĐ</option><option value="family7">Gia đình 7 chỗ / Biển trắng — 1.013.400 VNĐ</option><option value="taxi5">Taxi 5 chỗ / Biển vàng — 1.443.720 VNĐ</option><option value="taxi7">Taxi 7 chỗ / Biển vàng — 2.049.600 VNĐ</option><option value="business5">KD UDCN 5 chỗ / Biển vàng — 861.600 VNĐ</option><option value="business7">KD UDCN 7 chỗ / Biển vàng — 1.218.000 VNĐ</option><option value="custom">Tùy chỉnh</option></select><div class="live-help">Phí tai nạn đã được tính trong tổng BHDS theo mức chọn.</div></div>
                 <div class="live-field"><label>Bảo hiểm dân sự</label><input type="text" id="live-civil-fee" autocomplete="off"></div>
             </div>
 
@@ -711,8 +711,9 @@
                         <option value="DBV">DBV (BT)</option>
                         <option value="MIC">MIC</option>
                         <option value="BIC">BIC</option>
+                        <option value="BAOVIET">Bảo Việt</option>
                     </select>
-                    <div class="live-help">Chọn bảo hiểm phân phối · DBV tối thiểu 5 triệu · BIC tối thiểu 5,5 triệu · EC VAN BIC 1,30%.</div>
+                    <div class="live-help">Chọn bảo hiểm phân phối · DBV tối thiểu 5 triệu · BIC tối thiểu 5,5 triệu · EC VAN BIC 1,30% · Bảo Việt áp biểu phí theo Model.</div>
                 </div>
 
                 <div class="live-field">
@@ -832,7 +833,7 @@
 
                             <div id="bhvc-insurer-quick-select" class="left-insurer-select rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 mb-4">
                                 <div class="insurer-title text-[11px] font-black uppercase text-blue-800 mb-2">Bảo hiểm phân phối</div>
-                                <div class="insurer-options grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold text-gray-700">
+                                <div class="insurer-options grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-bold text-gray-700">
                                     <label class="inline-flex items-center gap-1.5 cursor-pointer">
                                         <input type="checkbox" id="bhvc-check-PJICO" data-bhvc-insurer="PJICO" checked onchange="selectBhvcInsurerCheckbox('PJICO', this)" class="w-4 h-4 accent-blue-600">
                                         <span>PJICO</span>
@@ -848,6 +849,10 @@
                                     <label class="inline-flex items-center gap-1.5 cursor-pointer">
                                         <input type="checkbox" id="bhvc-check-BIC" data-bhvc-insurer="BIC" onchange="selectBhvcInsurerCheckbox('BIC', this)" class="w-4 h-4 accent-blue-600">
                                         <span>BIC</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" id="bhvc-check-BAOVIET" data-bhvc-insurer="BAOVIET" onchange="selectBhvcInsurerCheckbox('BAOVIET', this)" class="w-4 h-4 accent-blue-600">
+                                        <span>Bảo Việt</span>
                                     </label>
                                 </div>
                                 <div id="bhvc-insurer-quick-help" class="insurer-help text-[9px] text-blue-700 mt-2">Mặc định PJICO · chỉ áp dụng 1 bảo hiểm tại một thời điểm.</div>
@@ -963,6 +968,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                                 <div class="quote-option">
                                     <label>BHDS</label>
                                     <select id="quoteCivilPreset" onchange="syncQuoteFeePreset('civil')">
+                                        <option value="family4">Gia đình 4 chỗ · 520.700</option>
                                         <option value="family5">Gia đình 5 chỗ · 530.700</option>
                                         <option value="family7">Gia đình 7 chỗ · 1.013.400</option>
                                         <option value="taxi5">Taxi 5 chỗ · 1.443.720</option>
@@ -1588,7 +1594,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
     <script>
         const PHI_DANG_KY = 140000; const PHI_DANG_KIEM = 90000; const PHI_DICH_VU = 3000000;
         const REG_FEE_PRESETS = { ward:140000, metro:14000000 };
-        const CIVIL_FEE_PRESETS = { family5:530700, family7:1013400, taxi5:1443720, taxi7:2049600, business5:861600, business7:1218000 };
+        const CIVIL_FEE_PRESETS = { family4:520700, family5:530700, family7:1013400, taxi5:1443720, taxi7:2049600, business5:861600, business7:1218000 };
         const ROAD_FEE_PRESETS = { white1:1560000, white3:4325000, yellow1:2160000 };
         const DEFAULT_STANDARD_CAR_NAMES = [
             'MINIO GREEN','HERIO GREEN','NERIO GREEN','LIMO GREEN','EC VAN TIÊU CHUẨN','EC VAN NÂNG CAO','EC VAN NÂNG CAO (Cửa trượt)','VF2','VF3 ECO','VF3 PLUS','VF5','VF6 ECO','VF6 PLUS','VF7 ECO','VF7 PLUS TIÊU CHUẨN 2 - TRẦN THÉP','VF7 PLUS NC TIÊU CHUẨN 3 - TRẦN THÉP','VF MVP 7','VF8 ECO TIÊU CHUẨN 1 - 1 CẦU','VF8 ECO NÂNG CAO - 1 CẦU','VF8 PLUS TIÊU CHUẨN 1 - 2 CẦU','VF8 ALL NEW','VF9 ECO','VF9 PLUS','LẠC HỒNG','LẠC HỒNG (chống đạn)','VF WILD COMFORT'
@@ -4340,8 +4346,10 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
 
         function normalizeBhvcInsurer(v) {
-            const x = String(v || 'PJICO').toUpperCase();
-            return ['PJICO','DBV','MIC','BIC'].includes(x) ? x : 'PJICO';
+            const raw = String(v || 'PJICO').trim().toUpperCase();
+            const aliases = { 'BAO VIET':'BAOVIET', 'BẢO VIỆT':'BAOVIET', 'BAOVIET':'BAOVIET' };
+            const x = aliases[raw] || raw;
+            return ['PJICO','DBV','MIC','BIC','BAOVIET'].includes(x) ? x : 'PJICO';
         }
 
         function getBhvcVehicleClass(adj, plate) {
@@ -4378,116 +4386,94 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             let note = '';
 
             const isEcVan = model.includes('EC VAN') || model.includes('ECVAN');
-            const isVf2 = model.includes('VF2');
-            const isVf3 = model.includes('VF3');
-            const isMinio = model.includes('MINIO GREEN');
+            const isVf2 = model.includes('VF2') || model.includes('VF 2');
+            const isVf3 = model.includes('VF3') || model.includes('VF 3');
+            const isMinio = model.includes('MINIO');
+            const isHerio = model.includes('HERIO');
+            const isNerio = model.includes('NERIO');
+            const isLimo = model.includes('LIMO');
+            const isMpv7 = model.includes('MVP 7') || model.includes('MPV 7') || model.includes('MVP7') || model.includes('MPV7');
+            const isVf5 = model.includes('VF5') || model.includes('VF 5');
+            const isVf6 = model.includes('VF6') || model.includes('VF 6');
+            const isVf7 = model.includes('VF7') || model.includes('VF 7');
+            const isVf8 = model.includes('VF8') || model.includes('VF 8');
+            const isVf9 = model.includes('VF9') || model.includes('VF 9');
 
-            // ============================================================
-            // RULE ĐẶC BIỆT PJICO - VF2 / VF3
-            // Áp dụng cả biển trắng lẫn biển vàng, bất kể mục đích sử dụng.
-            // VF2: 4.000.000 VNĐ cố định
-            // VF3: 5.000.000 VNĐ cố định
-            // ============================================================
-            if (insurer === 'PJICO' && (isVf2 || isVf3)) {
-                const fixedFee = isVf2 ? 4000000 : 5000000;
-                const effectiveRate = p > 0 ? fixedFee / p * 100 : 0;
-
-                return {
-                    insurer,
-                    vehicleClass,
-                    price: p,
-                    rate: null,
-                    minimumFee: fixedFee,
-                    fee: fixedFee,
-                    effectiveRate,
-                    available: true,
-                    note: isVf2
-                        ? 'PJICO VF2: phí cố định 4.000.000 VNĐ, áp dụng biển trắng/biển vàng.'
-                        : 'PJICO VF3: phí cố định 5.000.000 VNĐ, áp dụng biển trắng/biển vàng.',
-                    tariffVersion: 'VINFAST 2026 - PJICO VF2/VF3 phí cố định'
-                };
+            // BẢO VIỆT: xe không kinh doanh áp tỷ lệ theo Model.
+            // Xe kinh doanh/Taxi: bảng ghi báo giá từng xe cụ thể.
+            if (insurer === 'BAOVIET') {
+                if (vehicleClass === 'business' || vehicleClass === 'taxi') {
+                    return {
+                        insurer, vehicleClass, price:p, rate:null, minimumFee:0, fee:0, effectiveRate:0,
+                        available:false, manualQuoteRequired:true,
+                        note:'Bảo Việt: xe kinh doanh/Taxi báo giá từng xe cụ thể — nhập tỷ lệ hoặc phí BHVC thủ công.',
+                        tariffVersion:'VINFAST 2026 - BẢO VIỆT'
+                    };
+                }
+                if (isVf2 || isVf3 || isMinio) { rate = 2.15; note = 'Bảo Việt: VF2 / VF3 / Minio áp dụng 2,15%.'; }
+                else if (isVf5 || isHerio) { rate = 1.60; note = 'Bảo Việt: VF5 / Herio áp dụng 1,60%.'; }
+                else if (isVf6 || isVf7 || isVf8 || isMpv7 || isNerio || isLimo) { rate = 1.50; note = 'Bảo Việt: VF6 / VF7 / VF8 / MPV7 / Nerio / Limo áp dụng 1,50%.'; }
+                else if (isVf9) { rate = 1.45; note = 'Bảo Việt: VF9 áp dụng 1,45%.'; }
+                else { available = false; note = 'Bảng Bảo Việt chưa nêu tỷ lệ cho Model này.'; }
             }
 
-            if (vehicleClass === 'taxi') {
-                if (insurer === 'PJICO') {
-                    rate = 2.30;
-                } else if (insurer === 'BIC' && isEcVan) {
-                    rate = 1.30;
-                    note = 'Biểu phí riêng BIC cho EC Van.';
+            // BIC EC VAN 1,30% là rule riêng đã chốt trước đó.
+            if (insurer === 'BIC' && isEcVan) {
+                rate = 1.30;
+                minimumFee = 0;
+                note = 'BIC EC Van: 1,30%.';
+            }
+
+            if (insurer !== 'BAOVIET' && !(insurer === 'BIC' && isEcVan)) {
+                if (vehicleClass === 'taxi') {
+                    if (insurer === 'PJICO') rate = 2.30;
+                    else { available = false; note = `${insurer}: bảng không thể hiện biểu phí Taxi.`; }
+                } else if (vehicleClass === 'business') {
+                    if (insurer === 'PJICO' || insurer === 'MIC') rate = p < 500000000 ? 1.70 : 1.60;
+                    else if (insurer === 'BIC') rate = 2.75;
+                    else { available = false; note = 'DBV: bảng không thể hiện biểu phí xe kinh doanh.'; }
                 } else {
-                    available = false;
-                    note = 'Bảng không thể hiện biểu phí Taxi cho hãng này.';
-                }
-            } else if (vehicleClass === 'business') {
-                if (insurer === 'PJICO' || insurer === 'MIC') {
-                    rate = p < 500000000 ? 1.70 : 1.60;
-                } else if (insurer === 'BIC') {
-                    rate = isEcVan ? 1.30 : 2.75;
-                    if (isEcVan) note = 'Biểu phí riêng BIC cho EC Van.';
-                } else {
-                    available = false;
-                    note = 'Bảng không thể hiện biểu phí xe kinh doanh của DBV.';
-                }
-            } else {
-                if (p < 400000000) {
-                    if (insurer === 'PJICO') {
-                        if (isVf2 || isMinio) {
-                            minimumFee = 4000000;
-                            note = 'PJICO: VF2/Minio Green phí tối thiểu 4.000.000 VNĐ.';
-                        } else if (isVf3 || isEcVan) {
-                            minimumFee = 5000000;
-                            note = 'PJICO: VF3/EC Van phí tối thiểu 5.000.000 VNĐ.';
-                        } else {
-                            available = false;
-                            note = 'PJICO dưới 400 triệu chỉ nêu VF2/Minio Green và VF3/EC Van.';
-                        }
-                    } else if (insurer === 'DBV') {
-                        rate = 1.90;
-                    } else if (insurer === 'MIC') {
-                        available = false;
-                        note = 'MIC: KHÔNG BÁN ở nhóm xe dưới 400 triệu.';
-                    } else if (insurer === 'BIC') {
-                        rate = 1.50;
-                        minimumFee = 5500000;
-                        note = 'BIC: 1,50%, phí tối thiểu 5.500.000 VNĐ/đơn.';
+                    if (p < 400000000) {
+                        if (insurer === 'PJICO') {
+                            if (isVf2 || isMinio) { minimumFee = 4000000; note = 'PJICO: VF2 / Minio phí tối thiểu 4.000.000 VNĐ.'; }
+                            else if (isVf3 || isEcVan) { minimumFee = 5000000; note = 'PJICO: VF3 / EC Van phí tối thiểu 5.000.000 VNĐ.'; }
+                            else { available = false; note = 'PJICO dưới 400 triệu: bảng chỉ nêu VF2 / Minio và VF3 / EC Van.'; }
+                        } else if (insurer === 'DBV') rate = 1.90;
+                        else if (insurer === 'MIC') { available = false; note = 'MIC: KHÔNG BÁN ở nhóm xe dưới 400 triệu.'; }
+                        else if (insurer === 'BIC') { rate = 1.50; minimumFee = 5500000; note = 'BIC: 1,50%, phí tối thiểu 5.500.000 VNĐ/đơn.'; }
+                    } else if (p < 600000000) {
+                        if (insurer === 'PJICO') rate = 1.41;
+                        else if (insurer === 'DBV') rate = 1.40;
+                        else if (insurer === 'MIC') rate = 1.50;
+                        else if (insurer === 'BIC') rate = 1.50;
+                    } else if (p < 700000000) {
+                        if (insurer === 'PJICO') rate = 1.16;
+                        else if (insurer === 'DBV') rate = 1.25;
+                        else if (insurer === 'MIC') rate = 1.35;
+                        else if (insurer === 'BIC') rate = 1.2155;
+                    } else if (p < 800000000) {
+                        if (insurer === 'PJICO') rate = 1.16;
+                        else if (insurer === 'DBV') rate = 1.25;
+                        else if (insurer === 'MIC') rate = 1.35;
+                        else if (insurer === 'BIC') rate = 1.19;
+                    } else if (p <= 1000000000) {
+                        if (insurer === 'PJICO') rate = 1.00;
+                        else if (insurer === 'DBV') rate = 1.00;
+                        else if (insurer === 'MIC') rate = 1.10;
+                        else if (insurer === 'BIC') rate = 1.08;
+                    } else {
+                        // Bảng mới chỉ nêu DBV 0,95% và BIC 1,10% ở nhóm trên 1 tỷ.
+                        if (insurer === 'DBV') rate = 0.95;
+                        else if (insurer === 'BIC') rate = 1.10;
+                        else { available = false; note = `${insurer}: bảng mới không nêu biểu phí tự động cho xe trên 1 tỷ.`; }
                     }
-                } else if (p < 600000000) {
-                    if (insurer === 'PJICO') rate = 1.41;
-                    else if (insurer === 'DBV') rate = 1.40;
-                    else if (insurer === 'MIC') rate = 1.50;
-                    else if (insurer === 'BIC') rate = 1.50;
-                } else if (p < 700000000) {
-                    if (insurer === 'PJICO') rate = 1.16;
-                    else if (insurer === 'DBV') rate = 1.25;
-                    else if (insurer === 'MIC') rate = 1.35;
-                    else if (insurer === 'BIC') rate = 1.2155;
-                } else if (p < 800000000) {
-                    if (insurer === 'PJICO') rate = 1.16;
-                    else if (insurer === 'DBV') rate = 1.25;
-                    else if (insurer === 'MIC') rate = 1.35;
-                    else if (insurer === 'BIC') rate = 1.19;
-                } else if (p <= 1000000000) {
-                    if (insurer === 'PJICO') rate = 1.00;
-                    else if (insurer === 'DBV') rate = 1.00;
-                    else if (insurer === 'MIC') rate = 1.10;
-                    else if (insurer === 'BIC') rate = 1.08;
-                } else {
-                    if (insurer === 'PJICO') rate = 1.00;
-                    else if (insurer === 'DBV') rate = 0.95;
-                    else if (insurer === 'MIC') rate = 1.10;
-                    else if (insurer === 'BIC') rate = 1.10;
                 }
             }
 
-            // Phí tối thiểu theo đơn vị bảo hiểm:
-            // - DBV (BT): tối thiểu 5.000.000 VNĐ
-            // - BIC: tối thiểu 5.500.000 VNĐ
-            //   Riêng EC VAN BIC áp dụng 1,30% theo dòng riêng, không ép mức tối thiểu 5,5 triệu.
             if (available && insurer === 'DBV') {
                 minimumFee = Math.max(minimumFee, 5000000);
                 note = note || 'DBV (BT): phí tối thiểu 5.000.000 VNĐ.';
             }
-
             if (available && insurer === 'BIC' && !isEcVan) {
                 minimumFee = Math.max(minimumFee, 5500000);
                 note = note || 'BIC: phí tối thiểu 5.500.000 VNĐ.';
@@ -4495,24 +4481,15 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             let fee = 0;
             let effectiveRate = 0;
-
             if (available) {
                 if (rate !== null) fee = p * rate / 100;
                 if (minimumFee > 0) fee = Math.max(fee, minimumFee);
                 effectiveRate = p > 0 ? fee / p * 100 : (rate || 0);
             }
-
             return {
-                insurer,
-                vehicleClass,
-                price: p,
-                rate,
-                minimumFee,
-                fee,
-                effectiveRate,
-                available,
-                note,
-                tariffVersion: 'VINFAST 2026 - cập nhật 15/10/2026'
+                insurer, vehicleClass, price:p, rate, minimumFee, fee, effectiveRate, available,
+                manualQuoteRequired:false, note,
+                tariffVersion:'VINFAST 2026 - cập nhật Bảo Việt/BHVC'
             };
         }
 
@@ -4559,14 +4536,14 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         function syncBhvcInsurerCheckboxes(insurer) {
             const selected = normalizeBhvcInsurer(insurer || 'PJICO');
-            ['PJICO','DBV','MIC','BIC'].forEach(code => {
+            ['PJICO','DBV','MIC','BIC','BAOVIET'].forEach(code => {
                 const el = document.getElementById(`bhvc-check-${code}`);
                 if (el) el.checked = code === selected;
             });
 
             const help = document.getElementById('bhvc-insurer-quick-help');
             if (help) {
-                help.innerHTML = `Đang chọn: <b>${selected === 'DBV' ? 'DBV (BT)' : selected}</b> · chỉ áp dụng 1 bảo hiểm tại một thời điểm.`;
+                help.innerHTML = `Đang chọn: <b>${selected === 'DBV' ? 'DBV (BT)' : (selected === 'BAOVIET' ? 'Bảo Việt' : selected)}</b> · chỉ áp dụng 1 bảo hiểm tại một thời điểm.`;
             }
         }
 
@@ -5063,7 +5040,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const bhvcTableQuoteUi = getBhvcTableQuote(car, adj, plt, calc.invoicePrice);
             document.getElementById('left-bhvc-panel').innerHTML += `
                 <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] text-slate-700">
-                    <b>${bhvcTableQuoteUi.insurer}</b> · ${bhvcTableQuoteUi.vehicleClass === 'taxi' ? 'Taxi' : (bhvcTableQuoteUi.vehicleClass === 'business' ? 'Xe chở người KD' : 'Xe không KD')}
+                    <b>${bhvcTableQuoteUi.insurer === 'BAOVIET' ? 'Bảo Việt' : bhvcTableQuoteUi.insurer}</b> · ${bhvcTableQuoteUi.vehicleClass === 'taxi' ? 'Taxi' : (bhvcTableQuoteUi.vehicleClass === 'business' ? 'Xe chở người KD' : 'Xe không KD')}
                     · Giá HĐ ${formatMoney(calc.invoicePrice)}
                     ${bhvcTableQuoteUi.available
                         ? (bhvcTableQuoteUi.minimumFee > 0 && bhvcTableQuoteUi.rate === null
