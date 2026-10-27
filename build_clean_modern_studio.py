@@ -64,12 +64,16 @@ if anim_start != -1 and anim_end != -1:
                 void el.offsetWidth;
                 el.classList.add('value-updated-pulse');
             }
-            if (id === 'quote-total') {
+                        if (id === 'quote-total') {
                 const dockSum = document.getElementById('mobile-dock-summary');
+                const topBadge = document.getElementById('mobile-top-price-badge');
+                const carEl = document.getElementById('carSelect');
+                const carName = carEl && carEl.selectedOptions && carEl.selectedOptions[0] ? carEl.selectedOptions[0].text : 'VinFast';
                 if (dockSum) {
-                    const carEl = document.getElementById('carSelect');
-                    const carName = carEl && carEl.selectedOptions && carEl.selectedOptions[0] ? carEl.selectedOptions[0].text : 'VinFast';
                     dockSum.innerHTML = `<b>${carName.split('(')[0].trim()}</b>: <span class="text-cyan-400 font-black">${text}</span>`;
+                }
+                if (topBadge) {
+                    topBadge.innerText = text;
                 }
             }
         }\n\n        """
@@ -112,6 +116,7 @@ enhance_replacement = """scheduleQuotePriceFit(document);
             if (hp && car) hp.innerText = formatMoney(calc.totOnRoad);
             const cs = document.getElementById('consoleCarSelect');
             if (cs && cs.value !== car.id) cs.value = car.id;
+            const ms = document.getElementById('mobileTopCarSelect'); if (ms && ms.value !== car.id) ms.value = car.id;
 """
 core_js = core_js.replace(enhance_target, enhance_replacement, 1)
 
@@ -120,17 +125,26 @@ render_dd_target = "function renderDropdown() { const s=document.getElementById(
 render_dd_replacement = """function renderDropdown() { 
             const s = document.getElementById('carSelect'); 
             const cs = document.getElementById('consoleCarSelect');
+            const ms = document.getElementById('mobileTopCarSelect');
             const v = s ? s.value : ''; 
             const optionsHtml = carList.map(c => `<option value=\"${c.id}\">${c.name} ${c.version}</option>`).join('');
             if (s) { s.innerHTML = optionsHtml; if (v && carList.find(c => c.id === v)) s.value = v; }
             if (cs) { cs.innerHTML = optionsHtml; if (v && carList.find(c => c.id === v)) cs.value = v; }
+            if (ms) { ms.innerHTML = optionsHtml; if (v && carList.find(c => c.id === v)) ms.value = v; }
         }
         function handleConsoleCarChange(val) {
             const s = document.getElementById('carSelect');
-            if (s && s.value !== val) {
-                s.value = val;
-                handleCarSelectionChange();
-            }
+            const ms = document.getElementById('mobileTopCarSelect');
+            if (s && s.value !== val) s.value = val;
+            if (ms && ms.value !== val) ms.value = val;
+            handleCarSelectionChange();
+        }
+        function handleMobileTopCarChange(val) {
+            const s = document.getElementById('carSelect');
+            const cs = document.getElementById('consoleCarSelect');
+            if (s && s.value !== val) s.value = val;
+            if (cs && cs.value !== val) cs.value = val;
+            handleCarSelectionChange();
         }"""
 
 # 3.2.1 Replace old duplicate scale and fit logic from backup core_js
@@ -371,7 +385,7 @@ if layout_start != -1:
 # Add studio zoom & helpers
 studio_helpers = """
         // ================== MODERN RESPONSIVE STUDIO ZOOM & FIT (<1280px Fluid, >=1280px Desktop) ==================
-        let currentQuoteScale = 1;
+        let currentQuoteScale = 'fit';
         let currentMobileTab = 'quote';
 
         function setMobileTab(tab) {
@@ -381,11 +395,13 @@ studio_helpers = """
             const rightPreview = document.getElementById('right-preview');
             const tabBtnQuote = document.getElementById('mobile-tab-btn-quote');
             const tabBtnConfig = document.getElementById('mobile-tab-btn-config');
+            const mobileTopCar = document.getElementById('mobile-top-car-selector');
             const floatingBanner = document.getElementById('mobile-dock-floating-banner');
             
             if (window.innerWidth >= 1280) {
                 if (leftConsole) leftConsole.style.display = '';
                 if (rightPreview) rightPreview.style.display = '';
+                if (mobileTopCar) mobileTopCar.style.display = '';
                 if (floatingBanner) floatingBanner.style.display = 'none';
                 return;
             }
@@ -393,6 +409,10 @@ studio_helpers = """
             if (leftConsole && rightPreview) {
                 leftConsole.style.display = isQuote ? 'none' : 'flex';
                 rightPreview.style.display = isQuote ? 'flex' : 'none';
+            }
+
+            if (mobileTopCar) {
+                mobileTopCar.style.display = 'flex';
             }
             
             if (tabBtnQuote && tabBtnConfig) {
@@ -433,9 +453,9 @@ studio_helpers = """
             
             // Desktop mode (>= 1280px)
             let target = 1;
+            const containerWidth = shell.parentElement ? shell.parentElement.clientWidth : window.innerWidth;
             if (scale === 'fit') {
-                const containerWidth = shell.parentElement ? shell.parentElement.clientWidth : window.innerWidth;
-                const available = Math.max(768, containerWidth - 32);
+                const available = Math.max(600, containerWidth - 32);
                 target = Math.min(1, available / 1024);
             } else {
                 target = Number(scale) || 1;
@@ -444,16 +464,18 @@ studio_helpers = """
             el.style.width = '1024px';
             el.style.minWidth = '1024px';
             el.style.maxWidth = '1024px';
-            el.style.transform = target === 1 ? 'none' : `scale(${target})`;
-            el.style.transformOrigin = 'top center';
-            shell.style.transform = 'none';
+
+            const shellWidth = shell.clientWidth || containerWidth;
+            const scaledWidth = 1024 * target;
+            const offsetX = Math.max(0, Math.floor((shellWidth - scaledWidth) / 2));
+
+            el.style.transformOrigin = 'top left';
+            el.style.transform = `translate(${offsetX}px, 0px) scale(${target})`;
+            shell.style.overflowX = target < 1 ? 'hidden' : 'auto';
+            shell.style.overflowY = 'hidden';
             
             const scaledHeight = el.offsetHeight * target;
-            if (target !== 1) {
-                shell.style.height = `${scaledHeight + 35}px`;
-            } else {
-                shell.style.height = 'auto';
-            }
+            shell.style.height = target === 1 && offsetX === 0 ? 'auto' : `${Math.ceil(scaledHeight + 35)}px`;
             
             document.querySelectorAll('.zoom-pill-btn').forEach(btn => {
                 const match = btn.dataset.scale == scale;
@@ -471,11 +493,15 @@ studio_helpers = """
                 setQuoteViewScale(1);
                 setMobileTab(currentMobileTab);
             } else {
-                setQuoteViewScale(currentQuoteScale || 1);
+                setQuoteViewScale(currentQuoteScale || 'fit');
                 const lc = document.getElementById('left-console');
                 const rp = document.getElementById('right-preview');
+                const tabs = document.getElementById('mobile-view-tabs');
+                const topCar = document.getElementById('mobile-top-car-selector');
                 if (lc) lc.style.display = '';
                 if (rp) rp.style.display = '';
+                if (tabs) tabs.style.display = '';
+                if (topCar) topCar.style.display = '';
             }
         }
 
@@ -1299,9 +1325,12 @@ html_template = f"""<!DOCTYPE html>
                 padding: 12px 10px !important;
                 gap: 12px !important;
             }}
+            #capture-area:not(.export-desktop-clone) > div.p-7 > * {{
+                order: 10 !important;
+            }}
 
             /* Section 1 on Mobile: Car Hero Stage & Swatches */
-            #capture-area:not(.export-desktop-clone) .quote-spec-card {{
+            #capture-area:not(.export-desktop-clone) > div.p-7 > .quote-spec-card {{
                 order: 1 !important;
                 width: 100% !important;
                 border-radius: 16px !important;
@@ -1341,7 +1370,7 @@ html_template = f"""<!DOCTYPE html>
             }}
 
             /* Section 2 on Mobile: Vehicle Title & Options & Price Breakdown */
-            #capture-area:not(.export-desktop-clone) .capture-grid-main {{
+            #capture-area:not(.export-desktop-clone) > div.p-7 > .capture-grid-main {{
                 order: 2 !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -1416,7 +1445,7 @@ html_template = f"""<!DOCTYPE html>
             }}
 
             /* Section 3 on Mobile: Grand Total On-Road Banner */
-            #capture-area:not(.export-desktop-clone) #quote-total-footer {{
+            #capture-area:not(.export-desktop-clone) > div.p-7 > #quote-total-footer {{
                 order: 3 !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -1449,13 +1478,17 @@ html_template = f"""<!DOCTYPE html>
             }}
 
             /* Section 4 & 5 on Mobile: Promotions & Warranties */
-            #capture-area:not(.export-desktop-clone) .capture-grid-cost {{
+            #capture-area:not(.export-desktop-clone) > div.p-7 > #charging-promo-panel {{
+                order: 4 !important;
+                margin: 0 !important;
+            }}
+            #capture-area:not(.export-desktop-clone) > div.p-7 > .capture-grid-cost {{
                 order: 4 !important;
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 10px !important;
             }}
-            #capture-area:not(.export-desktop-clone) #warranty-panel {{
+            #capture-area:not(.export-desktop-clone) > div.p-7 > #warranty-panel {{
                 order: 5 !important;
                 margin: 0 !important;
             }}
@@ -1525,7 +1558,7 @@ html_template = f"""<!DOCTYPE html>
 
     <!-- ================= TOP CYBER-LUXURY STUDIO NAVIGATION BAR ================= -->
     <nav id="top-command-bar" class="sticky top-0 z-40 w-full px-3 sm:px-4 xl:px-8 py-2 text-white bg-slate-900/95 backdrop-blur-xl border-b border-slate-700/60 shadow-lg">
-        <div class="max-w-[1560px] mx-auto flex flex-wrap items-center justify-between gap-3">
+        <div class="max-w-[1560px] mx-auto flex items-center justify-between gap-2">
             <!-- Brand & Status -->
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/35 font-display font-black text-lg tracking-tighter text-white ring-2 ring-blue-400/30">
@@ -1567,8 +1600,8 @@ html_template = f"""<!DOCTYPE html>
                     </button>
                 </div>
 
-                <!-- Group 2: Modals & Settings (Always visible) -->
-                <button type="button" onclick="toggleLiveCustomize(true)" class="tactile-btn px-3 py-1.5 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-purple-600/25 flex items-center gap-1 border border-purple-400/30">
+                <!-- Group 2: Modals & Settings (Desktop only, mobile uses bottom dock) -->
+                <button type="button" onclick="toggleLiveCustomize(true)" class="hidden xl:flex tactile-btn px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-purple-600/25 items-center gap-1 border border-purple-400/30">
                     <span>⚙</span><span>Phí & Bank</span>
                 </button>
 
@@ -1793,6 +1826,26 @@ html_template = f"""<!DOCTYPE html>
             <button type="button" id="mobile-tab-btn-config" onclick="setMobileTab('config')" class="flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 text-slate-300 hover:text-white">
                 <span>⚙️</span><span>CẤU HÌNH & CTKM</span>
             </button>
+        </div>
+        
+        <!-- ================= SMART MOBILE TOP CAR SELECTOR (< 1280px) ================= -->
+        <div id="mobile-top-car-selector" class="xl:hidden w-full max-w-[1024px] mb-2 p-2.5 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-2xl border border-blue-500/40 shadow-xl flex flex-col gap-1.5">
+            <div class="flex items-center justify-between text-xs font-bold">
+                <span class="flex items-center gap-1.5 text-cyan-300 uppercase tracking-wider font-extrabold text-[11px]">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span>🚗 Chọn Xe Báo Giá:</span>
+                </span>
+                <div class="flex items-center gap-1">
+                    <span class="text-[9.5px] text-slate-400 uppercase font-semibold">Lăn bánh:</span>
+                    <span id="mobile-top-price-badge" class="font-mono font-black text-xs text-white bg-blue-600/90 px-2 py-0.5 rounded-lg border border-cyan-400/30">Đang tính...</span>
+                </div>
+            </div>
+            <div class="relative bg-slate-800/95 rounded-xl border-2 border-blue-400/60 h-11 flex items-center px-3 hover:border-cyan-400 transition-colors shadow-inner">
+                <select id="mobileTopCarSelect" onchange="handleMobileTopCarChange(this.value)" class="w-full h-full bg-transparent text-white font-extrabold text-sm outline-none cursor-pointer pr-6">
+                    <!-- Dynamically populated with all VinFast cars -->
+                </select>
+                <div class="pointer-events-none absolute right-3 text-cyan-400 text-xs font-black">▼</div>
+            </div>
         </div>
         
         <!-- ================= LỆNH ĐIỀU KHIỂN BÊN TRÁI (STUDIO CONSOLE) ================= -->
