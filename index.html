@@ -622,274 +622,320 @@
             animation: swatchGlow 2.5s ease-in-out infinite;
         }
 
-        /* Responsive Mobile Styles */
-        @media (max-width: 767px) {
-            body { padding-bottom: calc(75px + env(safe-area-inset-bottom)); }
-            #capture-area {
-                width: 100% !important; min-width: 0 !important; max-width: 100% !important;
-                border-radius: 14px;
-            }
-            #capture-area header { padding: 14px !important; }
-            #capture-area > header + div { padding: 14px !important; }
-            #capture-area .capture-grid-main, #capture-area .capture-grid-cost {
-                grid-template-columns: 1fr !important;
-                gap: 12px !important;
-            }
-            #capture-area .quote-spec-card > .grid:first-child {
-                grid-template-columns: 1fr !important;
-            }
-            #capture-area #quote-promo-list {
-                grid-template-columns: 1fr !important;
-            }
-            #capture-area .quote-price-card { padding: 14px !important; }
-            #capture-area .quote-option-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            #capture-area .quote-fee-option-grid { grid-template-columns: 1fr !important; }
+        /* Responsive Mobile & Tablet Styles (Optimized for all viewports < 1280px) */
+        .active-mobile-tab {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45) !important;
         }
 
-        /* V74: Export clone cố định desktop 1024px - KHÔNG dùng layout mobile */
-        #temporary-export-root,
-        #temporary-pdf-export-root,
-        #capture-area-clone.export-desktop-clone {
-            transform: none !important;
-            zoom: 1 !important;
+        @media (max-width: 1279px) {
+            body {
+                padding-bottom: calc(100px + env(safe-area-inset-bottom)) !important;
+                overflow-x: hidden !important;
+            }
+
+            /* Compact Navbar: Single Row, 54px */
+            #top-command-bar {
+                padding: 8px 12px !important;
+                height: 54px !important;
+            }
+            #top-command-bar .hidden.xl\:flex {
+                display: none !important;
+            }
+
+            /* Main Studio Container */
+            .main-studio-container {
+                padding: 6px 10px 120px 10px !important;
+                gap: 10px !important;
+            }
+
+            /* Segmented Tabs */
+            #mobile-view-tabs {
+                display: flex !important;
+                top: 54px !important;
+                margin-bottom: 8px !important;
+            }
+
+            /* Hide Desktop Zoom Bar on screens < 1280px */
+            #quote-zoom-bar {
+                display: none !important;
+            }
+
+            /* Fluid Shell & Card (Zero Scaling, 100% Readable) */
+            #quote-live-shell {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 20px !important;
+                overflow: visible !important;
+                border: 0 !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                transform: none !important;
+            }
+
+            #capture-area:not(.export-desktop-clone) {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                transform: none !important;
+                margin: 0 !important;
+                border-radius: 20px !important;
+                overflow: hidden !important;
+                box-shadow: 0 4px 25px rgba(15, 23, 42, 0.08) !important;
+            }
+
+            /* Header of Quotation Card */
+            #capture-area:not(.export-desktop-clone) > header {
+                padding: 12px 14px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                border-bottom-width: 4px !important;
+            }
+            #capture-area:not(.export-desktop-clone) > header h1 {
+                font-size: 16px !important;
+                font-weight: 900 !important;
+            }
+            #capture-area:not(.export-desktop-clone) > header p {
+                font-size: 10.5px !important;
+            }
+            #capture-area:not(.export-desktop-clone) > header #current-date {
+                font-size: 11px !important;
+                margin: 0 !important;
+                white-space: nowrap !important;
+            }
+
+            /* PERFECT SECTION RE-ORDERING ON MOBILE:
+               1. Car Hero Showroom (.quote-spec-card)
+               2. Model & Price Breakdown (.capture-grid-main)
+               3. Total Grand Footer (#quote-total-footer)
+               4. Promotions (.capture-grid-cost)
+               5. Warranties (#warranty-panel)
+            */
+            #capture-area:not(.export-desktop-clone) > div.p-7 {
+                display: flex !important;
+                flex-direction: column !important;
+                padding: 12px 10px !important;
+                gap: 12px !important;
+            }
+
+            /* Section 1 on Mobile: Car Hero Stage & Swatches */
+            #capture-area:not(.export-desktop-clone) .quote-spec-card {
+                order: 1 !important;
+                width: 100% !important;
+                border-radius: 16px !important;
+                border: 1px solid #e2e8f0 !important;
+                overflow: hidden !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-spec-card > .grid:first-child {
+                grid-template-columns: 1fr !important;
+            }
+            #capture-area:not(.export-desktop-clone) .car-stage-bg {
+                padding: 10px 6px !important;
+                min-height: 175px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .cyber-pedestal-rings {
+                width: 230px !important;
+                height: 90px !important;
+                bottom: 2px !important;
+            }
+            #capture-area:not(.export-desktop-clone) #quote-car-img {
+                max-height: 175px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .el-color-swatch {
+                width: 32px !important;
+                height: 32px !important;
+            }
+
+            /* Performance Gauges */
+            #capture-area:not(.export-desktop-clone) .quote-spec-card .grid-cols-3 > div {
+                padding: 6px 4px !important;
+            }
+            #capture-area:not(.export-desktop-clone) #quote-max-power,
+            #capture-area:not(.export-desktop-clone) #quote-battery-capacity,
+            #capture-area:not(.export-desktop-clone) #quote-driving-range {
+                font-size: 13.5px !important;
+                line-height: 1.2 !important;
+                font-weight: 900 !important;
+            }
+
+            /* Section 2 on Mobile: Vehicle Title & Options & Price Breakdown */
+            #capture-area:not(.export-desktop-clone) .capture-grid-main {
+                order: 2 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+            #capture-area:not(.export-desktop-clone) #quote-car-name {
+                font-size: 22px !important;
+                line-height: 1.25 !important;
+                font-weight: 900 !important;
+                margin-bottom: 6px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-primary-row {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+                margin-top: 6px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-primary-row > div {
+                width: 100% !important;
+                height: 40px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-option-grid,
+            #capture-area:not(.export-desktop-clone) .quote-fee-option-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+                margin-top: 6px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-option {
+                height: 38px !important;
+                padding: 0 8px !important;
+                font-size: 11px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-option select {
+                font-size: 11px !important;
+            }
+
+            /* Price Breakdown Card */
+            #capture-area:not(.export-desktop-clone) .quote-price-card {
+                padding: 12px 14px !important;
+                width: 100% !important;
+                border-radius: 16px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-price-row {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                min-height: 28px !important;
+                font-size: 12.5px !important;
+                gap: 6px !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-price-row .dot-leader {
+                display: none !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-price-row > span:first-child {
+                font-size: 12px !important;
+                white-space: nowrap !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-price-row > span:last-child {
+                font-size: 13.5px !important;
+                font-weight: 800 !important;
+                white-space: nowrap !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-price-final-row {
+                padding-top: 8px !important;
+                margin-top: 4px !important;
+                border-top: 1px dashed #cbd5e1 !important;
+            }
+            #capture-area:not(.export-desktop-clone) .quote-price-final-row #quote-price-final {
+                font-size: 18px !important;
+                line-height: 1.2 !important;
+                font-weight: 900 !important;
+            }
+
+            /* Section 3 on Mobile: Grand Total On-Road Banner */
+            #capture-area:not(.export-desktop-clone) #quote-total-footer {
+                order: 3 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                padding: 14px 12px !important;
+                gap: 8px !important;
+                border-radius: 16px !important;
+            }
+            #capture-area:not(.export-desktop-clone) #quote-total-footer .min-w-0 {
+                width: 100% !important;
+                text-align: center !important;
+            }
+            #capture-area:not(.export-desktop-clone) #quote-total-footer h2 {
+                font-size: 13px !important;
+                line-height: 1.2 !important;
+                margin-bottom: 2px !important;
+            }
+            #capture-area:not(.export-desktop-clone) #quote-total-footer p {
+                font-size: 10.5px !important;
+                margin: 0 !important;
+            }
+            #capture-area:not(.export-desktop-clone) #quote-total-footer #quote-total {
+                font-size: 24px !important;
+                padding: 10px 14px !important;
+                width: 100% !important;
+                text-align: center !important;
+                margin: 0 !important;
+                border-radius: 12px !important;
+            }
+
+            /* Section 4 & 5 on Mobile: Promotions & Warranties */
+            #capture-area:not(.export-desktop-clone) .capture-grid-cost {
+                order: 4 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            #capture-area:not(.export-desktop-clone) #warranty-panel {
+                order: 5 !important;
+                margin: 0 !important;
+            }
+
+            /* Cyber-Modal Adjustments */
+            #live-customize-panel {
+                width: 100% !important;
+                max-width: calc(100vw - 16px) !important;
+                max-height: calc(100vh - 30px) !important;
+                border-radius: 20px !important;
+            }
+            #live-customize-panel .live-fee-row {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            #live-customize-panel .live-modal-header {
+                padding: 14px 16px !important;
+                border-top-left-radius: 19px !important;
+                border-top-right-radius: 19px !important;
+            }
+            #live-customize-panel .live-modal-body {
+                padding: 14px !important;
+            }
+            #live-customize-panel .sticky.bottom-0 {
+                padding: 10px 14px !important;
+                border-bottom-left-radius: 19px !important;
+                border-bottom-right-radius: 19px !important;
+            }
+            #live-customize-panel .sticky.bottom-0 button {
+                padding: 8px 12px !important;
+                font-size: 11px !important;
+            }
+
+            /* Left Console on Mobile */
+            #left-console {
+                width: 100% !important;
+            }
         }
+
+        /* Desktop Strict Export Isolation (1024px Pristine Layout) */
+        @media (min-width: 1280px) {
+            #capture-area {
+                width: 1024px !important;
+                min-width: 1024px !important;
+                max-width: 1024px !important;
+            }
+        }
+
         #capture-area-clone.export-desktop-clone {
-            display: block !important;
             width: 1024px !important;
             min-width: 1024px !important;
             max-width: 1024px !important;
-            background: #fff !important;
-            font-size: 16px !important;
-            line-height: normal !important;
-            overflow: visible !important;
-        }
-        #capture-area-clone.export-desktop-clone img {
-            object-fit: contain !important;
-        }
-        #capture-area-clone.export-desktop-clone header {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 24px 28px !important;
-            border-bottom: 4px solid #1464f4 !important;
-            min-height: 90px !important;
-        }
-        #capture-area-clone.export-desktop-clone header > div:first-child {
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-            max-width: none !important;
-        }
-        #capture-area-clone.export-desktop-clone header h1 {
-            font-size: 24px !important;
-            line-height: 30px !important;
-            margin: 0 0 4px 0 !important;
-            white-space: nowrap !important;
-        }
-        #capture-area-clone.export-desktop-clone header p {
-            font-size: 13px !important;
-            line-height: 20px !important;
-            margin: 0 !important;
-            white-space: nowrap !important;
-        }
-        #capture-area-clone.export-desktop-clone .capture-grid-main {
-            display: grid !important;
-            grid-template-columns: minmax(0, 54fr) minmax(410px, 46fr) !important;
-            gap: 18px !important;
-            align-items: start !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-price-card {
-            min-width: 0 !important;
-            padding: 16px 20px !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-price-row {
-            min-height: 36px !important;
-            height: auto !important;
-            font-size: 14.5px !important;
-            line-height: 20px !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            margin-bottom: 4px !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-price-row > span:first-child {
-            white-space: nowrap !important;
-            font-size: 14.5px !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-price-row > span:last-child {
-            font-size: 16px !important;
-            white-space: nowrap !important;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-price-final-row {
-            margin-top: 8px !important;
-            padding-top: 8px !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-price-final-row #quote-price-final {
-            font-size: 26px !important;
-            line-height: 32px !important;
-            white-space: nowrap !important;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-        }
-        #capture-area-clone.export-desktop-clone .capture-grid-cost {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 18px !important;
-            align-items: stretch !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-option-grid {
-            display: grid !important;
-            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            gap: 8px !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-fee-option-grid {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 8px !important;
-        }
-        #capture-area-clone.export-desktop-clone #quote-promo-list {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 10px !important;
-        }
-        #capture-area-clone.export-desktop-clone #warranty-panel,
-        #capture-area-clone.export-desktop-clone #charging-promo-panel {
-            overflow: visible !important;
-        }
-        #capture-area-clone.export-desktop-clone #warranty-panel h3,
-        #capture-area-clone.export-desktop-clone #charging-promo-panel h3 {
-            font-size: 15px !important;
-            line-height: 22px !important;
-            margin: 0 0 2px 0 !important;
-            white-space: nowrap !important;
-        }
-        #capture-area-clone.export-desktop-clone #warranty-subtitle {
-            font-size: 12px !important;
-            line-height: 18px !important;
-            margin: 0 !important;
-            white-space: nowrap !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-spec-card {
+            transform: none !important;
             display: block !important;
-            width: 100% !important;
-            overflow: hidden !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-spec-card > .grid:first-child {
-            display: grid !important;
-            grid-template-columns: minmax(0, 1.65fr) minmax(330px, 1fr) !important;
-            min-height: 390px !important;
-            width: 100% !important;
-            align-items: stretch !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-spec-card > .grid:first-child > div:first-child {
-            min-width: 0 !important;
-            min-height: 390px !important;
-            padding: 16px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            border-right: 1px solid #f3f4f6 !important;
-            border-bottom: 0 !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-spec-card > .grid:first-child > div:nth-child(2) {
-            min-width: 0 !important;
-            padding: 16px 20px !important;
-            border-left: 0 !important;
-            border-top: 0 !important;
-        }
-        #capture-area-clone.export-desktop-clone #quote-selected-color {
-            font-size: 13px !important;
-            font-weight: 700 !important;
-            color: #1e40af !important;
-        }
-        #capture-area-clone.export-desktop-clone .el-color-swatch {
-            width: 32px !important;
-            height: 32px !important;
-            border-radius: 8px !important;
-            display: inline-block !important;
-            border: 2px solid #ffffff !important;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.2) !important;
-            flex-shrink: 0 !important;
-        }
-        #capture-area-clone.export-desktop-clone .el-color-swatch.is-active {
-            box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px #1464f4 !important;
-        }
-        #capture-area-clone.export-desktop-clone #quote-car-img {
-            display: block !important;
-            width: auto !important;
-            height: auto !important;
-            max-width: 96% !important;
-            max-height: 340px !important;
-            margin: auto !important;
-        }
-        #capture-area-clone.export-desktop-clone #quote-car-specs {
-            display: block !important;
-            max-height: none !important;
-            height: auto !important;
-            overflow: visible !important;
-            padding-right: 0 !important;
-        }
-        #capture-area-clone.export-desktop-clone #quote-car-specs li {
-            width: 100% !important;
-            font-size: 11px !important;
-            line-height: 15px !important;
-            margin-bottom: 5px !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-spec-card > .grid:nth-child(2) {
-            display: grid !important;
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-            width: 100% !important;
-            border-top: 1px solid #e5e7eb !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-spec-card > .grid:nth-child(2) > div {
-            width: auto !important;
-            min-width: 0 !important;
-            padding: 15px 10px !important;
-            text-align: center !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-total-footer {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 22px 28px !important;
-            background: #1d4ed8 !important;
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #1e40af 100%) !important;
-            border-bottom: 8px solid #1464f4 !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-total-footer h2 {
-            font-size: 26px !important;
-            line-height: 34px !important;
-            margin: 0 0 4px 0 !important;
-            display: block !important;
-            white-space: nowrap !important;
-            color: #ffffff !important;
-            font-weight: 900 !important;
-        }
-        #capture-area-clone.export-desktop-clone .quote-total-footer p {
-            font-size: 13px !important;
-            line-height: 20px !important;
-            margin: 0 !important;
-            display: block !important;
-            color: #dbeafe !important;
-            white-space: nowrap !important;
-            font-weight: 600 !important;
-        }
-        #capture-area-clone.export-desktop-clone #quote-total {
-            font-size: 42px !important;
-            line-height: 48px !important;
-            padding: 12px 26px !important;
-            white-space: nowrap !important;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-            font-weight: 900 !important;
-            color: #1464f4 !important;
-            background: #ffffff !important;
-            border-radius: 16px !important;
-        }
-        #capture-area-clone.export-focus-clone {
-            box-shadow: none !important;
-            border-radius: 0 !important;
         }
     </style>
+</style>
 </head>
 <body class="antialiased text-gray-800 relative bg-slate-100">
 
@@ -901,7 +947,7 @@
     </div>
 
     <!-- ================= TOP CYBER-LUXURY STUDIO NAVIGATION BAR ================= -->
-    <nav id="top-command-bar" class="sticky top-0 z-40 w-full px-4 xl:px-8 py-2.5 text-white bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/60 shadow-lg">
+    <nav id="top-command-bar" class="sticky top-0 z-40 w-full px-3 sm:px-4 xl:px-8 py-2 text-white bg-slate-900/95 backdrop-blur-xl border-b border-slate-700/60 shadow-lg">
         <div class="max-w-[1560px] mx-auto flex flex-wrap items-center justify-between gap-3">
             <!-- Brand & Status -->
             <div class="flex items-center gap-3">
@@ -930,20 +976,22 @@
             </div>
 
             <!-- Global Action Tools (Tactile Buttons) -->
-            <div class="flex items-center gap-2 flex-wrap">
-                <!-- Group 1: Output Actions -->
-                <button type="button" onclick="openPreview()" class="tactile-btn px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs sm:text-sm font-black shadow-lg shadow-blue-500/30 flex items-center gap-1.5 border border-cyan-300/30">
-                    <span>📸</span><span>Lưu Hình HD</span>
-                </button>
-                <button type="button" onclick="savePreviewPdf('full', this)" class="tactile-btn px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-rose-600/25 flex items-center gap-1 border border-rose-400/30">
-                    <span>📄</span><span class="hidden sm:inline">Xuất PDF</span>
-                </button>
-                <button type="button" onclick="openQuoteInfo()" class="tactile-btn px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/25 flex items-center gap-1 border border-emerald-400/30">
-                    <span>📋</span><span>Copy Text</span>
-                </button>
+            <div class="flex items-center gap-2">
+                <!-- Group 1: Output Actions (Desktop / Tablet only, mobile uses bottom dock) -->
+                <div class="hidden xl:flex items-center gap-2">
+                    <button type="button" onclick="openPreview()" class="tactile-btn px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white text-xs sm:text-sm font-black shadow-lg shadow-blue-500/30 flex items-center gap-1.5 border border-cyan-300/30">
+                        <span>📸</span><span>Lưu Hình HD</span>
+                    </button>
+                    <button type="button" onclick="savePreviewPdf('full', this)" class="tactile-btn px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-rose-600/25 flex items-center gap-1 border border-rose-400/30">
+                        <span>📄</span><span class="hidden sm:inline">Xuất PDF</span>
+                    </button>
+                    <button type="button" onclick="openQuoteInfo()" class="tactile-btn px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/25 flex items-center gap-1 border border-emerald-400/30">
+                        <span>📋</span><span>Copy Text</span>
+                    </button>
+                </div>
 
-                <!-- Group 2: Modals & Settings -->
-                <button type="button" onclick="toggleLiveCustomize(true)" class="tactile-btn px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-purple-600/25 flex items-center gap-1 border border-purple-400/30">
+                <!-- Group 2: Modals & Settings (Always visible) -->
+                <button type="button" onclick="toggleLiveCustomize(true)" class="tactile-btn px-3 py-1.5 sm:py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-purple-600/25 flex items-center gap-1 border border-purple-400/30">
                     <span>⚙</span><span>Phí & Bank</span>
                 </button>
 
@@ -1157,8 +1205,18 @@
         </div>
     </div>
 
-    <!-- ================= MAIN STUDIO WORKSPACE CONTAINER ================= -->
-    <div class="max-w-[1560px] mx-auto flex flex-col xl:flex-row gap-7 p-4 xl:p-8 items-start justify-center pb-28 sm:pb-36 relative z-10">
+<!-- ================= MAIN STUDIO WORKSPACE CONTAINER ================= -->
+    <div class="max-w-[1560px] mx-auto flex flex-col xl:flex-row gap-7 p-3 sm:p-4 xl:p-8 items-start justify-center pb-28 sm:pb-36 relative z-10 main-studio-container">
+        
+        <!-- MOBILE VIEW MODE SEGMENTED TAB SWITCHER (Visible on screens < 1280px) -->
+        <div id="mobile-view-tabs" class="xl:hidden w-full max-w-[1024px] sticky top-[54px] z-30 mb-1 px-1 py-1 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-700/80 shadow-xl flex items-center gap-1">
+            <button type="button" id="mobile-tab-btn-quote" onclick="setMobileTab('quote')" class="flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 active-mobile-tab">
+                <span>📄</span><span>TỜ BÁO GIÁ</span>
+            </button>
+            <button type="button" id="mobile-tab-btn-config" onclick="setMobileTab('config')" class="flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 text-slate-300 hover:text-white">
+                <span>⚙️</span><span>CẤU HÌNH & CTKM</span>
+            </button>
+        </div>
         
         <!-- ================= LỆNH ĐIỀU KHIỂN BÊN TRÁI (STUDIO CONSOLE) ================= -->
         <div id="left-console" class="flex flex-col gap-5 w-full xl:w-[470px] shrink-0 xl:sticky top-20 z-10">
@@ -1382,7 +1440,7 @@
         </div>
 
         <!-- ================= KHU VỰC BÁO GIÁ TRỰC TIẾP (RIGHT LIVE QUOTE STUDIO) ================= -->
-        <div class="flex-1 min-w-0 flex flex-col items-center w-full">
+        <div id="right-preview" class="flex-1 min-w-0 flex flex-col items-center w-full">
             
             <!-- STUDIO CANVAS TOP CONTROL BAR (Scale / Zoom & Quick Export) -->
             <div id="quote-zoom-bar" class="w-full max-w-[1024px] mb-3 flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-sm">
@@ -1407,7 +1465,7 @@
 
             <!-- QUOTE SHELL WRAPPER -->
             <div id="quote-live-shell" class="w-full max-w-[1024px] overflow-x-auto shrink-0 shadow-xl rounded-2xl bg-white border border-slate-200/80 transition-all duration-300">
-                <div id="capture-area" class="relative bg-white w-[1024px] min-w-[1024px]">
+                <div id="capture-area" class="relative bg-white w-full max-w-[1024px]">
                     <!-- Header -->
                     <header class="flex items-center justify-between p-7 border-b-[5px] border-brand-primary bg-white rounded-t-lg">
                         <div>
@@ -1779,17 +1837,60 @@
     </div>
 
     <!-- ================= FIXED BOTTOM BAR CÔNG CỤ (DÀNH CHO MOBILE) ================= -->
-    <div id="action-buttons" class="fixed bottom-0 left-0 w-full z-40 flex xl:hidden overflow-x-auto bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 gap-2 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] hide-scroll items-center">
-        <button onclick="openPreview()" class="tactile-btn bg-brand-primary text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">📸 Lưu Hình</button>
-        <button onclick="savePreviewPdf('full', this)" class="tactile-btn bg-rose-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">📄 Xuất PDF</button>
-        <button onclick="openQuoteInfo()" class="tactile-btn bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">📋 Copy Text</button>
-        <button onclick="toggleLiveCustomize(true)" class="tactile-btn bg-purple-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">⚙ Phí & Bank</button>
-        <button onclick="openCarManager()" class="tactile-btn bg-blue-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">🚗 Dữ Liệu Xe</button>
-        <button onclick="openPromoManager()" class="tactile-btn bg-fuchsia-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">🎯 CTKM</button>
-        <button onclick="openAccManager()" class="tactile-btn bg-purple-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">📦 Phụ Kiện</button>
-        <button onclick="openComboPicker()" class="tactile-btn bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">🎁 Combo</button>
-        <button onclick="exportAllDataToFile()" class="tactile-btn bg-slate-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs whitespace-nowrap">⬇ Xuất Data</button>
-        <label class="tactile-btn bg-amber-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shrink-0 text-xs cursor-pointer mb-0 whitespace-nowrap">⬆ Nhập Data<input type="file" class="hidden" accept=".json" onchange="importAllDataFromFile(event)"></label>
+    <div id="mobile-bottom-dock" class="fixed bottom-0 left-0 w-full z-40 flex flex-col xl:hidden bg-slate-950/95 backdrop-blur-2xl border-t border-slate-800 shadow-[0_-8px_30px_rgba(0,0,0,0.45)]">
+        
+        <!-- Context Floating Banner (When on Config Tab) -->
+        <div id="mobile-dock-floating-banner" style="display: none;" class="px-3.5 py-1.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-950 border-b border-blue-500/30 flex items-center justify-between text-xs font-bold text-white">
+            <div class="flex items-center gap-2 min-w-0 truncate">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0"></span>
+                <span id="mobile-dock-summary" class="truncate text-slate-300">Giá lăn bánh tự động tính</span>
+            </div>
+            <button type="button" onclick="setMobileTab('quote')" class="tactile-btn px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-black shrink-0 flex items-center gap-1 shadow-md shadow-blue-600/30">
+                <span>Xem Báo Giá ➔</span>
+            </button>
+        </div>
+
+        <!-- Secondary Drawer/Popup for Management Tools -->
+        <div id="mobile-extra-menu" class="hidden p-3 bg-slate-900 border-b border-slate-700/80 grid grid-cols-3 gap-2">
+            <button onclick="toggleMobileExtraMenu(); openCarManager()" class="tactile-btn p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold flex flex-col items-center justify-center gap-1 border border-slate-700">
+                <span class="text-base">🚗</span><span>Dữ Liệu Xe</span>
+            </button>
+            <button onclick="toggleMobileExtraMenu(); openPromoManager()" class="tactile-btn p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold flex flex-col items-center justify-center gap-1 border border-slate-700">
+                <span class="text-base">🎯</span><span>CTKM</span>
+            </button>
+            <button onclick="toggleMobileExtraMenu(); openAccManager()" class="tactile-btn p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold flex flex-col items-center justify-center gap-1 border border-slate-700">
+                <span class="text-base">📦</span><span>Phụ Kiện</span>
+            </button>
+            <button onclick="toggleMobileExtraMenu(); openComboPicker()" class="tactile-btn p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold flex flex-col items-center justify-center gap-1 border border-slate-700">
+                <span class="text-base">🎁</span><span>Combo</span>
+            </button>
+            <button onclick="toggleMobileExtraMenu(); exportAllDataToFile()" class="tactile-btn p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold flex flex-col items-center justify-center gap-1 border border-slate-700">
+                <span class="text-base">⬇</span><span>Xuất Data</span>
+            </button>
+            <label class="tactile-btn p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold flex flex-col items-center justify-center gap-1 border border-slate-700 cursor-pointer mb-0">
+                <span class="text-base">⬆</span><span>Nhập Data</span>
+                <input type="file" class="hidden" accept=".json" onchange="toggleMobileExtraMenu(); importAllDataFromFile(event)">
+            </label>
+        </div>
+
+        <!-- Primary 5-Touch Control Dock -->
+        <div class="px-2.5 py-2 flex items-center justify-between gap-1.5" style="padding-bottom: max(8px, env(safe-area-inset-bottom));">
+            <button onclick="openPreview()" class="tactile-btn flex-1 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-extrabold text-[11px] shadow-md shadow-blue-500/25 flex flex-col items-center justify-center gap-0.5">
+                <span class="text-sm">📸</span><span>Lưu Hình</span>
+            </button>
+            <button onclick="savePreviewPdf('full', this)" class="tactile-btn flex-1 py-2 rounded-xl bg-rose-600 text-white font-extrabold text-[11px] shadow-md shadow-rose-600/25 flex flex-col items-center justify-center gap-0.5">
+                <span class="text-sm">📄</span><span>Xuất PDF</span>
+            </button>
+            <button onclick="openQuoteInfo()" class="tactile-btn flex-1 py-2 rounded-xl bg-emerald-600 text-white font-extrabold text-[11px] shadow-md shadow-emerald-600/25 flex flex-col items-center justify-center gap-0.5">
+                <span class="text-sm">📋</span><span>Copy Text</span>
+            </button>
+            <button onclick="toggleLiveCustomize(true)" class="tactile-btn flex-1 py-2 rounded-xl bg-purple-600 text-white font-extrabold text-[11px] shadow-md shadow-purple-600/25 flex flex-col items-center justify-center gap-0.5">
+                <span class="text-sm">⚙️</span><span>Chỉnh Phí</span>
+            </button>
+            <button onclick="toggleMobileExtraMenu()" class="tactile-btn w-10 py-2 rounded-xl bg-slate-800 text-slate-300 font-extrabold text-[11px] border border-slate-700 flex flex-col items-center justify-center gap-0.5" title="Thêm công cụ">
+                <span class="text-sm">⋯</span><span>Thêm</span>
+            </button>
+        </div>
     </div>
 
     <!-- ================== CÁC MODAL QUẢN LÝ DỮ LIỆU ================== -->
@@ -5205,6 +5306,14 @@ const PHI_DANG_KY = 140000; const PHI_DANG_KIEM = 90000; const PHI_DICH_VU = 300
                 void el.offsetWidth;
                 el.classList.add('value-updated-pulse');
             }
+            if (id === 'quote-total') {
+                const dockSum = document.getElementById('mobile-dock-summary');
+                if (dockSum) {
+                    const carEl = document.getElementById('carSelect');
+                    const carName = carEl && carEl.selectedOptions && carEl.selectedOptions[0] ? carEl.selectedOptions[0].text : 'VinFast';
+                    dockSum.innerHTML = `<b>${carName.split('(')[0].trim()}</b>: <span class="text-cyan-400 font-black">${text}</span>`;
+                }
+            }
         }
 
         function setConsoleTab(tab) {
@@ -5245,70 +5354,8 @@ const PHI_DANG_KY = 140000; const PHI_DANG_KIEM = 90000; const PHI_DICH_VU = 300
             }
         }
 
-        let _currentQuoteScale = 'fit';
-        function setQuoteViewScale(mode) {
-            _currentQuoteScale = mode;
-            const shell = document.getElementById('quote-live-shell');
-            if (!shell) return;
+        // Old scale functions removed in favor of modern responsive studio
 
-            ['fit', '100', '90', '85'].forEach(m => {
-                const btn = document.getElementById('scale-btn-' + m);
-                if (btn) {
-                    if (m === mode) {
-                        btn.className = 'px-2.5 py-1 text-xs font-bold rounded-lg transition-all bg-blue-600 text-white shadow-sm';
-                    } else {
-                        btn.className = 'px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-slate-600 hover:bg-slate-100';
-                    }
-                }
-            });
-
-            shell.classList.remove('view-fit', 'view-100', 'view-90', 'view-85');
-            shell.classList.add('view-' + mode);
-
-            if (mode === 'fit') {
-                autoFitQuoteShell();
-            } else {
-                shell.style.transform = '';
-                shell.style.transformOrigin = '';
-                shell.style.marginBottom = '';
-            }
-        }
-
-        function autoFitQuoteShell() {
-            const shell = document.getElementById('quote-live-shell');
-            if (!shell) return;
-            const col = document.getElementById('right-quote-column') || shell.parentElement;
-            if (!col) return;
-
-            if (_currentQuoteScale === 'fit') {
-                const availableW = col.clientWidth - 16;
-                if (availableW < 1024) {
-                    const scale = Math.max(0.48, Math.min(1, availableW / 1024));
-                    shell.style.transform = 'scale(' + scale + ')';
-                    shell.style.transformOrigin = 'top center';
-                    const heightDiff = (1 - scale) * shell.offsetHeight;
-                    shell.style.marginBottom = '-' + Math.round(heightDiff) + 'px';
-                } else {
-                    shell.style.transform = 'none';
-                    shell.style.transformOrigin = '';
-                    shell.style.marginBottom = '';
-                }
-            } else {
-                const scaleVal = Number(_currentQuoteScale) / 100;
-                shell.style.transform = 'scale(' + scaleVal + ')';
-                shell.style.transformOrigin = 'top center';
-                const heightDiff = (1 - scaleVal) * shell.offsetHeight;
-                shell.style.marginBottom = '-' + Math.round(heightDiff) + 'px';
-            }
-        }
-
-        window.addEventListener('resize', () => {
-            if (_currentQuoteScale === 'fit') {
-                autoFitQuoteShell();
-            }
-        });
-
-        
         function syncBankFromConsole(field, val) {
             const car = carList.find(x => x.id === document.getElementById('carSelect')?.value);
             if (!car) return;
@@ -7659,7 +7706,7 @@ ${optionText}
             if (!t) {
                 t = document.createElement('div');
                 t.id = 'magic-studio-toast';
-                t.className = 'fixed top-5 left-1/2 -translate-x-1/2 z-[1001] pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px] flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-900/95 backdrop-blur-xl border border-cyan-400/40 text-white text-xs font-bold shadow-[0_10px_30px_rgba(6,182,212,0.35)]';
+                t.className = 'fixed top-14 md:top-5 left-1/2 -translate-x-1/2 z-[1001] pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px] flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-900/95 backdrop-blur-xl border border-cyan-400/40 text-white text-xs font-bold shadow-[0_10px_30px_rgba(6,182,212,0.35)] whitespace-nowrap max-w-[90vw]';
                 document.body.appendChild(t);
             }
             t.innerHTML = `<span class="text-base">${icon}</span> <span>${msg}</span>`;
@@ -7705,25 +7752,83 @@ ${optionText}
             }
         });
 
-        // ================== STUDIO CANVAS ZOOM & FIT ==================
+        // ================== MODERN RESPONSIVE STUDIO ZOOM & FIT (<1280px Fluid, >=1280px Desktop) ==================
         let currentQuoteScale = 1;
+        let currentMobileTab = 'quote';
+
+        function setMobileTab(tab) {
+            currentMobileTab = tab;
+            const isQuote = tab === 'quote';
+            const leftConsole = document.getElementById('left-console');
+            const rightPreview = document.getElementById('right-preview');
+            const tabBtnQuote = document.getElementById('mobile-tab-btn-quote');
+            const tabBtnConfig = document.getElementById('mobile-tab-btn-config');
+            const floatingBanner = document.getElementById('mobile-dock-floating-banner');
+            
+            if (window.innerWidth >= 1280) {
+                if (leftConsole) leftConsole.style.display = '';
+                if (rightPreview) rightPreview.style.display = '';
+                if (floatingBanner) floatingBanner.style.display = 'none';
+                return;
+            }
+            
+            if (leftConsole && rightPreview) {
+                leftConsole.style.display = isQuote ? 'none' : 'flex';
+                rightPreview.style.display = isQuote ? 'flex' : 'none';
+            }
+            
+            if (tabBtnQuote && tabBtnConfig) {
+                tabBtnQuote.classList.toggle('active-mobile-tab', isQuote);
+                tabBtnQuote.classList.toggle('text-slate-300', !isQuote);
+                tabBtnConfig.classList.toggle('active-mobile-tab', !isQuote);
+                tabBtnConfig.classList.toggle('text-slate-300', isQuote);
+            }
+
+            if (floatingBanner) {
+                floatingBanner.style.display = isQuote ? 'none' : 'flex';
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function setQuoteViewScale(scale) {
             currentQuoteScale = scale;
             const el = document.getElementById('capture-area');
             const shell = document.getElementById('quote-live-shell');
             if (!el || !shell) return;
             
+            // On mobile / tablet screens (< 1280px), NEVER use transform scale on screen!
+            if (window.innerWidth < 1280) {
+                el.style.transform = 'none';
+                el.style.transformOrigin = 'top center';
+                el.style.width = '100%';
+                el.style.minWidth = '0';
+                el.style.maxWidth = '100%';
+                shell.style.transform = 'none';
+                shell.style.transformOrigin = 'top center';
+                shell.style.width = '100%';
+                shell.style.height = 'auto';
+                shell.style.marginBottom = '0';
+                shell.style.overflow = 'visible';
+                return;
+            }
+            
+            // Desktop mode (>= 1280px)
             let target = 1;
             if (scale === 'fit') {
                 const containerWidth = shell.parentElement ? shell.parentElement.clientWidth : window.innerWidth;
-                const available = Math.max(340, containerWidth - 32);
+                const available = Math.max(768, containerWidth - 32);
                 target = Math.min(1, available / 1024);
             } else {
                 target = Number(scale) || 1;
             }
             
+            el.style.width = '1024px';
+            el.style.minWidth = '1024px';
+            el.style.maxWidth = '1024px';
             el.style.transform = target === 1 ? 'none' : `scale(${target})`;
             el.style.transformOrigin = 'top center';
+            shell.style.transform = 'none';
             
             const scaledHeight = el.offsetHeight * target;
             if (target !== 1) {
@@ -7745,10 +7850,23 @@ ${optionText}
         
         function autoFitQuoteShell() {
             if (window.innerWidth < 1280) {
-                setQuoteViewScale('fit');
-            } else {
                 setQuoteViewScale(1);
+                setMobileTab(currentMobileTab);
+            } else {
+                setQuoteViewScale(currentQuoteScale || 1);
+                const lc = document.getElementById('left-console');
+                const rp = document.getElementById('right-preview');
+                if (lc) lc.style.display = '';
+                if (rp) rp.style.display = '';
             }
+        }
+
+        window.addEventListener('resize', autoFitQuoteShell);
+
+        function toggleMobileExtraMenu() {
+            const menu = document.getElementById('mobile-extra-menu');
+            if (!menu) return;
+            menu.classList.toggle('hidden');
         }
 
         function resetDefaultDatasetFromEmbedded() {
