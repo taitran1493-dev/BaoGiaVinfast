@@ -764,14 +764,14 @@
 
                     <hr class="my-5 border-gray-200">
 
-                    <!-- MỨC GIẢM TỐI ĐA NHÀ MÁY THEO DÒNG XE -->
+                    <!-- MÃ SẢN PHẨM NHÀ MÁY THEO DÒNG XE -->
                     <div class="mb-4 bg-amber-50 border border-amber-300 rounded-xl p-3">
                         <div class="flex items-center justify-between gap-3">
                             <div>
-                                <div class="text-xs font-black text-amber-800">Mức giảm tối đa của Nhà máy</div>
-                                <div class="text-[10px] text-amber-700 mt-0.5">Tham chiếu cho ô Nhập mức giảm thêm bằng tiền · Phần vượt chuyển Thanh Toán</div>
+                                <div class="text-xs font-black text-amber-800 uppercase">Mã sản phẩm Nhà máy</div>
+                                <div class="text-[10px] text-amber-700 mt-0.5">Mã đối chiếu khung Nhà máy · Phần vượt khung chuyển Thanh Toán</div>
                             </div>
-                            <div id="vf-car-cut-limit-display" class="text-base font-black text-amber-700 whitespace-nowrap">0 VNĐ</div>
+                            <div id="vf-car-cut-limit-display" class="text-base font-black text-amber-700 whitespace-nowrap">--</div>
                         </div>
                     </div>
 
@@ -807,17 +807,13 @@
 
                     <hr class="my-5 border-gray-200">
 
-                    <!-- CẮT MÁU (LƯƠNG SALE) -->
+                    <!-- MÃ POVIN -->
                     <div class="bg-red-50 border-2 border-red-300 rounded-xl p-4 shadow-sm relative overflow-hidden">
                         <div class="absolute right-0 top-0 w-2 h-full bg-red-500"></div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="block text-xs font-black text-red-600 uppercase tracking-wide">Giảm Giá Bằng Lương</label>
+                        <div class="flex justify-between items-center gap-3">
+                            <label class="block text-xs font-black text-red-600 uppercase tracking-wide">MÃ POVIN</label>
+                            <span id="vf-catmau-limit" class="text-sm font-black text-red-600 underline">MASP: --</span>
                         </div>
-                        <p class="text-[10px] text-red-400 font-medium mb-3 leading-tight flex justify-between">
-                            <span>Nhập phần lương dùng để giảm thêm cho khách.</span>
-                            <span id="vf-catmau-limit" class="font-bold text-red-600 underline">MASP: --</span>
-                        </p>
-                        <input type="text" id="vf-catmau" oninput="formatInputMoney(this); syncVF()" placeholder="Nhập giảm giá bằng lương..." class="w-full border border-red-300 rounded-lg p-3 text-lg font-black text-red-600 text-right outline-none bg-white focus:ring-2 focus:ring-red-200 transition-shadow">
                     </div>
                 </div>
             </div>
@@ -1328,19 +1324,51 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                         <div class="col-span-1 sm:col-span-2 rounded-xl border border-cyan-200 bg-cyan-50 p-3">
                             <div class="flex items-center justify-between gap-3 mb-2">
                                 <div>
-                                    <div class="text-xs font-black text-cyan-800">Ảnh xe theo màu / Model</div>
-                                    <div class="text-[9px] text-cyan-700">Chọn màu rồi Upload ảnh tương ứng. Khi báo giá đổi màu, hình xe tự đổi theo.</div>
+                                    <div class="text-xs font-black text-cyan-800">Màu xe & Ảnh xe theo màu / Model</div>
+                                    <div class="text-[9px] text-cyan-700">Cho phép tự đặt tên màu xe, chọn màu nâng cao kèm chi phí phụ phí màu nâng cao và gán ảnh tương ứng.</div>
                                 </div>
                                 <button type="button" onclick="refreshCarColorImageManager()" class="px-2.5 py-1.5 rounded-lg border border-cyan-300 bg-white text-cyan-700 text-[10px] font-black">Làm mới màu</button>
                             </div>
                             <input type="hidden" id="form-car-color-images-json" value="{}">
+                            <input type="hidden" id="form-car-color-configs-json" value="[]">
+
                             <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-                                <select id="form-car-color-image-select" onchange="previewSelectedCarColorImage()" class="w-full border rounded-lg p-2 text-sm bg-white"></select>
+                                <select id="form-car-color-image-select" onchange="previewSelectedCarColorImage()" class="w-full border rounded-lg p-2 text-sm bg-white font-bold text-gray-800"></select>
                                 <label class="px-4 py-2 rounded-lg bg-cyan-600 text-white text-xs font-black cursor-pointer flex items-center justify-center">
-                                    Upload màu
+                                    Upload ảnh màu
                                     <input type="file" id="form-car-color-image-file" accept="image/*" class="hidden" onchange="uploadSelectedCarColorImage(this)">
                                 </label>
                             </div>
+
+                            <!-- Chỉnh sửa Tên màu / Màu nâng cao / Chi phí màu nâng cao -->
+                            <div class="mt-2 rounded-lg border border-cyan-200 bg-white p-2.5 space-y-2">
+                                <div class="text-[10px] font-black uppercase text-cyan-800">Chỉnh màu đang chọn hoặc thêm màu mới</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                                    <div class="sm:col-span-5">
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Tên màu xe</label>
+                                        <input type="text" id="form-car-color-custom-name" class="w-full border rounded-lg px-2.5 py-1.5 text-xs font-bold text-gray-800 outline-none focus:border-cyan-500" placeholder="VD: Trắng Ngọc Trai, Đỏ Nóc Đen...">
+                                    </div>
+                                    <div class="sm:col-span-3 flex items-center pt-3 sm:pt-4">
+                                        <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                                            <input type="checkbox" id="form-car-color-is-premium" onchange="toggleCarColorPremiumInput()" class="w-4 h-4 accent-amber-600 rounded">
+                                            <span class="text-xs font-black text-amber-700">Màu nâng cao</span>
+                                        </label>
+                                    </div>
+                                    <div class="sm:col-span-4">
+                                        <label class="block text-[9px] font-bold text-amber-700 mb-0.5">Chi phí màu nâng cao (VNĐ)</label>
+                                        <input type="text" inputmode="numeric" id="form-car-color-surcharge" oninput="formatInputMoney(this)" class="w-full border border-amber-300 rounded-lg px-2.5 py-1.5 text-xs font-black text-amber-800 text-right outline-none bg-amber-50/40 focus:border-amber-500" placeholder="VD: 8.000.000">
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <button type="button" onclick="saveCurrentCarColorConfig()" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-[10px] font-black">Lưu thông tin màu</button>
+                                        <button type="button" onclick="addNewCarColorConfig()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black">+ Thêm thành màu mới</button>
+                                    </div>
+                                    <button type="button" onclick="deleteSelectedCarColorConfig()" class="px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-black">Xóa màu này</button>
+                                </div>
+                                <div id="form-car-color-list-badges" class="flex flex-wrap gap-1.5 pt-1 border-t border-gray-100"></div>
+                            </div>
+
                             <div class="mt-2">
                                 <label class="block text-[9px] font-black uppercase text-cyan-800 mb-1">Link ảnh cho màu đang chọn</label>
                                 <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
@@ -1620,6 +1648,18 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         ];
 
         let carList = []; let accList = []; let promoList = []; let accessoryCombos = []; let accessorySaleTabs = []; let quoteAdjustments = {};
+
+        function getFactoryProductCode(car) {
+            if (!car) return '';
+            const rawKey = String(car.standardName || car.version || car.name || 'XE')
+                .toUpperCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/Đ/g, 'D')
+                .replace(/[^A-Z0-9]/g, '');
+            const factoryMax = Math.max(0, Number(car.cutLimit || car.discount || 0));
+            const maxCode = Math.round((factoryMax / 1000000) * 100) / 100;
+            return `${rawKey}${maxCode}`;
+        }
 
         function getSalaryProductCode(car) {
             if (!car) return '';
@@ -2337,8 +2377,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             }
         };
 
-        function getVehicleColorConfig(car) {
-            if (!car) return null;
+        function getDefaultVehicleColorConfig(car) {
+            if (!car) return { basic: ['Trắng','Đen','Đỏ','Xám','Xanh','Bạc'], premium: [], surcharge: 0, fallback: true };
             const key = normalizeCarKey(car.standardName || [car.name, car.version].filter(Boolean).join(' '));
 
             if (VEHICLE_COLOR_CONFIGS[key]) return VEHICLE_COLOR_CONFIGS[key];
@@ -2358,6 +2398,66 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             };
         }
 
+        function normalizeCarColorConfigsList(list) {
+            if (!Array.isArray(list)) return [];
+            const seen = new Set();
+            const result = [];
+            list.forEach(item => {
+                if (!item || typeof item !== 'object') return;
+                const name = String(item.name || '').trim();
+                if (!name) return;
+                const normKey = name.toLocaleLowerCase('vi-VN');
+                if (seen.has(normKey)) return;
+                seen.add(normKey);
+                const isPremium = !!item.isPremium;
+                const surcharge = isPremium ? Math.max(0, Number(item.surcharge || 0)) : 0;
+                result.push({ name, isPremium, surcharge });
+            });
+            return result;
+        }
+
+        function buildColorConfigFromList(items, defaultSurcharge = 0) {
+            const normalized = normalizeCarColorConfigsList(items);
+            const basic = [];
+            const premium = [];
+            const premiumSurcharges = {};
+            let maxSurcharge = 0;
+
+            normalized.forEach(it => {
+                if (it.isPremium) {
+                    premium.push(it.name);
+                    const sc = Number(it.surcharge || defaultSurcharge || 0);
+                    premiumSurcharges[it.name] = sc;
+                    if (sc > maxSurcharge) maxSurcharge = sc;
+                } else {
+                    basic.push(it.name);
+                }
+            });
+
+            return {
+                basic,
+                premium,
+                surcharge: maxSurcharge || Number(defaultSurcharge || 0),
+                premiumSurcharges,
+                items: normalized
+            };
+        }
+
+        function getVehicleColorConfig(car) {
+            if (!car) return null;
+            const baseCfg = getDefaultVehicleColorConfig(car);
+
+            if (Array.isArray(car.colorConfigs) && car.colorConfigs.length > 0) {
+                return buildColorConfigFromList(car.colorConfigs, baseCfg.surcharge || 0);
+            }
+
+            const items = [
+                ...(baseCfg.basic || []).map(name => ({ name, isPremium: false, surcharge: 0 })),
+                ...(baseCfg.premium || []).map(name => ({ name, isPremium: true, surcharge: Number(baseCfg.surcharge || 0) }))
+            ];
+            return buildColorConfigFromList(items, baseCfg.surcharge || 0);
+        }
+
         function getSelectedColorInfo(car) {
             const cfg = getVehicleColorConfig(car);
             if (!cfg) return { name: '', isPremium: false, surcharge: 0 };
@@ -2368,11 +2468,15 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 ? select.value
                 : (adj.selectedColor || cfg.basic[0] || cfg.premium[0] || '');
 
-            const isPremium = (cfg.premium || []).includes(selected);
+            const itemMatch = Array.isArray(cfg.items) ? cfg.items.find(x => x.name === selected) : null;
+            const isPremium = itemMatch ? !!itemMatch.isPremium : (cfg.premium || []).includes(selected);
+            const surcharge = isPremium
+                ? Number((itemMatch ? itemMatch.surcharge : (cfg.premiumSurcharges?.[selected] ?? cfg.surcharge)) || 0)
+                : 0;
             return {
                 name: selected,
                 isPremium,
-                surcharge: isPremium ? Number(cfg.surcharge || 0) : 0,
+                surcharge,
                 config: cfg
             };
         }
@@ -2452,8 +2556,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
         function renderQuoteColorSwatches(car) {
             if (!car) return;
-            const cfg = getVehicleColorConfig(car) || { basic:[], premium:[], surcharge:0 };
-            const selected = getSelectedColorInfo(car)?.name || '';
+            const cfg = getVehicleColorConfig(car) || { basic:[], premium:[], surcharge:0, premiumSurcharges:{} };
+            const selectedInfo = getSelectedColorInfo(car);
+            const selected = selectedInfo?.name || '';
             const basicEl = document.getElementById('quote-basic-color-swatches');
             const premiumEl = document.getElementById('quote-premium-color-swatches');
             const premiumWrap = document.getElementById('quote-premium-color-wrap');
@@ -2465,8 +2570,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const makeChip = (name, premium=false) => {
                 const active = name === selected;
                 const outline = active ? 'ring-2 ring-blue-600 ring-offset-2' : 'border border-gray-300';
-                const title = premium && Number(cfg.surcharge || 0) > 0
-                    ? `${name} · +${formatMoney(cfg.surcharge)}`
+                const itemSc = Number(cfg.premiumSurcharges?.[name] ?? cfg.surcharge ?? 0);
+                const title = premium && itemSc > 0
+                    ? `${name} · +${formatMoney(itemSc)}`
                     : name;
                 return `<button type="button" onclick="syncCarColor(${JSON.stringify(name).replace(/"/g,'&quot;')})" title="${title.replace(/"/g,'&quot;')}" class="w-8 h-8 rounded-md ${outline} shadow-sm" style="background:${carColorCss(name)}"></button>`;
             };
@@ -2476,9 +2582,15 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             if (premiumWrap) premiumWrap.classList.toggle('hidden', !(cfg.premium || []).length);
             if (premiumLabel) {
-                premiumLabel.textContent = Number(cfg.surcharge || 0) > 0
-                    ? `Màu nâng cao + ${formatMoney(cfg.surcharge)}`
-                    : 'Màu nâng cao';
+                const uniqueSc = [...new Set((cfg.premium || []).map(n => Number(cfg.premiumSurcharges?.[n] ?? cfg.surcharge ?? 0)).filter(x => x > 0))];
+                if (uniqueSc.length === 1) {
+                    premiumLabel.textContent = `Màu nâng cao + ${formatMoney(uniqueSc[0])}`;
+                } else if (uniqueSc.length > 1) {
+                    const activeSc = selectedInfo?.isPremium && selectedInfo.surcharge > 0 ? selectedInfo.surcharge : null;
+                    premiumLabel.textContent = activeSc ? `Màu nâng cao + ${formatMoney(activeSc)}` : 'Màu nâng cao (phụ phí theo màu)';
+                } else {
+                    premiumLabel.textContent = 'Màu nâng cao';
+                }
             }
         }
 
@@ -2662,26 +2774,223 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             if (field) field.value = JSON.stringify(map || {});
         }
 
+        function readCarColorConfigsForm() {
+            try {
+                const raw = document.getElementById('form-car-color-configs-json')?.value || '[]';
+                const arr = JSON.parse(raw);
+                return normalizeCarColorConfigsList(arr);
+            } catch (_) {
+                return [];
+            }
+        }
+
+        function writeCarColorConfigsForm(list) {
+            const field = document.getElementById('form-car-color-configs-json');
+            if (field) field.value = JSON.stringify(normalizeCarColorConfigsList(list));
+        }
+
         function getCarFormColorConfig() {
             const standardName = document.getElementById('form-car-standard-name')?.value?.trim()
                 || document.getElementById('form-car-name')?.value?.trim()
                 || '';
-            return getVehicleColorConfig({ standardName, name: standardName }) || { basic:[], premium:[], surcharge:0 };
+            const customList = readCarColorConfigsForm();
+            const baseCfg = getDefaultVehicleColorConfig({ standardName, name: standardName }) || { basic:[], premium:[], surcharge:0 };
+            if (customList.length > 0) {
+                return buildColorConfigFromList(customList, baseCfg.surcharge || 0);
+            }
+            return getVehicleColorConfig({ standardName, name: standardName }) || { basic:[], premium:[], surcharge:0, items:[] };
         }
 
-        function refreshCarColorImageManager() {
+        function ensureCarColorConfigsFormInitialized() {
+            let list = readCarColorConfigsForm();
+            if (!list.length) {
+                const cfg = getCarFormColorConfig();
+                list = Array.isArray(cfg.items) ? cfg.items : [];
+                writeCarColorConfigsForm(list);
+            }
+            return list;
+        }
+
+        function toggleCarColorPremiumInput() {
+            const isPrem = !!document.getElementById('form-car-color-is-premium')?.checked;
+            const scInput = document.getElementById('form-car-color-surcharge');
+            if (!scInput) return;
+            scInput.disabled = !isPrem;
+            scInput.classList.toggle('opacity-50', !isPrem);
+            if (isPrem && !parseMoneyInput(scInput.value)) {
+                const standardName = document.getElementById('form-car-standard-name')?.value?.trim()
+                    || document.getElementById('form-car-name')?.value?.trim()
+                    || '';
+                const baseCfg = getDefaultVehicleColorConfig({ standardName, name: standardName });
+                const defSc = Number(baseCfg?.surcharge || 8000000);
+                if (defSc > 0) scInput.value = defSc.toLocaleString('vi-VN');
+            } else if (!isPrem) {
+                scInput.value = '';
+            }
+        }
+
+        function renderCarColorConfigBadges(selectedColor = '') {
+            const box = document.getElementById('form-car-color-list-badges');
+            if (!box) return;
+            const cfg = getCarFormColorConfig();
+            const items = Array.isArray(cfg.items) ? cfg.items : [];
+            if (!items.length) {
+                box.innerHTML = '<span class="text-[10px] text-gray-400 italic">Chưa có màu nào</span>';
+                return;
+            }
+            box.innerHTML = items.map(it => {
+                const active = it.name === selectedColor;
+                const badgeCls = it.isPremium
+                    ? (active ? 'bg-amber-600 text-white border-amber-700' : 'bg-amber-50 text-amber-800 border-amber-300')
+                    : (active ? 'bg-cyan-700 text-white border-cyan-800' : 'bg-gray-100 text-gray-700 border-gray-300');
+                const scText = it.isPremium && it.surcharge > 0 ? ` (+${Math.round(it.surcharge / 1000000 * 10) / 10}Tr)` : (it.isPremium ? ' (NC)' : '');
+                const safeName = String(it.name).replace(/"/g, '&quot;');
+                return `<button type="button" onclick="selectCarColorInManager(${JSON.stringify(it.name).replace(/"/g,'&quot;')})" class="px-2 py-1 rounded-md border text-[10px] font-bold transition-all ${badgeCls}" title="${safeName}">${it.name}${scText}</button>`;
+            }).join('');
+        }
+
+        function selectCarColorInManager(colorName) {
+            const select = document.getElementById('form-car-color-image-select');
+            if (!select) return;
+            select.value = colorName;
+            previewSelectedCarColorImage();
+        }
+
+        function syncEditingCarColorConfigsLive(newList, newImageMap = null, selectedColor = null) {
+            const editId = document.getElementById('form-car-id')?.value || '';
+            const car = carList.find(c => c.id === editId);
+            if (!car) return;
+            car.colorConfigs = normalizeCarColorConfigsList(newList);
+            if (newImageMap) car.colorImages = { ...newImageMap };
+            try { localStorage.setItem('vinfast_cars_v3', JSON.stringify(carList)); } catch (_) {}
+            if (document.getElementById('carSelect')?.value === car.id) {
+                if (selectedColor) {
+                    if (!quoteAdjustments[car.id]) quoteAdjustments[car.id] = getDefaultQuoteAdjustments(car);
+                    quoteAdjustments[car.id].selectedColor = selectedColor;
+                    saveQuoteAdjustmentsToStorage();
+                }
+                renderColorOptions(car, true);
+                refreshQuoteCarImage(car, selectedColor);
+                updateQuotationUI();
+            }
+        }
+
+        function saveCurrentCarColorConfig() {
+            const select = document.getElementById('form-car-color-image-select');
+            const oldName = select?.value || '';
+            const newName = document.getElementById('form-car-color-custom-name')?.value?.trim() || '';
+            if (!newName) {
+                alert('Vui lòng nhập tên màu xe!');
+                return;
+            }
+            const isPremium = !!document.getElementById('form-car-color-is-premium')?.checked;
+            const surcharge = isPremium ? parseMoneyInput(document.getElementById('form-car-color-surcharge')?.value || '') : 0;
+
+            let list = ensureCarColorConfigsFormInitialized();
+            const idx = list.findIndex(x => x.name === oldName);
+            const conflictIdx = list.findIndex((x, i) => i !== idx && x.name.toLocaleLowerCase('vi-VN') === newName.toLocaleLowerCase('vi-VN'));
+            if (conflictIdx >= 0) {
+                alert('Tên màu này đã tồn tại trong danh sách màu của xe!');
+                return;
+            }
+
+            if (idx >= 0) {
+                list[idx] = { name: newName, isPremium, surcharge };
+            } else {
+                list.push({ name: newName, isPremium, surcharge });
+            }
+
+            const imgMap = readCarColorImagesForm();
+            if (oldName && oldName !== newName && imgMap[oldName]) {
+                imgMap[newName] = imgMap[oldName];
+                delete imgMap[oldName];
+                writeCarColorImagesForm(imgMap);
+            }
+
+            writeCarColorConfigsForm(list);
+            refreshCarColorImageManager(newName);
+            syncEditingCarColorConfigsLive(list, imgMap, newName);
+            setCarColorImageStatus(`Đã lưu màu "${newName}" (${isPremium ? 'Màu nâng cao +' + formatMoney(surcharge) : 'Màu cơ bản'}).`, 'ok');
+        }
+
+        function addNewCarColorConfig() {
+            const newName = document.getElementById('form-car-color-custom-name')?.value?.trim() || '';
+            if (!newName) {
+                alert('Vui lòng nhập tên màu xe mới cần thêm!');
+                return;
+            }
+            const isPremium = !!document.getElementById('form-car-color-is-premium')?.checked;
+            const surcharge = isPremium ? parseMoneyInput(document.getElementById('form-car-color-surcharge')?.value || '') : 0;
+
+            let list = ensureCarColorConfigsFormInitialized();
+            const existingIdx = list.findIndex(x => x.name.toLocaleLowerCase('vi-VN') === newName.toLocaleLowerCase('vi-VN'));
+            if (existingIdx >= 0) {
+                list[existingIdx] = { name: newName, isPremium, surcharge };
+            } else {
+                list.push({ name: newName, isPremium, surcharge });
+            }
+
+            writeCarColorConfigsForm(list);
+            refreshCarColorImageManager(newName);
+            syncEditingCarColorConfigsLive(list, null, newName);
+            setCarColorImageStatus(`Đã thêm màu "${newName}" (${isPremium ? 'Màu nâng cao +' + formatMoney(surcharge) : 'Màu cơ bản'}).`, 'ok');
+        }
+
+        function deleteSelectedCarColorConfig() {
+            const select = document.getElementById('form-car-color-image-select');
+            const color = select?.value || '';
+            if (!color) return;
+
+            let list = ensureCarColorConfigsFormInitialized();
+            if (list.length <= 1) {
+                alert('Xe cần có ít nhất 1 màu!');
+                return;
+            }
+            list = list.filter(x => x.name !== color);
+            const imgMap = readCarColorImagesForm();
+            delete imgMap[color];
+            writeCarColorImagesForm(imgMap);
+            writeCarColorConfigsForm(list);
+            refreshCarColorImageManager(list[0]?.name || '');
+            syncEditingCarColorConfigsLive(list, imgMap, list[0]?.name || '');
+            setCarColorImageStatus(`Đã xóa màu "${color}".`, 'normal');
+        }
+
+        function refreshCarColorImageManager(preferredColor = null) {
             const select = document.getElementById('form-car-color-image-select');
             if (!select) return;
             const cfg = getCarFormColorConfig();
-            const current = select.value;
-            const colors = [...(cfg.basic || []), ...(cfg.premium || [])];
-            select.innerHTML = colors.map(name => `<option value="${String(name).replace(/"/g,'&quot;')}">${name}</option>`).join('');
+            const current = preferredColor !== null ? preferredColor : select.value;
+            const items = Array.isArray(cfg.items) ? cfg.items : [];
+            select.innerHTML = items.map(it => {
+                const suffix = it.isPremium
+                    ? (it.surcharge > 0 ? ` — Nâng cao (+${formatMoney(it.surcharge)})` : ' — Nâng cao')
+                    : ' — Cơ bản';
+                return `<option value="${String(it.name).replace(/"/g,'&quot;')}">${it.name}${suffix}</option>`;
+            }).join('');
+            const colors = items.map(x => x.name);
             if (colors.includes(current)) select.value = current;
             previewSelectedCarColorImage();
         }
 
         function previewSelectedCarColorImage() {
             const color = document.getElementById('form-car-color-image-select')?.value || '';
+            const cfg = getCarFormColorConfig();
+            const item = (cfg.items || []).find(x => x.name === color);
+
+            const nameInp = document.getElementById('form-car-color-custom-name');
+            const premChk = document.getElementById('form-car-color-is-premium');
+            const scInp = document.getElementById('form-car-color-surcharge');
+            if (nameInp) nameInp.value = item ? item.name : color;
+            if (premChk) premChk.checked = !!(item && item.isPremium);
+            if (scInp) {
+                const scVal = item && item.isPremium ? Number(item.surcharge || 0) : 0;
+                scInp.value = scVal > 0 ? scVal.toLocaleString('vi-VN') : '';
+                scInp.disabled = !(item && item.isPremium);
+                scInp.classList.toggle('opacity-50', !(item && item.isPremium));
+            }
+            renderCarColorConfigBadges(color);
+
             const map = readCarColorImagesForm();
             const img = document.getElementById('form-car-color-image-preview');
             const empty = document.getElementById('form-car-color-image-empty');
@@ -2785,7 +3094,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 options.push({ name, premium: false, surcharge: 0 });
             });
             (cfg.premium || []).forEach(name => {
-                options.push({ name, premium: true, surcharge: Number(cfg.surcharge || 0) });
+                options.push({ name, premium: true, surcharge: Number(cfg.premiumSurcharges?.[name] ?? cfg.surcharge ?? 0) });
             });
 
             let selected = adj.selectedColor || '';
@@ -2858,6 +3167,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         function getQuoteAdjustments(car) {
             const def = getDefaultQuoteAdjustments(car); if (!car) return def; const sav = quoteAdjustments[car.id] || {};
             let merged = { ...def, ...sav };
+            merged.bhvcType = (merged.bhvcType === 'khong') ? 'khong' : 'mua';
             merged.regFees = { ...def.regFees, ...(sav.regFees || {}) };
             merged.vfPromos = { ...def.vfPromos, ...(sav.vfPromos || {}) };
             merged.accessories = Array.isArray(sav.accessories) ? sav.accessories : [];
@@ -2930,6 +3240,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const c = car && typeof car === 'object' ? { ...car } : {};
             const derived = deriveVehicleHighlightsFromSpecs(c.specs || '');
             c.colorImages = c.colorImages && typeof c.colorImages === 'object' && !Array.isArray(c.colorImages) ? c.colorImages : {};
+            c.colorConfigs = normalizeCarColorConfigsList(c.colorConfigs);
             c.maxPower = String(c.maxPower || derived.maxPower || '').trim();
             c.batteryCapacity = String(c.batteryCapacity || derived.batteryCapacity || '').trim();
             c.drivingRange = String(c.drivingRange || derived.drivingRange || '').trim();
@@ -3127,7 +3438,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 accessoryCombos,
                 accessorySaleTabs,
                 vehicleMediaSchemaVersion: 1,
-                vehicleMediaFields: ['colorImages','maxPower','batteryCapacity','drivingRange'],
+                vehicleMediaFields: ['colorImages','colorConfigs','maxPower','batteryCapacity','drivingRange'],
                 updatedForHtmlVersion: 'V65'
             };
             const link = document.createElement("a");
@@ -3712,11 +4023,14 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
         // ================== CAR MANAGER ==================
         function openCarManager() { renderTable(); toggleModal('carManagerModal', true);  refreshCarColorImageManager(); }
         function closeCarManager() { toggleModal('carManagerModal', false); }
-        function renderTable() { document.getElementById('car-table-body').innerHTML = carList.map(car => `<tr class="hover:bg-gray-50 border-b cursor-pointer" onclick="editCar('${car.id}')"><td class="p-2"><img src="${car.image||'https://placehold.co/100x60'}" class="w-16 h-10 object-cover rounded"></td><td class="p-3"><div class="font-bold">${car.name} ${car.version}</div><div class="text-[10px] font-bold text-indigo-600">KEY: ${car.standardName||'Chưa đặt'}</div><div class="text-[10px] font-bold text-amber-700">NHÀ MÁY MAX: ${formatMoney(car.cutLimit||car.discount||0)}</div><div class="text-[10px] font-bold text-blue-700">GỢI Ý ĐẠI LÝ: ${formatMoney(car.dealerPromoSuggested||0)}</div><div class="text-[10px] font-bold text-red-600">LƯƠNG XE: ${formatMoney(car.saleSalary||0)}</div><div class="text-xs text-blue-600">${car.type==='bantai'?'Bán Tải':'Du lịch'} - ${car.year}</div></td><td class="p-3">${formatMoney(car.price)}</td><td class="p-3 text-center"><button onclick="event.stopPropagation(); deleteCar('${car.id}')" class="text-red-500 hover:text-red-700">Xóa</button></td></tr>`).join(''); }
+        function renderTable() { document.getElementById('car-table-body').innerHTML = carList.map(car => `<tr class="hover:bg-gray-50 border-b cursor-pointer" onclick="editCar('${car.id}')"><td class="p-2"><img src="${car.image||'https://placehold.co/100x60'}" class="w-16 h-10 object-cover rounded"></td><td class="p-3"><div class="font-bold">${car.name} ${car.version}</div><div class="text-[10px] font-bold text-indigo-600">KEY: ${car.standardName||'Chưa đặt'}</div><div class="text-[10px] font-bold text-amber-700">MÃ SP NHÀ MÁY: ${getFactoryProductCode(car)} (${formatMoney(car.cutLimit||car.discount||0)})</div><div class="text-[10px] font-bold text-blue-700">GỢI Ý ĐẠI LÝ: ${formatMoney(car.dealerPromoSuggested||0)}</div><div class="text-[10px] font-bold text-red-600">MÃ POVIN: ${getSalaryProductCode(car)}</div><div class="text-xs text-blue-600">${car.type==='bantai'?'Bán Tải':'Du lịch'} - ${car.year}</div></td><td class="p-3">${formatMoney(car.price)}</td><td class="p-3 text-center"><button onclick="event.stopPropagation(); deleteCar('${car.id}')" class="text-red-500 hover:text-red-700">Xóa</button></td></tr>`).join(''); }
         function clearCarForm() {
-            document.querySelectorAll('#form-car-id,#form-car-name,#form-car-version,#form-car-year,#form-car-img,#form-car-price,#form-car-standard-name,#form-car-cut-limit,#form-car-sale-salary,#form-car-dealer-promo-suggest,#form-car-bh-tang,#form-car-bh-mua,#form-car-specs,#form-car-ctkm2-desc,#form-car-voucher-desc,#form-car-promo-text,#form-car-max-power,#form-car-battery-capacity,#form-car-driving-range').forEach(e=>e.value='');
+            document.querySelectorAll('#form-car-id,#form-car-name,#form-car-version,#form-car-year,#form-car-img,#form-car-price,#form-car-standard-name,#form-car-cut-limit,#form-car-sale-salary,#form-car-dealer-promo-suggest,#form-car-bh-tang,#form-car-bh-mua,#form-car-specs,#form-car-ctkm2-desc,#form-car-voucher-desc,#form-car-promo-text,#form-car-max-power,#form-car-battery-capacity,#form-car-driving-range,#form-car-color-custom-name,#form-car-color-surcharge').forEach(e=>e.value='');
+            const premChk = document.getElementById('form-car-color-is-premium');
+            if (premChk) premChk.checked = false;
             document.getElementById('form-car-type').value='dulich';
             writeCarColorImagesForm({});
+            writeCarColorConfigsForm([]);
             const p1 = document.getElementById('form-car-img-preview'); if (p1) p1.removeAttribute('src');
             const p2 = document.getElementById('form-car-color-image-preview'); if (p2) p2.removeAttribute('src');
             refreshCarColorImageManager();
@@ -3738,6 +4052,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 type: document.getElementById('form-car-type').value,
                 image: document.getElementById('form-car-img').value.trim(),
                 colorImages: readCarColorImagesForm(),
+                colorConfigs: readCarColorConfigsForm(),
                 maxPower: document.getElementById('form-car-max-power').value.trim(),
                 batteryCapacity: document.getElementById('form-car-battery-capacity').value.trim(),
                 drivingRange: document.getElementById('form-car-driving-range').value.trim(),
@@ -3767,6 +4082,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             renderStandardCarNameList();
             renderTable();
             renderDropdown();
+            const currentSelectedCar = carList.find(c => c.id === document.getElementById('carSelect')?.value);
+            if (currentSelectedCar) renderColorOptions(currentSelectedCar, true);
             renderPromosUI();
             updateQuotationUI();
             if (document.getElementById('carSelect')?.value === normalizedCar.id) refreshQuoteCarImage(normalizedCar);
@@ -3797,6 +4114,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             document.getElementById('form-car-battery-capacity').value = c.batteryCapacity || '';
             document.getElementById('form-car-driving-range').value = c.drivingRange || '';
             writeCarColorImagesForm(c.colorImages || {});
+            const cfg = getVehicleColorConfig(c);
+            writeCarColorConfigsForm(Array.isArray(c.colorConfigs) && c.colorConfigs.length ? c.colorConfigs : (cfg?.items || []));
 
             const preview = document.getElementById('form-car-img-preview');
             if (preview) {
@@ -4112,7 +4431,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             return text;
         }
 
-        function changeBHVCType(t) { const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(c){if(!quoteAdjustments[c.id])quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c); quoteAdjustments[c.id].bhvcType=t; saveQuoteAdjustmentsToStorage(); updateQuotationUI();} }
+        function changeBHVCType(t) { const c=carList.find(x=>x.id===document.getElementById('carSelect').value); if(c){if(!quoteAdjustments[c.id])quoteAdjustments[c.id]=getDefaultQuoteAdjustments(c); quoteAdjustments[c.id].bhvcType=(t==='khong'?'khong':'mua'); saveQuoteAdjustmentsToStorage(); updateQuotationUI();} }
         
         function normalizePromoSemanticName(name) {
             return String(name || '')
@@ -4316,7 +4635,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 exclusiveId: document.getElementById('vf-main-policy')?.value || 'none',
                 additiveIds: [], customValues: {},
                 dealerExtra: parseMoneyInput(document.getElementById('vf-dealer-extra')?.value || ''),
-                catMau: parseMoneyInput(document.getElementById('vf-catmau').value)
+                catMau: 0
             };
             
             document.querySelectorAll('.promo-additive-chk').forEach(chk => {
@@ -4755,14 +5074,10 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 if (dealerExtraOverflow > 0) promoDetails.push(`Phần vượt khung giảm tại Thanh Toán: ${formatMoney(dealerExtraOverflow)}`);
             }
 
-            // "Giảm Giá Bằng Lương" thuộc nhóm còn lại => giảm tại Thanh Toán.
-            const catMauEntered = Math.max(0, Number(vfp.catMau || 0));
+            // Đã bỏ ô nhập giảm giá bằng lương (MÃ POVIN chỉ hiển thị MASP).
+            const catMauEntered = 0;
             const catMauInvoice = 0;
-            const catMauOverflow = catMauEntered;
-            if (catMauEntered > 0) {
-                paymentDiscount += catMauEntered;
-                promoDetails.push(`Giảm Giá Bằng Lương (Thanh Toán): ${formatMoney(catMauEntered)}`);
-            }
+            const catMauOverflow = 0;
 
             invoiceDiscount = Math.min(listPrice, invoiceDiscount);
             const invoicePrice = Math.max(0, listPrice - invoiceDiscount);
@@ -4778,8 +5093,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             let phiDangKiem = Number(rf.inspectionFee || PHI_DANG_KIEM);
             
             const bhRates = getBhvcRates(car, adj, plt, invoicePrice);
-            const rMua = bhRates.mua, rTang = bhRates.tang;
-            const bhvcType = adj.bhvcType || 'mua';
+            const rMua = bhRates.mua;
+            const bhvcType = (adj.bhvcType === 'khong') ? 'khong' : 'mua';
             
             let calculatedBhValue = 0;
             const manualBhvcAmount = adj.bhvcManualAmount;
@@ -4789,11 +5104,9 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 calculatedBhValue = hasManualBhvcAmount
                     ? Number(manualBhvcAmount)
                     : invoicePrice * (rMua / 100);
-            } else if (bhvcType === 'tang') {
-                calculatedBhValue = invoicePrice * (rTang / 100);
             }
 
-            let effectiveBhValueForReg = (bhvcType === 'tang' || bhvcType === 'khong') ? 0 : calculatedBhValue;
+            let effectiveBhValueForReg = (bhvcType === 'khong') ? 0 : calculatedBhValue;
 
             let accTang = [], aMua = [], totAcc = 0;
             (Array.isArray(adj.accessories) ? adj.accessories : []).forEach(a => {
@@ -4979,23 +5292,24 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             const dealerExtraInp = document.getElementById('vf-dealer-extra');
             if(dealerExtraInp && document.activeElement !== dealerExtraInp) dealerExtraInp.value = Number(vfp.dealerExtra || 0) > 0 ? Number(vfp.dealerExtra).toLocaleString('vi-VN') : '';
 
-            document.getElementById('vf-catmau').value = vfp.catMau ? Number(vfp.catMau).toLocaleString('vi-VN') : '';
+            const cutInputEl = document.getElementById('vf-catmau');
+            if (cutInputEl) cutInputEl.value = '';
             const factoryMax = getFactoryMaxDiscount(car);
+            const factoryCode = getFactoryProductCode(car);
             const cutDisplay = document.getElementById('vf-car-cut-limit-display');
-            if(cutDisplay) cutDisplay.innerText = factoryMax > 0 ? formatMoney(factoryMax) : 'Chưa thiết lập';
+            if(cutDisplay) cutDisplay.innerText = factoryCode || 'Chưa thiết lập';
 
             const dealerExtraValue = Number(vfp.dealerExtra || 0);
             const dealerExtraInpForLimit = document.getElementById('vf-dealer-extra');
             const salaryCodeEl = document.getElementById('vf-catmau-limit');
             const isOverCut = factoryMax > 0 && dealerExtraValue > factoryMax;
 
-            // Khu vực "Giảm Giá Bằng Lương" chỉ hiển thị mã lương/MASP nội bộ.
-            // Không dùng khu vực này để hiển thị khung giảm thêm.
+            // Khu vực "MÃ POVIN" chỉ hiển thị MASP trước đó.
             if (salaryCodeEl) {
                 const salaryCode = getSalaryProductCode(car);
                 salaryCodeEl.innerText = salaryCode
-                    ? 'Mã lương / MASP: ' + salaryCode
-                    : 'Mã lương / MASP: Chưa thiết lập';
+                    ? 'MASP: ' + salaryCode
+                    : 'MASP: Chưa thiết lập';
                 salaryCodeEl.classList.remove('animate-pulse');
             }
 
@@ -5029,13 +5343,12 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
 
             // Bảng trái BHVC
             const bhRatesUi = getBhvcRates(car, adj, plt, calc.invoicePrice);
-            let rMua=bhRatesUi.mua, rTang=bhRatesUi.tang;
-            let vMua=calc.invoicePrice*rMua/100, vTang=calc.invoicePrice*rTang/100, curT=adj.bhvcType||'mua';
+            let rMua=bhRatesUi.mua;
+            let vMua=calc.invoicePrice*rMua/100, curT=(adj.bhvcType==='khong'?'khong':'mua');
             
             document.getElementById('left-bhvc-panel').innerHTML = `
-                <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='mua'?'border-indigo-500 bg-indigo-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="mua" class="w-4 h-4 accent-indigo-600" ${curT==='mua'?'checked':''} onchange="changeBHVCType('mua')"><span class="font-bold text-[13px]">Khách mua BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-indigo-700">+ ${formatMoney(vMua)} <span class="text-[10px] font-bold text-indigo-500">(${rMua}%)</span></div></label>
-                <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='tang'?'border-green-500 bg-green-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="radio" value="tang" class="w-4 h-4 accent-green-600" ${curT==='tang'?'checked':''} onchange="changeBHVCType('tang')"><span class="font-bold text-[13px]">Đại lý Tặng BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-green-700">Trị giá: ${formatMoney(vTang)} <span class="text-[10px] font-bold text-green-600">(${rTang}%)</span></div></label>
-                <label class="flex items-center p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='khong'?'border-gray-400 bg-gray-100':'border-gray-200 hover:bg-gray-50'}"><input type="radio" value="khong" class="w-4 h-4 accent-gray-600 mr-2" ${curT==='khong'?'checked':''} onchange="changeBHVCType('khong')"><span class="font-bold text-[13px]">Không lấy BHVC</span></label>`;
+                <label class="flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='mua'?'border-indigo-500 bg-indigo-50 shadow-sm':'border-gray-200 hover:bg-gray-50'}"><div class="flex items-center gap-2"><input type="checkbox" value="mua" class="w-4 h-4 accent-indigo-600" ${curT==='mua'?'checked':''} onchange="changeBHVCType(this.checked ? 'mua' : 'khong')"><span class="font-bold text-[13px]">Mua BHVC</span></div><div class="mt-1 ml-6 text-[14px] font-black text-indigo-700">+ ${formatMoney(vMua)} <span class="text-[10px] font-bold text-indigo-500">(${rMua}%)</span></div></label>
+                <label class="flex items-center p-2.5 rounded-lg border-2 cursor-pointer transition-all ${curT==='khong'?'border-gray-400 bg-gray-100':'border-gray-200 hover:bg-gray-50'}"><input type="checkbox" value="khong" class="w-4 h-4 accent-gray-600 mr-2" ${curT==='khong'?'checked':''} onchange="changeBHVCType(this.checked ? 'khong' : 'mua')"><span class="font-bold text-[13px]">Không mua BHVC</span></label>`;
 
             const bhvcTableQuoteUi = getBhvcTableQuote(car, adj, plt, calc.invoicePrice);
             document.getElementById('left-bhvc-panel').innerHTML += `
@@ -5050,7 +5363,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 </div>`;
 
             const recommendedBhvcRate = getRecommendedBhvcRate(calc.invoicePrice, adj, plt, car);
-            const currentBhvcRate = curT === 'tang' ? Number(rTang) : Number(rMua);
+            const currentBhvcRate = Number(rMua);
             const hasManualBhvc = adj.bhvcManualAmount !== null && adj.bhvcManualAmount !== '' && Number.isFinite(Number(adj.bhvcManualAmount)) && Number(adj.bhvcManualAmount) >= 0;
             if (hasManualBhvc && curT === 'mua') {
                 document.getElementById('left-bhvc-panel').innerHTML += `
@@ -5131,7 +5444,7 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             document.getElementById('quote-phi-dich-vu').innerText = formatMoney(adj.registrationService);
 
             document.getElementById('quote-bu-thue').innerText = formatMoney(calc.bu); document.getElementById('quote-bu-thue-row').style.display = calc.bu>0?'flex':'none';
-            document.getElementById('quote-bh-vc-row').style.display = (calc.bhType==='khong'||calc.bhType==='tang')?'none':'flex'; document.getElementById('quote-bh-vc').innerText = formatMoney(calc.bhVal);
+            document.getElementById('quote-bh-vc-row').style.display = (calc.bhType==='khong')?'none':'flex'; document.getElementById('quote-bh-vc').innerText = formatMoney(calc.bhVal);
             document.getElementById('quote-acc-cost-row').style.display = calc.totAcc>0?'flex':'none'; document.getElementById('quote-acc-cost').innerText = formatMoney(calc.totAcc);
             document.getElementById('quote-reg-total').innerText = formatMoney(calc.netReg); document.getElementById('quote-total').innerText = formatMoney(calc.totOnRoad);
 
@@ -5184,7 +5497,6 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
             (car.promoText || '').split('\n').map(x => x.trim()).filter(Boolean).forEach(x => pushUniquePromo(pA, x));
             const chargingPromo = getChargingPromotion(car, adj);
             pushUniquePromo(pA, chargingPromo);
-            if (calc.bhType === 'tang') pushUniquePromo(pA, 'Tặng Bảo hiểm vật chất');
 
             // Quà Combo: luôn bung từng món, không đưa giá tham chiếu lên báo giá khách.
             calc.comboGiftItemNames.forEach(name => pushUniquePromo(pA, cleanAccessoryDisplayName(name)));
@@ -5382,10 +5694,8 @@ Camera hành trình" class="w-full resize-y border border-emerald-300 rounded-lg
                 optionLines.push(clean);
             };
 
-            // BHVC: mua hay tặng đều đưa vào Options.
-            if (adj.bhvcType === 'tang') {
-                pushOption('Bảo hiểm vật chất');
-            } else if (adj.bhvcType === 'mua') {
+            // BHVC: chỉ khi khách mua mới đưa vào Options.
+            if (adj.bhvcType === 'mua') {
                 pushOption('Bảo hiểm vật chất');
             }
 
@@ -6746,7 +7056,7 @@ ${optionText}
             const rateHelp = document.getElementById('live-bhvc-rate-help');
             if (rateHelp) {
                 const rates = getBhvcRates(c, a, plate, calc?.invoicePrice || c.price);
-                const currentRate = a.bhvcType === 'tang' ? rates.tang : rates.mua;
+                const currentRate = rates.mua;
                 const mismatch = a.bhvcType !== 'khong' && recommendedRate > 0 && Math.abs(Number(currentRate)-Number(recommendedRate)) > 0.0001;
                 const tq = rates.tableQuote || getBhvcTableQuote(c, a, plate, calc?.invoicePrice || c.price);
 
@@ -6764,7 +7074,7 @@ ${optionText}
             if (manualInput) manualInput.value = hasManual ? Number(a.bhvcManualAmount).toLocaleString('vi-VN') : '';
             if (manualHelp) {
                 const rates = getBhvcRates(c, a, plate, calc?.invoicePrice || c.price);
-                const normalRate = a.bhvcType === 'tang' ? rates.tang : rates.mua;
+                const normalRate = rates.mua;
                 const normalAmount = (calc?.invoicePrice || 0) * (Number(normalRate || 0) / 100);
                 manualHelp.innerHTML = hasManual
                     ? `Đang dùng giá nhập tay: <b class="text-rose-700">${formatMoney(Number(a.bhvcManualAmount))}</b> · Phí theo tỷ lệ hiện tại: <b>${formatMoney(normalAmount)}</b>`
