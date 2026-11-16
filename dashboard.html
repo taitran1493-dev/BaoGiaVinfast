@@ -1,0 +1,1763 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f3ef">
+<title>Báo cáo hoạt động ngày · Phòng Kinh Doanh 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f4f3ef; --surface:#ffffff; --surface-2:#f9f8f5; --line:#e6e3db; --line-2:#d9d5ca;
+  --text:#1c1b18; --muted:#6c6960; --faint:#a29e93;
+  --ink:#1c1b18; --ink-text:#ffffff;
+  --g-online:#3b5bdb; --g-care:#0e9f6e; --g-field:#dd8418;
+  --g-budget:#7c3aed; --g-budget-bg:#f5f3ff;
+  --ok:#15803d; --ok-bg:#e7f5ec; --miss:#c2410c; --miss-bg:#fdeee6;
+  --heat:#3b5bdb;
+  --r:14px; --r-sm:10px;
+  --shadow:0 1px 0 rgba(28,27,24,.04),0 1px 3px rgba(28,27,24,.06);
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --font:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+html[data-theme="dark"]{
+  --bg:#0f1012; --surface:#17181b; --surface-2:#1c1d21; --line:#26282d; --line-2:#33363c;
+  --text:#ecebe7; --muted:#9b9a94; --faint:#6a6964;
+  --ink:#ecebe7; --ink-text:#121214;
+  --g-online:#7390ff; --g-care:#37c492; --g-field:#f2a640;
+  --g-budget:#a78bfa; --g-budget-bg:#261b40;
+  --ok:#4ade80; --ok-bg:#15291d; --miss:#fb923c; --miss-bg:#2e1c12;
+  --heat:#7390ff;
+  --shadow:0 1px 0 rgba(0,0,0,.3);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+.wrap{max-width:1320px;margin:0 auto;padding:0 20px}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+h2{font-size:15px}
+.muted{color:var(--muted)}
+:focus-visible{outline:2px solid var(--g-online);outline-offset:2px;border-radius:6px}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.topbar-in{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:14px;padding-bottom:10px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-mark{min-width:36px;padding:0 7px;height:36px;border-radius:10px;background:var(--ink);color:var(--ink-text);display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.02em;flex:none}
+.brand h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand p{margin:0;font-size:12.5px;color:var(--muted)}
+.top-actions{display:flex;align-items:center;gap:6px;flex:none}
+.sync{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);padding:0 8px;white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.sync[data-s="ok"] i{background:var(--ok)}
+.sync[data-s="load"] i{background:var(--g-online);animation:pulse 1s infinite}
+.sync[data-s="warn"] i{background:var(--miss)}
+@keyframes pulse{50%{opacity:.25}}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;transition:transform .12s var(--ease-out),background .15s}
+.icon-btn:hover{background:var(--surface-2)}
+.icon-btn:active{transform:scale(.95)}
+.icon-btn svg{width:17px;height:17px}
+.icon-btn.spin svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:12px}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 14px;border-radius:8px;font-weight:500;color:var(--muted);white-space:nowrap;transition:color .15s,background .15s}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed="true"],.seg button.active{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 1px var(--line)}
+.seg-sm button{padding:5px 11px;font-size:12.5px}
+.datebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.day-ctl,.range-ctl{display:flex;align-items:center;gap:6px}
+.nav-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:16px;transition:transform .12s var(--ease-out)}
+.nav-btn:active{transform:scale(.94)}
+.nav-btn:disabled{opacity:.35;cursor:default}
+.date-pill{position:relative;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid var(--line);background:var(--surface);border-radius:9px;font-weight:600;cursor:pointer;white-space:nowrap}
+.date-pill svg{width:15px;height:15px;color:var(--muted)}
+.date-pill input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.chip-btn{height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:background .15s,transform .12s}
+.chip-btn:active{transform:scale(.97)}
+.chip-btn:hover{background:var(--surface-2)}
+.range-ctl select,.range-ctl input,.foot select{height:34px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:0 10px}
+.range-ctl input{width:142px}
+.spacer{flex:1}
+
+/* ---------- layout ---------- */
+main{padding-top:18px;padding-bottom:40px}
+.view{animation:viewIn .22s var(--ease-out)}
+@keyframes viewIn{from{opacity:0;transform:translateY(4px)}}
+.stack{display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;min-width:0}
+.card-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.card-h p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.grid-2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
+.grid-2>.card{display:flex;flex-direction:column}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.legend i.line{height:2px;border-radius:0;width:14px;background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)!important}
+
+/* ---------- roll call ---------- */
+.rc-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.rc-num{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.rc-num small{font-size:18px;color:var(--faint);font-weight:600}
+.progress{height:6px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;margin:14px 0 16px}
+.progress i{display:block;height:100%;background:var(--ok);border-radius:6px;transition:width .5s var(--ease-out)}
+.rc-groups{display:grid;gap:14px}
+.rc-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.rc-label b{font-weight:600;color:var(--text)}
+.people{display:flex;flex-wrap:wrap;gap:8px}
+.person{display:inline-flex;align-items:center;gap:9px;padding:6px 12px 6px 6px;border-radius:999px;border:1px solid var(--line);background:var(--surface);text-align:left;transition:border-color .15s,background .15s,transform .12s var(--ease-out);max-width:100%}
+.person:hover{border-color:var(--line-2);background:var(--surface-2)}
+.person:active{transform:scale(.97)}
+.person .nm{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person .meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.person.miss{background:var(--miss-bg);border-color:transparent}
+.person.miss .meta{color:var(--miss)}
+.person .val{font-weight:600;font-size:12.5px;color:var(--ok)}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;background:hsl(var(--h) 45% 90%);color:hsl(var(--h) 45% 28%)}
+html[data-theme="dark"] .av{background:hsl(var(--h) 30% 24%);color:hsl(var(--h) 60% 85%)}
+.av.lg{width:52px;height:52px;font-size:17px}
+.mini-bar{width:44px;height:4px;border-radius:4px;background:var(--line);overflow:hidden;display:inline-block;vertical-align:middle;margin-left:4px}
+.mini-bar i{display:block;height:100%;background:var(--ok)}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.kpi{padding:16px 18px;position:relative;cursor:default;transition:border-color .15s,transform .12s}
+.kpi.clickable{cursor:pointer}
+.kpi.clickable:hover{border-color:var(--line-2);background:var(--surface-2)}
+.kpi .lbl{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:500}
+.kpi .lbl i{width:8px;height:8px;border-radius:3px}
+.kpi .v{font-size:24px;font-weight:700;letter-spacing:-.03em;margin:6px 0 4px;line-height:1.15}
+.kpi .d{font-size:11.5px;color:var(--muted);display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.delta{font-weight:600;border-radius:6px;padding:1px 6px;font-size:11px}
+.delta.up{color:var(--ok);background:var(--ok-bg)}
+.delta.down{color:var(--miss);background:var(--miss-bg)}
+.delta.flat{color:var(--muted);background:var(--surface-2)}
+
+/* ---------- chart ---------- */
+.chart-box{position:relative;height:280px}
+.grid-2 .chart-box{flex:1 1 auto;height:auto;min-height:280px}
+.chart-box canvas{position:absolute;left:0;top:0}
+
+/* ---------- category bars ---------- */
+.cats{display:grid;gap:16px}
+.cat-g-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:600;margin-bottom:6px}
+.cat-g-h span{display:inline-flex;align-items:center;gap:7px}
+.cat-g-h i{width:8px;height:8px;border-radius:3px}
+.cat-g-h b{font-weight:600}
+.cat-row{display:grid;grid-template-columns:118px minmax(0,1fr) 44px;align-items:center;gap:10px;padding:3px 0;font-size:13px}
+.cat-row .nm{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-row .track{position:relative;height:8px;background:var(--surface-2);border-radius:5px}
+.cat-row .fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;transition:width .5s var(--ease-out)}
+.cat-row .avg{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);border-radius:2px;opacity:.55;transition:left .5s var(--ease-out)}
+.cat-row .n{text-align:right;font-weight:600}
+.cat-row.zero .n{color:var(--faint);font-weight:500}
+
+/* ---------- heatmap / attendance map ---------- */
+.heat-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -18px;padding:0 18px}
+.heat{border-collapse:separate;border-spacing:4px;margin:-4px;width:100%}
+.heat th{font-weight:500;font-size:11px;color:var(--muted);text-align:center;padding:0 0 2px;white-space:nowrap}
+.heat th.sel{color:var(--text);font-weight:700}
+.heat th .dw{display:block;font-size:10px;color:var(--faint)}
+.heat td.nm{position:sticky;left:0;z-index:2;background:var(--surface);padding-right:8px;white-space:nowrap;font-size:13px;min-width:145px;max-width:185px;overflow:hidden;text-overflow:ellipsis}
+.heat td.nm button{border:0;background:none;padding:0;display:flex;align-items:center;gap:8px;text-align:left;width:100%}
+.heat td.nm .av{width:22px;height:22px;font-size:9.5px}
+.hc{width:36px;min-width:36px;height:30px;border-radius:7px;font-size:12px;font-weight:600;text-align:center;border:0;padding:0;display:inline-flex;align-items:center;justify-content:center;transition:transform .12s var(--ease-out)}
+.hc:hover{transform:scale(1.08)}
+.hc.sel{box-shadow:0 0 0 2px var(--text)}
+/* check mode */
+.hc.chk-yes{background:var(--ok-bg);color:var(--ok)}
+.hc.chk-yes svg{width:15px;height:15px;stroke-width:2.8}
+.hc.chk-no{background:var(--miss-bg);color:var(--miss);opacity:.85;font-size:13px;font-weight:700}
+.hc.chk-zero{background:var(--surface-2);color:var(--faint);box-shadow:inset 0 0 0 1px var(--line)}
+/* count mode */
+.hc.none{background:repeating-linear-gradient(135deg,var(--surface-2) 0 4px,var(--line) 4px 5px);color:transparent}
+.hc.zero{background:var(--surface-2);color:var(--faint);box-shadow:inset 0 0 0 1px var(--line)}
+.heat td.sum{font-size:12px;color:var(--muted);padding-left:8px;white-space:nowrap;text-align:right}
+.heat tfoot td{font-size:11.5px;padding-top:6px;text-align:center;color:var(--muted);font-weight:600}
+.heat tfoot td.nm{text-align:left;font-weight:700;color:var(--text)}
+.heat-legend{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.heat-legend .sw{width:14px;height:14px;border-radius:4px;display:inline-block;vertical-align:middle}
+.leg-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:6px;font-size:11.5px}
+.leg-pill.chk-yes{background:var(--ok-bg);color:var(--ok);font-weight:600}
+.leg-pill.chk-no{background:var(--miss-bg);color:var(--miss);font-weight:600}
+
+/* ---------- table & filters ---------- */
+.tbl-filter-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:6px 0 14px}
+.cat-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cat-pill{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-size:12.5px;font-weight:500;color:var(--muted);display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.cat-pill:hover{color:var(--text);border-color:var(--line-2)}
+.cat-pill.active{background:var(--ink);color:var(--ink-text);border-color:var(--ink)}
+.cat-pill i{width:7px;height:7px;border-radius:2px;display:inline-block}
+.cat-pill.active i{background:#ffffff!important}
+.cat-pill-budget{border-color:color-mix(in oklab, var(--g-budget) 40%, var(--line))}
+.cat-pill-budget.active{background:var(--g-budget);border-color:var(--g-budget);color:#fff}
+.single-metric-wrap select{height:32px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:0 8px;font-size:12.5px;color:var(--muted);max-width:190px}
+.single-metric-wrap select.active{color:var(--text);font-weight:600;border-color:var(--g-online)}
+
+.tbl-wrap{overflow:auto;max-height:70vh;margin:0 -18px -18px;border-top:1px solid var(--line);border-radius:0 0 var(--r) var(--r)}
+table.data{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+.data th,.data td{padding:9px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+.data thead th{position:sticky;top:0;background:var(--surface-2);z-index:2;font-weight:600;font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+.data thead tr.grp th{top:0;cursor:default;font-size:11px;text-align:center;border-bottom:0;padding:7px 10px 0}
+.data thead tr.cols th{top:0}
+.data thead tr.grp ~ tr.cols th{top:28px}
+.data thead th:hover{color:var(--text)}
+.data thead th.sorted{color:var(--text)}
+.data thead th .ar{font-size:10px;margin-left:3px;opacity:.8}
+.data th:first-child,.data td:first-child{position:sticky;left:0;text-align:left;background:var(--surface);z-index:1;border-right:1px solid var(--line)}
+.data thead th:first-child{z-index:3;background:var(--surface-2)}
+.data tbody tr{cursor:pointer;transition:background .12s}
+.data tbody tr:hover td{background:var(--surface-2)}
+.data td.z{color:var(--faint)}
+.data td.top{font-weight:700;color:var(--g-online)}
+.data td.tot{font-weight:700}
+.data td.bgt{font-weight:700;color:var(--g-budget)}
+.data tfoot td{position:sticky;bottom:0;background:var(--surface-2);font-weight:700;border-top:1px solid var(--line-2);border-bottom:0}
+.data tfoot td:first-child{background:var(--surface-2)}
+.data .gcol{border-left:1px solid var(--line)}
+.nmcell{display:flex;align-items:center;gap:9px}
+.nmcell .av{width:24px;height:24px;font-size:10px}
+.nmcell small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.gtag{display:inline-flex;align-items:center;gap:5px}
+.gtag i{width:7px;height:7px;border-radius:2px}
+
+/* budget table specific styling */
+.budget-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px}
+.bs-item .lbl{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.bs-item .val{font-size:18px;font-weight:700;letter-spacing:-.02em;margin-top:2px;color:var(--text)}
+.bs-item .val.accent{color:var(--g-budget)}
+.bs-item .sub{font-size:11px;color:var(--muted);margin-top:1px}
+.pct-bar{display:inline-flex;align-items:center;gap:6px}
+.pct-bar .bar{width:46px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;display:inline-block}
+.pct-bar .bar i{display:block;height:100%;background:var(--g-budget);border-radius:3px}
+
+/* ---------- person ---------- */
+.picker{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin;-webkit-mask:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.picker .person{flex:none}
+.picker .person[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ink-text)}
+.picker .person[aria-pressed="true"] .meta{color:inherit;opacity:.7}
+.picker .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.picker .dot.off{background:var(--miss)}
+.hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.hero .who{display:flex;align-items:center;gap:14px;min-width:0;flex:1 1 260px}
+.hero h2{font-size:20px}
+.hero .code{font-size:12.5px;color:var(--muted)}
+.hero-stats{display:grid;grid-template-columns:repeat(5,auto);gap:4px 24px}
+.hs .k{font-size:12px;color:var(--muted)}
+.hs .v{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.hs .v small{font-size:12px;color:var(--faint);font-weight:600}
+.hs .v.bgt{color:var(--g-budget)}
+
+.hist{display:grid;gap:8px}
+.hist details{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);overflow:hidden}
+.hist details[open]{border-color:var(--line-2)}
+.hist summary{list-style:none;display:grid;grid-template-columns:118px minmax(0,1fr) auto 18px;align-items:center;gap:14px;padding:11px 14px;cursor:pointer}
+.hist summary::-webkit-details-marker{display:none}
+.hist summary:hover{background:var(--surface-2)}
+.hist .dt b{display:block;font-weight:600}
+.hist .dt span{font-size:12px;color:var(--muted)}
+.hist .chev{transition:transform .2s var(--ease-out);color:var(--muted)}
+.hist details[open] .chev{transform:rotate(90deg)}
+.hist .tot{font-weight:700;font-size:16px;text-align:right;min-width:40px}
+.stackbar{display:flex;height:8px;border-radius:5px;overflow:hidden;background:var(--surface-2)}
+.stackbar i{display:block;height:100%;transition:width .4s var(--ease-out)}
+.hist .missing summary{color:var(--muted)}
+.hist .missing .tag{font-size:12px;color:var(--miss);background:var(--miss-bg);padding:2px 8px;border-radius:6px;justify-self:start}
+.hist-body{padding:4px 14px 14px;border-top:1px solid var(--line)}
+.mgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:12px}
+.mgrid h4{margin:0 0 6px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.mgrid h4 i{width:7px;height:7px;border-radius:2px}
+.mrow{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.mrow span{color:var(--muted)}
+.mrow b{font-weight:600}
+.mrow.z b{color:var(--faint);font-weight:500}
+.flags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.flag{font-size:12px;padding:3px 8px;border-radius:6px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.flag.warn{background:var(--miss-bg);color:var(--miss);border-color:transparent}
+.flag.bgt{background:var(--g-budget-bg);color:var(--g-budget);font-weight:600;border-color:transparent}
+.links{margin-top:12px;display:grid;gap:4px;font-size:13px}
+.links a{color:var(--g-online);text-decoration:none;word-break:break-all}
+.links a:hover{text-decoration:underline}
+.note{margin-top:10px;font-size:13px;background:var(--surface-2);border-radius:8px;padding:8px 10px}
+
+.empty{padding:28px 10px;text-align:center;color:var(--muted);font-size:13px}
+.foot{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:6px 2px 0}
+.foot label{display:inline-flex;align-items:center;gap:8px}
+.foot a{color:inherit}
+
+/* skeleton */
+.sk{background:linear-gradient(90deg,var(--surface-2),var(--line),var(--surface-2));background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r);border:1px solid var(--line)}
+@keyframes sk{to{background-position:-200% 0}}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hero-stats{grid-template-columns:repeat(3,auto)}
+}
+@media (max-width:1024px){
+  .grid-2{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .wrap{padding:0 14px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .kpi{padding:13px 14px}
+  .kpi .v{font-size:20px}
+  .budget-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px}
+  .card{padding:15px}
+  .scroll-x{margin:0 -15px;padding:0 15px}
+  .tbl-wrap{margin:0 -15px -15px}
+  .stack,.grid-2{gap:12px}
+  main{padding-top:12px}
+  .sync span{display:none}
+  .controls{gap:8px}
+  #tabs{width:100%}
+  #tabs button{flex:1}
+  #modeSeg{order:1}
+  .controls .spacer{order:2}
+  #scopeSeg{order:3}
+  .datebar{order:4;width:100%}
+  .day-ctl{width:100%}
+  .date-pill{flex:1;justify-content:center}
+  .range-ctl{width:100%;flex-wrap:wrap}
+  .range-ctl select{flex:1 1 100%}
+  .range-ctl input{flex:1;width:auto;min-width:0}
+  .chart-box,.grid-2 .chart-box{height:230px;min-height:230px;flex:none}
+  .hist summary{grid-template-columns:86px minmax(0,1fr) auto 14px;gap:10px;padding:10px 12px}
+  .mgrid{grid-template-columns:1fr}
+  .hero-stats{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:10px 16px}
+  .cat-row{grid-template-columns:96px minmax(0,1fr) 38px}
+  .rc-num{font-size:28px}
+  .cat-tabs{overflow-x:auto;padding-bottom:4px;width:100%;flex-wrap:nowrap}
+  .cat-pill{flex:none}
+  .single-metric-wrap{width:100%}
+  .single-metric-wrap select{max-width:100%;width:100%}
+}
+@media (max-width:420px){
+  .brand p{display:none}
+  .person .nm{max-width:120px}
+  .date-pill{padding:0 10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">
+      <div class="brand-mark" id="brandMark">PKD2</div>
+      <div style="min-width:0">
+        <h1 id="teamName">Phòng Kinh Doanh</h1>
+        <p>Báo cáo hoạt động hằng ngày của TVBH</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="sync" id="sync" data-s="load"><i></i><span>Đang tải…</span></span>
+      <button class="icon-btn" id="btnRefresh" title="Tải lại dữ liệu (R)" aria-label="Tải lại dữ liệu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      </button>
+      <button class="icon-btn" id="btnTheme" title="Sáng / tối" aria-label="Đổi giao diện sáng tối">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="wrap controls">
+    <div class="seg" id="tabs" role="tablist" aria-label="Chế độ xem">
+      <button data-tab="team" role="tab">Tổng team</button>
+      <button data-tab="person" role="tab">Cá nhân</button>
+    </div>
+    <div class="seg seg-sm" id="modeSeg" aria-label="Kiểu thời gian">
+      <button data-mode="day">Ngày</button>
+      <button data-mode="range">Khoảng</button>
+    </div>
+    <div class="datebar">
+      <div class="day-ctl" id="dayCtl">
+        <button class="nav-btn" id="prevDay" aria-label="Ngày trước">‹</button>
+        <label class="date-pill" id="dayPill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+          <span id="dayLabel">—</span>
+          <input type="date" id="dayInput" aria-label="Chọn ngày">
+        </label>
+        <button class="nav-btn" id="nextDay" aria-label="Ngày sau">›</button>
+        <button class="chip-btn" id="btnToday">Hôm nay</button>
+      </div>
+      <div class="range-ctl" id="rangeCtl" hidden>
+        <select id="preset" aria-label="Khoảng thời gian">
+          <option value="7">7 ngày qua</option>
+          <option value="14">14 ngày qua</option>
+          <option value="30">30 ngày qua</option>
+          <option value="month">Tháng này</option>
+          <option value="lastmonth">Tháng trước</option>
+          <option value="custom">Tuỳ chọn…</option>
+        </select>
+        <input type="date" id="fromInput" aria-label="Từ ngày">
+        <span class="muted">→</span>
+        <input type="date" id="toInput" aria-label="Đến ngày">
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="seg seg-sm" id="scopeSeg" aria-label="Phạm vi">
+      <button data-scope="team" id="scopeTeamBtn">Nhóm</button>
+      <button data-scope="all">Toàn bộ</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="loading" class="stack">
+    <div class="sk" style="height:150px"></div>
+    <div class="kpis"><div class="sk" style="height:104px"></div><div class="sk" style="height:104px"></div><div class="sk" style="height:104px"></div><div class="sk" style="height:104px"></div><div class="sk" style="height:104px"></div></div>
+    <div class="sk" style="height:320px"></div>
+  </div>
+
+  <!-- ================= TEAM ================= -->
+  <section id="viewTeam" class="view stack" hidden>
+    <section class="card">
+      <div class="rc-top">
+        <div>
+          <h2 id="rcTitle">Điểm danh báo cáo</h2>
+          <p class="muted" id="rcSub" style="margin:3px 0 0;font-size:12.5px"></p>
+        </div>
+        <div class="rc-num" id="rcNum">0<small>/0</small></div>
+      </div>
+      <div class="progress"><i id="rcBar" style="width:0"></i></div>
+      <div class="rc-groups" id="rcGroups"></div>
+    </section>
+
+    <!-- 5 KPI cards including Ad Budget -->
+    <div class="kpis" id="teamKpis"></div>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-h">
+          <div><h2>Xu hướng hoạt động</h2><p id="trendSub"></p></div>
+          <div class="legend" id="teamLegend"></div>
+        </div>
+        <div class="chart-box"><canvas id="teamChart" aria-label="Biểu đồ hoạt động theo ngày"></canvas></div>
+      </section>
+      <section class="card">
+        <div class="card-h"><div><h2>Theo hạng mục</h2><p id="catSub"></p></div></div>
+        <div class="cats" id="teamCats"></div>
+      </section>
+    </div>
+
+    <!-- Attendance / Heatmap with Check Mode -->
+    <section class="card">
+      <div class="card-h">
+        <div>
+          <h2>Bản đồ báo cáo</h2>
+          <p id="heatSub">Điểm danh có / không nộp báo cáo theo ngày. Bấm vào ô để xem chi tiết.</p>
+        </div>
+        <div class="heat-actions">
+          <div class="seg seg-sm" id="heatModeSeg" aria-label="Kiểu hiển thị">
+            <button data-heat="check" class="active">✓ Check Có/Không</button>
+            <button data-heat="count"># Số lượng HĐ</button>
+          </div>
+          <div class="heat-legend" id="heatLegend"></div>
+        </div>
+      </div>
+      <div class="scroll-x"><table class="heat" id="heat"></table></div>
+    </section>
+
+    <!-- Filterable Data Table including Dedicated Ad Budget Table -->
+    <section class="card" id="tableCard">
+      <div class="card-h" style="margin-bottom:6px">
+        <div>
+          <h2 id="tableTitle">Bảng chi tiết thành viên</h2>
+          <p id="tableSub">Bấm tiêu đề cột để sắp xếp · bấm dòng để xem chi tiết cá nhân</p>
+        </div>
+        <button class="chip-btn" id="btnExport">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Tải CSV
+        </button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="tbl-filter-row">
+        <div class="cat-tabs" id="catTabs">
+          <button data-cat="all" class="cat-pill active">Tất cả hạng mục</button>
+          <button data-cat="online" class="cat-pill"><i style="background:var(--g-online)"></i>Online (6)</button>
+          <button data-cat="care" class="cat-pill"><i style="background:var(--g-care)"></i>Chăm sóc (5)</button>
+          <button data-cat="field" class="cat-pill"><i style="background:var(--g-field)"></i>Thị trường (5)</button>
+          <button data-cat="budget" class="cat-pill cat-pill-budget">💰 Ngân sách quảng cáo</button>
+        </div>
+        <div class="single-metric-wrap">
+          <select id="singleMetricSelect" aria-label="Xem ma trận 1 chỉ số">
+            <option value="">🎯 Xem ma trận 1 chỉ số…</option>
+            <optgroup label="Nội dung online">
+              <option value="m0">FB bài</option>
+              <option value="m1">Story</option>
+              <option value="m2">FB Reels</option>
+              <option value="m3">TikTok video</option>
+              <option value="m4">Zalo bài</option>
+              <option value="m5">Livestream</option>
+            </optgroup>
+            <optgroup label="Chăm sóc & tương tác">
+              <option value="m6">Zalo chăm KH</option>
+              <option value="m7">Seeding ngày</option>
+              <option value="m8">Tương tác đúng tệp</option>
+              <option value="m9">Website/Form</option>
+              <option value="m10">Chăm KH cũ TT</option>
+            </optgroup>
+            <optgroup label="Thị trường & quan hệ">
+              <option value="m11">Đi thị trường</option>
+              <option value="m12">Trường lái/ĐK/Gara/Phụ kiện</option>
+              <option value="m13">Xin giới thiệu</option>
+              <option value="m14">Cafe/đối tác</option>
+              <option value="m15">DN/Sự kiện</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <!-- Container for dedicated budget highlight when budget filter is active -->
+      <div id="budgetSummaryBox" hidden></div>
+
+      <div class="tbl-wrap"><table class="data" id="teamTable"></table></div>
+    </section>
+  </section>
+
+  <!-- ================= PERSON ================= -->
+  <section id="viewPerson" class="view stack" hidden>
+    <div class="picker" id="picker" role="listbox" aria-label="Chọn thành viên"></div>
+
+    <section class="card hero" id="hero"></section>
+
+    <div class="kpis" id="personKpis"></div>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-h">
+          <div><h2>Hoạt động theo ngày</h2><p id="pTrendSub"></p></div>
+          <div class="legend" id="personLegend"></div>
+        </div>
+        <div class="chart-box"><canvas id="personChart" aria-label="Biểu đồ hoạt động cá nhân"></canvas></div>
+      </section>
+      <section class="card">
+        <div class="card-h">
+          <div><h2>So với trung bình nhóm</h2><p id="pCatSub"></p></div>
+          <div class="legend"><span><i style="width:2px;height:12px;border-radius:1px;background:var(--text);opacity:.55"></i>TB/người</span></div>
+        </div>
+        <div class="cats" id="personCats"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-h"><div><h2>Nhật ký báo cáo</h2><p id="histSub"></p></div></div>
+      <div class="hist" id="hist"></div>
+    </section>
+  </section>
+
+  <div class="foot" id="foot" hidden>
+    <span id="footInfo"></span>
+    <label>Khi 1 người nộp nhiều lần cho cùng ngày:
+      <select id="dupMode">
+        <option value="latest">Lấy bản nộp mới nhất</option>
+        <option value="sum">Cộng dồn các lần nộp</option>
+      </select>
+    </label>
+  </div>
+</main>
+
+<script>
+const SNAPSHOT = {"data":"\"Dấu thời gian\",\"TVBH (Mã | Họ tên)\",\"Ngày ghi nhận\",\"FB bài\",\"Story\",\"FB Reels\",\"TikTok video\",\"Zalo bài\",\"Zalo chăm KH\",\"Livestream\",\"Seeding ngày\",\"Tương tác đúng tệp\",\"Website/Form\",\"Đi thị trường\",\"Trường lái/ĐK/Gara/Phụ kiện\",\"Xin giới thiệu\",\"Cafe/đối tác\",\"DN/Sự kiện\",\"Chăm KH cũ TT\",\"Link/bằng chứng\",\"Ngân sách quảng cáo hiện tại trong tháng (VNĐ)\"\n\"10/31/2026 10:06:38\",\"PT30 | Nguyễn Nhật Quỳnh\",\"10/31/2026\",\"1\",\"1\",\"1\",\"1\",\"2\",\"5\",\"1\",\"5\",\"5\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"2\",\"\",\"\"\n\"11/3/2026 9:15:45\",\"PT28 | Lê Trọng Nghĩa\",\"11/3/2026\",\"3\",\"3\",\"3\",\"2\",\"3\",\"4\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 14:46:07\",\"PT30 | Nguyễn Nhật Quỳnh\",\"11/2/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"15\",\"0\",\"10\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"15\",\"https://www.facebook.com/share/p/1RrHW2B3r2/\",\"\"\n\"11/3/2026 14:46:54\",\"PT30 | Nguyễn Nhật Quỳnh\",\"11/1/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"15\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"10\",\"https://www.facebook.com/share/p/1ZGjk2GyYR/\",\"\"\n\"11/3/2026 15:41:29\",\"PT06 | Phạm Quốc Bảo\",\"2/18/1996\",\"2\",\"0\",\"0\",\"1\",\"1\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"0\",\"0\"\n\"11/3/2026 15:57:15\",\"PT04 | Phùng Bảo Trân\",\"1/11/2026\",\"\",\"\",\"\",\"\",\"\",\"7\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 16:00:50\",\"PT04 | Phùng Bảo Trân\",\"11/2/2026\",\"\",\"\",\"\",\"\",\"\",\"10\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 16:04:28\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/3/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"3\",\"0\",\"0\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 16:06:07\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/2/2026\",\"0\",\"1\",\"1\",\"1\",\"0\",\"3\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"\",\"\"\n\"11/3/2026 16:07:04\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/1/2026\",\"0\",\"0\",\"0\",\"1\",\"0\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"\",\"\"\n\"11/3/2026 16:23:58\",\"PT04 | Phùng Bảo Trân\",\"11/3/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 16:24:43\",\"PT26 | Lê Cao Thông\",\"9/21/2026\",\"\",\"\",\"\",\"\",\"\",\"15\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 16:25:47\",\"PT09 | Lê Lâm Xuân Vi\",\"11/3/2026\",\"2\",\"1\",\"2\",\"3\",\"1\",\"10\",\"0\",\"10\",\"10\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://business.facebook.com/latest/inbox/all?asset_id=868384119688144\u0026business_id=1584873616142710\u0026ir_qe_exposed=1\u0026nav_ref=manage_page_ap_plus_default\",\"\"\n\"11/3/2026 16:31:02\",\"PT10 | Lương Văn Phụng\",\"11/1/2026\",\"5\",\"5\",\"2\",\"1\",\"2\",\"10\",\"\",\"5\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 16:33:13\",\"PT13 | Trần Thế Tài\",\"11/3/2026\",\"2\",\"1\",\"1\",\"1\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"0\",\"0\"\n\"11/3/2026 16:35:27\",\"PT17 | Từ Quốc Khoa\",\"11/3/2026\",\"\",\"2\",\"\",\"1\",\"2\",\"5\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"2\",\"\",\"\"\n\"11/3/2026 16:38:47\",\"PT12 | Trần Phúc Hân\",\"11/3/2026\",\"1\",\"0\",\"1\",\"0\",\"1\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"https://www.facebook.com/share/p/1EKau7keDP/?mibextid=wwXIfr\",\"\"\n\"11/3/2026 16:39:53\",\"PT17 | Từ Quốc Khoa\",\"11/3/2026\",\"6\",\"6\",\"0\",\"1\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"https://www.facebook.com/share/p/18zNRSaa6V/?mibextid=wwXIfr\",\"\"\n\"11/3/2026 16:40:02\",\"PT12 | Trần Phúc Hân\",\"11/2/2026\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"\"\n\"11/3/2026 16:40:18\",\"PT14 | Nguyễn Thành Tuyên\",\"11/3/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"5\",\"0\",\"\",\"5\",\"0\",\"0\",\"0\",\"\",\"0\",\"0\",\"5\",\"Fb: https://www.facebook.com/share/p/1H8u6cMXMP/           tiktok:https://www.tiktok.com/@nt.neyut.03/video/7703767469160221953?_r=1\u0026_t=ZS-9B5q2yjfpmU\",\"\"\n\"11/3/2026 16:40:37\",\"PT11 | Phạm Ngọc Huy\",\"11/3/2026\",\"1\",\"1\",\"0\",\"0\",\"1\",\"9\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"12\",\"https://www.facebook.com/share/p/1Cd1QjqH5B/?mibextid=wwXIfr\",\"\"\n\"11/3/2026 16:41:05\",\"PT17 | Từ Quốc Khoa\",\"11/1/2026\",\"33\",\"\",\"0\",\"1\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"https://www.facebook.com/share/p/1CZ6dEpRw9/?mibextid=wwXIfr\",\"\"\n\"11/3/2026 16:43:30\",\"PT11 | Phạm Ngọc Huy\",\"11/1/2026\",\"1\",\"1\",\"0\",\"0\",\"1\",\"4\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/p/1LTULmukda/?mibextid=wwXIfr\",\"\"\n\"11/3/2026 16:44:44\",\"PT11 | Phạm Ngọc Huy\",\"11/2/2026\",\"0\",\"0\",\"0\",\"0\",\"0\",\"14\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"18\",\"\",\"\"\n\"11/3/2026 16:46:56\",\"PT31 | Lê Hoàng Hiệp\",\"11/3/2026\",\"\",\"\",\"\",\"\",\"2\",\"6\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/p/1YhbQu4Rfz/\",\"\"\n\"11/3/2026 16:48:52\",\"PT31 | Lê Hoàng Hiệp\",\"11/2/2026\",\"\",\"\",\"\",\"\",\"1\",\"2\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 16:50:21\",\"PT31 | Lê Hoàng Hiệp\",\"11/1/2026\",\"\",\"\",\"\",\"\",\"\",\"80\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 16:51:25\",\"PT13 | Trần Thế Tài\",\"11/2/2026\",\"1\",\"1\",\"1\",\"0\",\"1\",\"2\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"https://www.facebook.com/share/v/1Ccigemy5b/, https://www.facebook.com/share/r/182mCVg3UL/ \",\"0\"\n\"11/3/2026 16:54:59\",\"PT03 | Nguyễn Văn Phòng\",\"11/3/2026\",\"15\",\"15\",\"1\",\"1\",\"5\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/profile.php?id=61594759679499\",\"\"\n\"11/3/2026 16:58:00\",\"PT22 | Mai Thị Quỳnh Diễm\",\"11/3/2026\",\"1\",\"0\",\"1\",\"1\",\"2\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"4\",\"https://vt.tiktok.com/ZSpeKM5fN/ , https://www.facebook.com/share/r/19u26t4fCu/?mibextid=wwXIfr\",\"\"\n\"11/3/2026 17:04:45\",\"PT20 | Đỗ Nguyễn Phước Đức\",\"10/3/0026\",\"1\",\"1\",\"\",\"\",\"1\",\"3\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 17:09:24\",\"PT02 | Nguyễn Anh Quân\",\"11/3/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 17:09:35\",\"PT10 | Lương Văn Phụng\",\"11/2/2026\",\"3\",\"3\",\"1\",\"1\",\"2\",\"10\",\"\",\"6\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 17:10:28\",\"PT10 | Lương Văn Phụng\",\"11/3/2026\",\"3\",\"3\",\"1\",\"\",\"2\",\"10\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 17:29:43\",\"PT32 | Trần Ngọc Minh Vũ\",\"11/3/2026\",\"1\",\"\",\"1\",\"\",\"1\",\"19\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/19eh4shyyF/?mibextid=wwXIfr\",\"\"\n\"11/3/2026 18:06:15\",\"PT25 | Phan Ngọc Ánh\",\"11/3/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/3/2026 18:18:40\",\"PT24 | Nguyễn Thị Ngọc Trâm\",\"11/3/2026\",\"2\",\"2\",\"\",\"2\",\"0\",\"3\",\"\",\"58000\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/4/2026 1:14:51\",\"PT29 | Phạm Duy Phương\",\"11/3/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/4/2026 6:20:38\",\"PT21 | Phan Văn Quy\",\"11/3/2026\",\"2\",\"0\",\"0\",\"1\",\"2\",\"3\",\"0\",\"0\",\"\",\"\",\"0\",\"0\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/4/2026 15:57:52\",\"PT17 | Từ Quốc Khoa\",\"11/4/2026\",\"6\",\"6\",\"0\",\"1\",\"2\",\"3\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"https://www.facebook.com/share/1CgfY4rCD7/?mibextid=wwXIfr\",\"\"\n\"11/4/2026 16:20:34\",\"PT13 | Trần Thế Tài\",\"11/4/2026\",\"3\",\"2\",\"2\",\"1\",\"3\",\"2\",\"0\",\"0\",\"0\",\"0\",\"9\",\"0\",\"0\",\"0\",\"0\",\"2\",\"\",\"0\"\n\"11/4/2026 16:46:50\",\"PT11 | Phạm Ngọc Huy\",\"11/4/2026\",\"1\",\"1\",\"0\",\"0\",\"1\",\"6\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"11\",\"https://www.facebook.com/share/p/1C89NnYEAR/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 16:29:05\",\"PT30 | Nguyễn Nhật Quỳnh\",\"11/4/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"15\",\"0\",\"9\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"10\",\"\",\"\"\n\"11/5/2026 16:32:10\",\"PT05 | Lê Minh Thư\",\"11/4/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"1\",\"0\",\"\",\"\",\"0\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 16:33:20\",\"PT05 | Lê Minh Thư\",\"11/5/2026\",\"1\",\"\",\"1\",\"1\",\"1\",\"2\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 16:46:54\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/4/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"5\",\"0\",\"0\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"5\",\"\",\"\"\n\"11/5/2026 16:47:42\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/5/2025\",\"1\",\"1\",\"\",\"1\",\"\",\"3\",\"1\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"6\",\"\",\"\"\n\"11/5/2026 16:49:01\",\"PT04 | Phùng Bảo Trân\",\"11/5/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 16:51:02\",\"PT02 | Nguyễn Anh Quân\",\"5/11/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 16:52:06\",\"PT06 | Phạm Quốc Bảo\",\"2/18/1996\",\"2\",\"0\",\"1\",\"1\",\"0\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"\",\"\"\n\"11/5/2026 16:52:48\",\"PT10 | Lương Văn Phụng\",\"11/5/2026\",\"7\",\"7\",\"1\",\"0\",\"2\",\"12\",\"\",\"3\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 16:54:59\",\"PT09 | Lê Lâm Xuân Vi\",\"11/5/2026\",\"3\",\"1\",\"1\",\"1\",\"1\",\"4\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://business.facebook.com/latest/home?business_id=1584873616142710\u0026asset_id=868384119688144\",\"0\"\n\"11/5/2026 16:56:34\",\"PT03 | Nguyễn Văn Phòng\",\"11/6/2026\",\"41\",\"41\",\"3\",\"1\",\"3\",\"4\",\"0\",\"0\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"7\",\"https://www.facebook.com/profile.php?id=61594759679499\",\"\"\n\"11/5/2026 16:57:43\",\"PT03 | Nguyễn Văn Phòng\",\"11/6/2026\",\"41\",\"41\",\"1\",\"1\",\"3\",\"3\",\"0\",\"0\",\"4\",\"0\",\"0\",\"0\",\"3\",\"0\",\"0\",\"7\",\"https://www.facebook.com/profile.php?id=61594759679499\",\"\"\n\"11/5/2026 17:11:39\",\"PT07 | Nguyễn Quốc Đại\",\"11/1/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 17:12:36\",\"PT07 | Nguyễn Quốc Đại\",\"11/2/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 17:14:51\",\"PT07 | Nguyễn Quốc Đại\",\"11/3/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 17:15:33\",\"PT07 | Nguyễn Quốc Đại\",\"11/4/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 17:16:28\",\"PT07 | Nguyễn Quốc Đại\",\"11/4/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 17:17:01\",\"PT07 | Nguyễn Quốc Đại\",\"11/5/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 17:51:52\",\"PT24 | Nguyễn Thị Ngọc Trâm\",\"11/5/2026\",\"1\",\"1\",\"\",\"1\",\"1\",\"10\",\"\",\"\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 17:59:49\",\"PT17 | Từ Quốc Khoa\",\"11/5/2026\",\"6\",\"6\",\"1\",\"2\",\"2\",\"5\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"5\",\"https://www.facebook.com/share/1EcTW5ZEcM/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 18:10:55\",\"PT25 | Phan Ngọc Ánh\",\"11/4/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 18:12:17\",\"PT25 | Phan Ngọc Ánh\",\"11/5/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 18:14:43\",\"PT24 | Nguyễn Thị Ngọc Trâm\",\"11/4/2026\",\"1\",\"1\",\"\",\"2\",\"1\",\"4\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 18:16:47\",\"PT11 | Phạm Ngọc Huy\",\"11/5/2026\",\"1\",\"1\",\"1\",\"0\",\"1\",\"11\",\"0\",\"0\",\"0\",\"0\",\"\",\"\",\"\",\"\",\"0\",\"13\",\"https://www.facebook.com/share/r/1bzgYyGPS7/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 18:23:59\",\"PT32 | Trần Ngọc Minh Vũ\",\"11/5/2026\",\"2\",\"2\",\"\",\"2\",\"\",\"16\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/p/1UWD62HtnJ/?mibextid=wwXIfr \",\"\"\n\"11/5/2026 18:26:27\",\"PT13 | Trần Thế Tài\",\"11/5/2026\",\"2\",\"2\",\"2\",\"1\",\"2\",\"2\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"\",\"\"\n\"11/5/2026 18:28:18\",\"PT28 | Lê Trọng Nghĩa\",\"11/5/2026\",\"4\",\"\",\"\",\"3\",\"4\",\"4\",\"\",\"\",\"3\",\"\",\"1\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 18:58:34\",\"PT17 | Từ Quốc Khoa\",\"11/5/2026\",\"6\",\"6\",\"1\",\"2\",\"2\",\"4\",\"1\",\"\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\",\"5\",\"https://www.facebook.com/share/1EcTW5ZEcM/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 19:17:57\",\"PT14 | Nguyễn Thành Tuyên\",\"11/5/2026\",\"2\",\"0\",\"1\",\"1\",\"2\",\"3\",\"0\",\"\",\"3\",\"\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"Tiktok: https://vt.tiktok.com/ZSpY7rT2j/.    Fb: https://www.facebook.com/share/r/1KKU3qZbwS/?mibextid=wwXIfr.     Fb: https://www.facebook.com/share/p/19tzTmdFZQ/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 19:18:23\",\"PT08 | Nguyễn Thanh Phụng\",\"11/1/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"10\",\"0\",\"2\",\"2\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"10\",\"www.tiktok.com/@phungvinfast | https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 19:21:41\",\"PT08 | Nguyễn Thanh Phụng\",\"11/2/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"10\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"10\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 19:31:24\",\"PT08 | Nguyễn Thanh Phụng\",\"11/3/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"5\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 19:32:48\",\"PT08 | Nguyễn Thanh Phụng\",\"11/4/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr\",\"\"\n\"11/5/2026 20:03:43\",\"PT22 | Mai Thị Quỳnh Diễm\",\"11/4/2026\",\"2\",\"1\",\"0\",\"1\",\"2\",\"5\",\"2\",\"0\",\"\",\"0\",\"1\",\"0\",\"1\",\"0\",\"0\",\"5\",\"\",\"\"\n\"11/5/2026 20:04:40\",\"PT22 | Mai Thị Quỳnh Diễm\",\"11/5/2026\",\"2\",\"1\",\"1\",\"1\",\"2\",\"7\",\"2\",\"0\",\"0\",\"0\",\"1\",\"1\",\"1\",\"0\",\"0\",\"5\",\"\",\"\"\n\"11/5/2026 20:06:31\",\"PT20 | Đỗ Nguyễn Phước Đức\",\"11/4/0026\",\"\",\"1\",\"\",\"1\",\"\",\"3\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 20:07:15\",\"PT23 | Trương Viết Bình\",\"11/4/2026\",\"\",\"\",\"\",\"\",\"\",\"5\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 20:07:25\",\"PT20 | Đỗ Nguyễn Phước Đức\",\"10/5/0026\",\"2\",\"1\",\"\",\"1\",\"1\",\"2\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 20:08:02\",\"PT23 | Trương Viết Bình\",\"11/5/2026\",\"\",\"\",\"\",\"\",\"\",\"7\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"2\",\"\",\"\"\n\"11/5/2026 20:26:11\",\"PT29 | Phạm Duy Phương\",\"11/4/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/5/2026 20:42:07\",\"PT29 | Phạm Duy Phương\",\"11/5/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 9:02:40\",\"PT08 | Nguyễn Thanh Phụng\",\"11/5/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"10\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"8\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr\",\"\"\n\"11/6/2026 13:26:24\",\"PT12 | Trần Phúc Hân\",\"11/5/2026\",\"2\",\"0\",\"0\",\"1\",\"2\",\"5\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"7\",\"https://www.facebook.com/share/p/1CcANLAXPZ/,  https://www.facebook.com/share/r/19ff6N1xck/\",\"\"\n\"11/6/2026 16:18:57\",\"PT07 | Nguyễn Quốc Đại\",\"11/6/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 16:23:53\",\"PT12 | Trần Phúc Hân\",\"11/6/2026\",\"1\",\"1\",\"1\",\"0\",\"1\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"4\",\"https://www.facebook.com/share/p/1CSzskDaNq/\",\"\"\n\"11/6/2026 16:25:32\",\"PT14 | Nguyễn Thành Tuyên\",\"11/6/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"3\",\"0\",\"21\",\"0\",\"0\",\"0\",\"0\",\"\",\"0\",\"0\",\"2\",\"fb: https://www.facebook.com/share/p/1KGVYtE2Zg/     \",\"\"\n\"11/6/2026 16:32:27\",\"PT04 | Phùng Bảo Trân\",\"11/6/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 16:35:29\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/6/2026\",\"1\",\"1\",\"1\",\"2\",\"1\",\"2\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 16:53:08\",\"PT29 | Phạm Duy Phương\",\"11/6/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 16:53:26\",\"PT03 | Nguyễn Văn Phòng\",\"11/6/2026\",\"0\",\"1\",\"1\",\"1\",\"1\",\"3\",\"0\",\"0\",\"4\",\"0\",\"1\",\"0\",\"4\",\"1\",\"0\",\"4\",\"https://www.facebook.com/profile.php?id=61594759679499\",\"\"\n\"11/6/2026 16:55:10\",\"PT02 | Nguyễn Anh Quân\",\"6/11/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/profile.php?fb_profile_edit_entry_point=%7B%22click_point%22%3A%22edit_profile_button%22%2C%22feature%22%3A%22profile_header%22%7D\u0026id=100087532796361\u0026sk=about\",\"\"\n\"11/6/2026 16:57:51\",\"PT17 | Từ Quốc Khoa\",\"6/6/2026\",\"3\",\"3\",\"1\",\"1\",\"1\",\"4\",\"1\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"4\",\"https://www.facebook.com/share/1DoKmBq5Vx/?mibextid=wwXIfr\",\"\"\n\"11/6/2026 16:58:29\",\"PT30 | Nguyễn Nhật Quỳnh\",\"11/6/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"15\",\"0\",\"9\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"10\",\"https://www.facebook.com/nnq0711/\",\"\"\n\"11/6/2026 17:15:00\",\"PT26 | Lê Cao Thông\",\"11/6/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 17:18:43\",\"PT10 | Lương Văn Phụng\",\"11/6/2026\",\"4\",\"4\",\"0\",\"0\",\"2\",\"4\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 17:53:26\",\"PT31 | Lê Hoàng Hiệp\",\"11/6/2026\",\"\",\"\",\"\",\"\",\"\",\"4\",\"\",\"\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\",\"Vinfastngoctuongphanthiet.com.vn\",\"\"\n\"11/6/2026 18:08:15\",\"PT25 | Phan Ngọc Ánh\",\"11/6/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 18:09:51\",\"PT05 | Lê Minh Thư\",\"11/6/2026\",\"1\",\"1\",\"\",\"2\",\"1\",\"2\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\"\n\"11/6/2026 18:11:49\",\"PT32 | Trần Ngọc Minh Vũ\",\"11/6/2026\",\"2\",\"2\",\"\",\"1\",\"\",\"120\",\"\",\"100\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/p/19gLWoBRx4/?mibextid=wwXIfr\",\"\"\n\"11/6/2026 18:16:53\",\"PT28 | Lê Trọng Nghĩa\",\"11/6/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 18:27:47\",\"PT22 | Mai Thị Quỳnh Diễm\",\"11/6/2026\",\"1\",\"1\",\"0\",\"0\",\"1\",\"6\",\"1\",\"\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"6\",\"\",\"\"\n\"11/6/2026 18:29:15\",\"PT11 | Phạm Ngọc Huy\",\"11/6/2026\",\"2\",\"1\",\"0\",\"0\",\"1\",\"14\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"16\",\"https://www.facebook.com/share/p/1DphpYcju4/?mibextid=wwXIfr  /  https://www.facebook.com/share/p/1VmcYyTuj9/?mibextid=wwXIfr\",\"\"\n\"11/6/2026 20:09:59\",\"PT13 | Trần Thế Tài\",\"11/6/2026\",\"2\",\"2\",\"2\",\"\",\"1\",\"6\",\"1\",\"6\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"7\",\"\",\"\"\n\"11/6/2026 20:34:23\",\"PT24 | Nguyễn Thị Ngọc Trâm\",\"11/6/2026\",\"2\",\"2\",\"\",\"2\",\"1\",\"5\",\"\",\"100000\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/6/2026 20:43:44\",\"PT08 | Nguyễn Thanh Phụng\",\"11/6/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr\",\"\"\n\"11/7/2026 14:48:38\",\"PT30 | Nguyễn Nhật Quỳnh\",\"11/7/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"10\",\"0\",\"10\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1EX6mENywK/?mibextid=wwXIfr\",\"\"\n\"11/7/2026 16:23:57\",\"PT26 | Lê Cao Thông\",\"11/7/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"10\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/r/1FQejGmN62/\",\"\"\n\"11/7/2026 16:25:24\",\"PT04 | Phùng Bảo Trân\",\"11/7/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/7/2026 16:26:32\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/7/2026\",\"1\",\"1\",\"1\",\"2\",\"1\",\"5\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"2\",\"\",\"\"\n\"11/7/2026 16:26:52\",\"PT07 | Nguyễn Quốc Đại\",\"11/7/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/7/2026 16:53:16\",\"PT05 | Lê Minh Thư\",\"11/7/2026\",\"2\",\"2\",\"\",\"1\",\"2\",\"2\",\"1\",\"0\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\"\n\"11/7/2026 17:00:09\",\"PT13 | Trần Thế Tài\",\"11/7/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"5\",\"1\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"7\",\"0\",\"0\"\n\"11/7/2026 17:01:07\",\"PT02 | Nguyễn Anh Quân\",\"11/7/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/7/2026 17:04:28\",\"PT17 | Từ Quốc Khoa\",\"11/7/2026\",\"4\",\"2\",\"1\",\"2\",\"2\",\"3\",\"1\",\"\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"https://www.facebook.com/share/19wwyJkjum/?mibextid=wwXIfr\",\"\"\n\"11/7/2026 17:08:07\",\"PT10 | Lương Văn Phụng\",\"11/7/2026\",\"5\",\"5\",\"1\",\"1\",\"2\",\"10\",\"\",\"3\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/7/2026 17:09:46\",\"PT03 | Nguyễn Văn Phòng\",\"11/7/2026\",\"5\",\"5\",\"3\",\"2\",\"2\",\"2\",\"0\",\"0\",\"8\",\"0\",\"0\",\"0\",\"3\",\"0\",\"0\",\"5\",\"https://www.facebook.com/profile.php?id=61594759679499\",\"\"\n\"11/7/2026 17:11:33\",\"PT14 | Nguyễn Thành Tuyên\",\"11/7/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"3\",\"1\",\"3\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"Fb: https://www.facebook.com/share/p/1e4dGTdRzd/?mibextid=wwXIfr\",\"\"\n\"11/7/2026 17:12:55\",\"PT09 | Lê Lâm Xuân Vi\",\"11/7/2026\",\"1\",\"2\",\"2\",\"2\",\"1\",\"4\",\"1\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/\",\"\"\n\"11/7/2026 17:14:08\",\"PT25 | Phan Ngọc Ánh\",\"11/7/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/7/2026 17:32:38\",\"PT18 | Hoàng Thị Thu Trang\",\"7/11/2026\",\"\",\"\",\"\",\"\",\"1\",\"\",\"1\",\"1\",\"1\",\"\",\"0\",\"0\",\"\",\"0\",\"0\",\"\",\"\",\"\"\n\"11/7/2026 17:35:09\",\"PT32 | Trần Ngọc Minh Vũ\",\"11/7/2026\",\"1\",\"1\",\"\",\"1\",\"\",\"15\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/p/1CAHkoYQyX/?mibextid=wwXIfr\",\"\"\n\"11/7/2026 17:55:45\",\"PT28 | Lê Trọng Nghĩa\",\"11/7/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"\",\"\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\"\n\"11/7/2026 18:25:55\",\"PT31 | Lê Hoàng Hiệp\",\"7/7/2026\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"0\",\"0\",\"0\",\"\",\"\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\"\n\"11/7/2026 19:54:50\",\"PT12 | Trần Phúc Hân\",\"11/7/2026\",\"1\",\"1\",\"0\",\"0\",\"1\",\"2\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"3\",\"https://www.facebook.com/share/p/1J1aeLHLXS/?mibextid=wwXIfr\",\"\"\n\"11/7/2026 21:41:14\",\"PT11 | Phạm Ngọc Huy\",\"11/7/2026\",\"2\",\"2\",\"1\",\"\",\"2\",\"10\",\"1\",\"3\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"8\",\"https://www.facebook.com/share/p/1CVKoTrwfx/?mibextid=wwXIfr  ///  https://www.facebook.com/share/p/18iTvnBhDQ/?mibextid=wwXIfr\",\"\"\n\"11/8/2026 16:38:45\",\"PT08 | Nguyễn Thanh Phụng\",\"11/7/2026\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"3\",\"\",\"\"\n\"11/8/2026 16:47:17\",\"PT17 | Từ Quốc Khoa\",\"11/8/2026\",\"2\",\"1\",\"1\",\"1\",\"1\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"3\",\"https://www.facebook.com/share/19w2JsHs1r/?mibextid=wwXIfr\",\"\"\n\"11/8/2026 18:12:52\",\"PT08 | Nguyễn Thanh Phụng\",\"11/8/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"5\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"12\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr\",\"\"\n\"11/8/2026 18:27:06\",\"PT12 | Trần Phúc Hân\",\"11/8/2026\",\"1\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"\"\n\"11/8/2026 18:46:05\",\"PT13 | Trần Thế Tài\",\"11/8/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"\",\"1\",\"1\",\"1\",\"0\",\"0\",\"\",\"0\",\"0\",\"0\",\"3\",\"0\",\"0\"\n\"11/8/2026 19:40:35\",\"PT18 | Hoàng Thị Thu Trang\",\"11/8/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"\",\"0\",\"\",\"\",\"\",\"0\",\"0\",\"\",\"0\",\"\",\"\",\"https://www.facebook.com/share/1E8T4MwM6H/?mibextid=wwXIfr\",\"\"\n\"11/9/2026 8:13:59\",\"PT11 | Phạm Ngọc Huy\",\"11/9/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"18\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/p/1CG9gnHuVs/?mibextid=wwXIfr\",\"\"\n\"11/9/2026 16:07:26\",\"PT26 | Lê Cao Thông\",\"11/9/2026\",\"1\",\"1\",\"1\",\"\",\"1\",\"8\",\"\",\"6\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/9/2026 16:23:18\",\"PT07 | Nguyễn Quốc Đại\",\"11/9/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/9/2026 16:25:11\",\"PT04 | Phùng Bảo Trân\",\"11/9/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/9/2026 16:36:41\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/9/2026\",\"1\",\"\",\"1\",\"1\",\"1\",\"4\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/9/2026 16:36:53\",\"PT09 | Lê Lâm Xuân Vi\",\"11/9/2026\",\"2\",\"1\",\"1\",\"0\",\"1\",\"5\",\"1\",\"10\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/\",\"\"\n\"11/9/2026 16:43:37\",\"PT10 | Lương Văn Phụng\",\"11/9/2026\",\"6\",\"6\",\"2\",\"1\",\"2\",\"10\",\"\",\"4\",\"\",\"\",\"2\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/9/2026 17:00:25\",\"PT02 | Nguyễn Anh Quân\",\"11/9/0026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/1Caq6vmVBY/?mibextid=wwXIfr\",\"\"\n\"11/9/2026 17:06:49\",\"PT06 | Phạm Quốc Bảo\",\"11/9/2026\",\"\",\"0\",\"0\",\"0\",\"0\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"\"\n\"11/9/2026 17:09:23\",\"PT12 | Trần Phúc Hân\",\"11/9/2026\",\"2\",\"0\",\"0\",\"0\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"https://www.facebook.com/share/p/1DW9r4RnsN/\",\"\"\n\"11/9/2026 17:12:59\",\"PT03 | Nguyễn Văn Phòng\",\"11/9/2026\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"7\",\"https://www.facebook.com/share/1GbpDL42DA/?mibextid=wwXIfr\",\"\"\n\"11/9/2026 17:23:37\",\"PT13 | Trần Thế Tài\",\"11/9/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"\",\"\"\n\"11/9/2026 17:42:49\",\"PT17 | Từ Quốc Khoa\",\"11/9/2026\",\"4\",\"4\",\"1\",\"2\",\"2\",\"3\",\"1\",\"1\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"https://www.facebook.com/share/1J9U1ZTucs/?mibextid=wwXIfr\",\"\"\n\"11/9/2026 17:49:36\",\"PT24 | Nguyễn Thị Ngọc Trâm\",\"11/9/2026\",\"2\",\"2\",\"\",\"2\",\"2\",\"8\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/9/2026 17:50:44\",\"PT14 | Nguyễn Thành Tuyên\",\"11/9/2026\",\"1\",\"0\",\"0\",\"1\",\"1\",\"3\",\"1\",\"5\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"Fb: https://www.facebook.com/share/p/1HVfyjckiP/?mibextid=wwXIfr.           Tiktok: https://vt.tiktok.com/ZSpDX3ndd/\",\"\"\n\"11/9/2026 17:56:21\",\"PT08 | Nguyễn Thanh Phụng\",\"11/9/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"10\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr \",\"\"\n\"11/9/2026 19:17:00\",\"PT32 | Trần Ngọc Minh Vũ\",\"11/9/2026\",\"3\",\"3\",\"\",\"1\",\"\",\"20\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/14wEenheCpX/?mibextid=wwXIfr\",\"\"\n\"11/9/2026 19:46:10\",\"PT20 | Đỗ Nguyễn Phước Đức\",\"11/9/0026\",\"\",\"1\",\"\",\"\",\"\",\"3\",\"1\",\"2\",\"\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/10/2026 18:19:22\",\"PT13 | Trần Thế Tài\",\"11/10/2026\",\"2\",\"1\",\"1\",\"1\",\"2\",\"3\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\"\n\"11/10/2026 18:24:00\",\"PT18 | Hoàng Thị Thu Trang\",\"11/10/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/1A3dFT1qFE/?mibextid=wwXIfr\",\"\"\n\"11/10/2026 18:25:57\",\"PT17 | Từ Quốc Khoa\",\"11/10/2026\",\"3\",\"3\",\"1\",\"2\",\"1\",\"2\",\"1\",\"0\",\"0\",\"0\",\"0\",\"\",\"\",\"0\",\"0\",\"2\",\"https://www.facebook.com/share/1KzpN3f9JZ/?mibextid=wwXIfr\",\"\"\n\"11/10/2026 18:26:05\",\"PT08 | Nguyễn Thanh Phụng\",\"11/10/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"5\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\" www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr \",\"\"\n\"11/10/2026 18:30:39\",\"PT14 | Nguyễn Thành Tuyên\",\"11/10/2026\",\"2\",\"0\",\"0\",\"0\",\"2\",\"4\",\"0\",\"3\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"Fb: https://www.facebook.com/share/p/1By1PivNgw/?mibextid=wwXIfr.     https://www.facebook.com/share/p/19xB79EYPo/?mibextid=wwXIfr\",\"\"\n\"11/10/2026 18:49:11\",\"PT31 | Lê Hoàng Hiệp\",\"11/10/2026\",\"\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/11/2026 16:50:21\",\"PT04 | Phùng Bảo Trân\",\"11/11/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/11/2026 16:53:16\",\"PT07 | Nguyễn Quốc Đại\",\"11/11/2026\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/11/2026 16:53:20\",\"PT03 | Nguyễn Văn Phòng\",\"11/11/2026\",\"13\",\"13\",\"1\",\"1\",\"1\",\"1\",\"0\",\"0\",\"5\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"7\",\"https://www.facebook.com/profile.php?id=61594759679499\",\"\"\n\"11/11/2026 16:53:43\",\"PT10 | Lương Văn Phụng\",\"11/11/2026\",\"5\",\"5\",\"1\",\"1\",\"2\",\"10\",\"1\",\"3\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/11/2026 16:58:33\",\"PT26 | Lê Cao Thông\",\"11/11/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"7\",\"\",\"10\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/11/2026 17:00:13\",\"PT33 | Đào Dương Minh Anh\",\"11/11/2026\",\"\",\"\",\"\",\"\",\"\",\"5\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"2\",\"https://www.facebook.com/share/1DQb2r1gRG/?mibextid=wwXIfr\",\"\"\n\"11/11/2026 17:01:29\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/11/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"4\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"11/11/2026 17:43:08\",\"PT14 | Nguyễn Thành Tuyên\",\"11/11/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"2\",\"0\",\"0\",\"2\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"2\",\"Fb:https://www.facebook.com/share/p/14vvYStyYo1/?mibextid=wwXIfr\",\"\"\n\"11/11/2026 18:01:03\",\"PT17 | Từ Quốc Khoa\",\"11/11/2026\",\"2\",\"2\",\"\",\"\",\"1\",\"1\",\"\",\"\",\"\",\"\",\"1\",\"\",\"1\",\"\",\"\",\"1\",\"\",\"\"\n\"11/11/2026 20:46:08\",\"PT18 | Hoàng Thị Thu Trang\",\"10/11/2026\",\"2\",\"2\",\"2\",\"2\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"https://www.facebook.com/share/19Hvcyr4ak/?mibextid=wwXIfr\",\"\"\n\"11/11/2026 20:55:41\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/11/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"\",\"\",\"\",\"\",\"\",\"1\",\"\",\"\",\"\",\"\",\"\",\"https://docs.google.com/forms/d/e/1FAIpQLSfwqfBQsOziiwVLbFFOhWt_0TSJmN-xgXB5VwPlQqsdDfO1Uw/viewform?fbzx=-8544496292396346103\u0026zarsrc=31\",\"\"\n\"11/12/2026 16:32:30\",\"PT14 | Nguyễn Thành Tuyên\",\"11/12/2026\",\"2\",\"1\",\"0\",\"1\",\"2\",\"2\",\"1\",\"5\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"tiktok: https://www.tiktok.com/@nt.neyut.03/photo/7707211594249342215?_r=1\u0026_t=ZS-9BL7qIr876c       fb: https://www.facebook.com/share/p/1Cd2wUtpuL/ , https://www.facebook.com/share/p/1DH2n5wpEE/\",\"\"\n\"11/12/2026 16:56:39\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/12/2026\",\"1\",\"1\",\"1\",\"1\",\"0\",\"2\",\"0\",\"20\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"\"\n\"11/12/2026 16:56:41\",\"PT04 | Phùng Bảo Trân\",\"11/12/2026\",\"3\",\"0\",\"0\",\"0\",\"3\",\"8\",\"0\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"8\",\"\",\"\"\n\"11/12/2026 16:56:50\",\"PT06 | Phạm Quốc Bảo\",\"11/12/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"2\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"https://www.facebook.com/share/p/1CsqYw3cR9/\",\"0\"\n\"11/12/2026 16:59:44\",\"PT10 | Lương Văn Phụng\",\"11/12/2026\",\"6\",\"6\",\"0\",\"0\",\"2\",\"6\",\"1\",\"6\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"1\",\"\",\"\"\n\"11/12/2026 17:01:26\",\"PT33 | Đào Dương Minh Anh\",\"11/12/2026\",\"1\",\"2\",\"1\",\"1\",\"1\",\"5\",\"2\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"2\",\"https://www.facebook.com/share/r/1HAFQ65wPq/?mibextid=wwXIfr\",\"\"\n\"11/12/2026 17:02:46\",\"PT02 | Nguyễn Anh Quân\",\"11/12/2026\",\"2\",\"0\",\"0\",\"0\",\"1\",\"2\",\"0\",\"0\",\"1\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"1\",\"\",\"\"\n\"11/12/2026 17:02:59\",\"PT30 | Nguyễn Nhật Quỳnh\",\"11/12/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"10\",\"0\",\"9\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"20\",\"https://www.facebook.com/nnq0711/\",\"\"\n\"11/12/2026 17:03:08\",\"PT17 | Từ Quốc Khoa\",\"11/12/2026\",\"1\",\"1\",\"0\",\"1\",\"1\",\"3\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"https://www.facebook.com/share/1Gjfixjj9c/?mibextid=wwXIfr\",\"\"\n\"11/12/2026 17:03:34\",\"PT18 | Hoàng Thị Thu Trang\",\"11/12/2026\",\"2\",\"2\",\"2\",\"1\",\"1\",\"3\",\"1\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"https://www.facebook.com/share/1PKi3RPHmY/?mibextid=wwXIfr\",\"\"\n\"11/12/2026 17:03:51\",\"PT09 | Lê Lâm Xuân Vi\",\"12/11/2026\",\"3\",\"2\",\"2\",\"1\",\"0\",\"4\",\"0\",\"10\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1Fayz8iDTQ/?mibextid=wwXIfr\",\"\"\n\"11/12/2026 17:06:54\",\"PT08 | Nguyễn Thanh Phụng\",\"11/11/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"5\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"1\",\"3\",\" www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr \",\"\"\n\"11/12/2026 17:08:36\",\"PT08 | Nguyễn Thanh Phụng\",\"11/12/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\" www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr \",\"\"\n\"11/12/2026 17:10:33\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/12/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"2\",\"1\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BLAcTh2w2m\",\"\"\n\"11/12/2026 17:17:38\",\"PT07 | Nguyễn Quốc Đại\",\"11/12/2026\",\"1\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"\",\"\"\n\"11/12/2026 18:37:56\",\"PT26 | Lê Cao Thông\",\"11/12/2026\",\"1\",\"1\",\"1\",\"0\",\"1\",\"8\",\"0\",\"5\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"\",\"\"\n\"11/12/2026 18:57:46\",\"PT03 | Nguyễn Văn Phòng\",\"11/12/2026\",\"6\",\"6\",\"0\",\"0\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"3\",\"0\",\"0\",\"6\",\"https://www.facebook.com/share/1KLQBtU4Qq/\",\"\"\n\"11/13/2026 16:51:41\",\"PT07 | Nguyễn Quốc Đại\",\"11/13/2026\",\"1\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"\",\"\"\n\"11/13/2026 16:52:35\",\"PT04 | Phùng Bảo Trân\",\"11/13/1996\",\"2\",\"0\",\"1\",\"0\",\"2\",\"7\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"2\",\"\",\"\"\n\"11/13/2026 16:57:44\",\"PT26 | Lê Cao Thông\",\"11/13/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"7\",\"0\",\"8\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"\"\n\"11/13/2026 16:58:58\",\"PT33 | Đào Dương Minh Anh\",\"11/13/2026\",\"1\",\"1\",\"1\",\"1\",\"0\",\"3\",\"0\",\"10\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"3\",\"https://www.facebook.com/share/r/1CUctxYcF7/?mibextid=wwXIfr\",\"\"\n\"11/13/2026 17:01:17\",\"PT03 | Nguyễn Văn Phòng\",\"11/13/2026\",\"6\",\"6\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"4\",\"0\",\"0\",\"0\",\"2\",\"0\",\"0\",\"4\",\"https://www.facebook.com/share/1JdZEpsQJP/\",\"\"\n\"11/13/2026 17:37:15\",\"PT09 | Lê Lâm Xuân Vi\",\"11/13/2026\",\"2\",\"1\",\"1\",\"0\",\"0\",\"2\",\"0\",\"10\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1MwZyiRHrv/?mibextid=wwXIfr\",\"\"\n\"11/13/2026 18:18:23\",\"PT10 | Lương Văn Phụng\",\"11/13/2026\",\"5\",\"5\",\"1\",\"0\",\"3\",\"12\",\"0\",\"4\",\"0\",\"0\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/p/1CdZAjd4AH/?mibextid=wwXIfr\",\"\"\n\"11/13/2026 18:37:12\",\"PT17 | Từ Quốc Khoa\",\"11/13/2026\",\"6\",\"6\",\"1\",\"1\",\"1\",\"4\",\"0\",\"1\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1FgSTdtqYU/?mibextid=wwXIfr\",\"\"\n\"11/13/2026 18:37:19\",\"PT08 | Nguyễn Thanh Phụng\",\"11/13/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"0\",\"0\",\"5\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr \",\"\"\n\"11/13/2026 18:40:11\",\"PT18 | Hoàng Thị Thu Trang\",\"11/13/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"0\",\"2\",\"1\",\"0\",\"0\",\"0\",\"2\",\"0\",\"0\",\"2\",\"https://www.facebook.com/share/1EuChtv5kM/?mibextid=wwXIfr\",\"\"\n\"11/13/2026 18:52:06\",\"PT31 | Lê Hoàng Hiệp\",\"11/13/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"10\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"\",\"\"\n\"11/13/2026 19:46:51\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/13/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BN3Xz4bYkm\",\"\"\n\"11/13/2026 21:51:20\",\"PT12 | Trần Phúc Hân\",\"11/10/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"1\",\"0\",\"0\",\"2\",\"\",\"\"\n\"11/13/2026 21:52:26\",\"PT12 | Trần Phúc Hân\",\"11/11/2026\",\"1\",\"0\",\"0\",\"0\",\"0\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"4\",\"\",\"\"\n\"11/13/2026 21:53:14\",\"PT12 | Trần Phúc Hân\",\"11/12/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"\",\"\"\n\"11/13/2026 21:54:04\",\"PT12 | Trần Phúc Hân\",\"11/13/2026\",\"3\",\"1\",\"1\",\"1\",\"3\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"\"\n\"11/14/2026 16:39:17\",\"PT03 | Nguyễn Văn Phòng\",\"11/14/2026\",\"10\",\"10\",\"0\",\"0\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"0\",\"1\",\"6\",\"https://www.facebook.com/profile.php?id=61594759679499\",\"\"\n\"11/14/2026 16:50:57\",\"PT04 | Phùng Bảo Trân\",\"11/14/2026\",\"1\",\"0\",\"0\",\"2\",\"1\",\"4\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"\",\"\"\n\"11/14/2026 17:01:05\",\"PT33 | Đào Dương Minh Anh\",\"11/14/2026\",\"1\",\"1\",\"1\",\"2\",\"0\",\"5\",\"1\",\"6\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"https://www.facebook.com/share/1CExFXAmk5/?mibextid=wwXIfr\",\"\"\n\"11/14/2026 17:01:20\",\"PT07 | Nguyễn Quốc Đại\",\"11/14/2026\",\"1\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"\",\"\"\n\"11/14/2026 17:02:58\",\"PT02 | Nguyễn Anh Quân\",\"11/14/2026\",\"1\",\"0\",\"0\",\"1\",\"1\",\"2\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"\",\"\"\n\"11/14/2026 17:08:46\",\"PT10 | Lương Văn Phụng\",\"11/14/2026\",\"8\",\"8\",\"0\",\"0\",\"3\",\"7\",\"0\",\"8\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1516vsZdce2/?mibextid=wwXIfr\",\"\"\n\"11/14/2026 17:37:15\",\"PT26 | Lê Cao Thông\",\"11/14/2026\",\"1\",\"1\",\"1\",\"0\",\"1\",\"6\",\"0\",\"7\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"https://www.facebook.com/share/p/1d3LSNJwxh/\",\"0\"\n\"11/14/2026 17:50:50\",\"PT28 | Lê Trọng Nghĩa\",\"5/25/2004\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"0\",\"0\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"\",\"500000\"\n\"11/14/2026 18:05:06\",\"PT09 | Lê Lâm Xuân Vi\",\"11/14/2026\",\"1\",\"1\",\"1\",\"0\",\"0\",\"2\",\"0\",\"3\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1DyrdcM21v/?mibextid=wwXIfr\",\"1347502\"\n\"11/14/2026 18:10:36\",\"PT32 | Trần Ngọc Minh Vũ\",\"11/14/2026\",\"1\",\"1\",\"0\",\"1\",\"1\",\"25\",\"0\",\"9\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"6\",\"\",\"1170000\"\n\"11/14/2026 19:24:11\",\"PT13 | Trần Thế Tài\",\"11/14/2026\",\"1\",\"1\",\"0\",\"0\",\"1\",\"4\",\"0\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"6\",\"\",\"1400000\"\n\"11/14/2026 19:25:47\",\"PT17 | Từ Quốc Khoa\",\"11/14/2026\",\"2\",\"1\",\"1\",\"1\",\"1\",\"5\",\"0\",\"1\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1FXNZHnkZz/?mibextid=wwXIfr\",\"800000\"\n\"11/14/2026 19:26:09\",\"PT13 | Trần Thế Tài\",\"11/13/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"1400000\"\n\"11/14/2026 19:26:57\",\"PT08 | Nguyễn Thanh Phụng\",\"11/14/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"4\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"1\",\"1\",\"1\",\"4\",\"www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr \",\"2156000\"\n\"11/14/2026 19:27:03\",\"PT13 | Trần Thế Tài\",\"11/12/2026\",\"3\",\"2\",\"1\",\"1\",\"2\",\"4\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"\",\"1400000\"\n\"11/14/2026 19:30:25\",\"PT13 | Trần Thế Tài\",\"11/10/2026\",\"2\",\"1\",\"1\",\"0\",\"2\",\"4\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"\",\"1400000\"\n\"11/14/2026 19:33:16\",\"PT13 | Trần Thế Tài\",\"11/11/2026\",\"1\",\"1\",\"1\",\"0\",\"1\",\"3\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"\",\"1400000\"\n\"11/14/2026 19:43:09\",\"PT18 | Hoàng Thị Thu Trang\",\"11/14/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"0\",\"1\",\"2\",\"0\",\"1\",\"0\",\"3\",\"0\",\"1\",\"2\",\"https://www.facebook.com/share/19fmWQpxVB/?mibextid=wwXIfr\",\"335272\"\n\"11/14/2026 19:44:14\",\"PT12 | Trần Phúc Hân\",\"11/14/2026\",\"1\",\"1\",\"1\",\"0\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"1\",\"0\",\"0\",\"0\",\"\",\"119000\"\n\"11/14/2026 19:48:42\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/14/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"1\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BOl1yB1iZ3\",\"0\"\n\"11/14/2026 20:15:01\",\"PT24 | Nguyễn Thị Ngọc Trâm\",\"11/12/2026\",\"3\",\"3\",\"0\",\"2\",\"1\",\"5\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"3\",\"\",\"1100000\"\n\"11/14/2026 20:16:28\",\"PT24 | Nguyễn Thị Ngọc Trâm\",\"11/14/1026\",\"3\",\"3\",\"0\",\"1\",\"1\",\"5\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"1\",\"0\",\"0\",\"1\",\"\",\"1100000\"\n\"11/15/2026 8:41:49\",\"PT21 | Phan Văn Quy\",\"11/12/2026\",\"3\",\"0\",\"0\",\"0\",\"3\",\"10\",\"0\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"12\",\"\",\"700000\"\n\"11/15/2026 8:42:58\",\"PT21 | Phan Văn Quy\",\"11/15/2026\",\"1\",\"0\",\"0\",\"1\",\"1\",\"3\",\"0\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"\",\"888000\"\n\"11/15/2026 8:45:46\",\"PT22 | Mai Thị Quỳnh Diễm\",\"11/14/2026\",\"1\",\"1\",\"1\",\"0\",\"2\",\"10\",\"1\",\"4\",\"4\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"15\",\"\",\"650000\"\n\"11/15/2026 8:46:44\",\"PT06 | Phạm Quốc Bảo\",\"11/15/2026\",\"1\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"1282000\"\n\"11/15/2026 8:49:50\",\"PT20 | Đỗ Nguyễn Phước Đức\",\"11/14/2026\",\"0\",\"0\",\"0\",\"0\",\"0\",\"3\",\"0\",\"3\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"\",\"1818181\"\n\"11/15/2026 8:53:13\",\"PT33 | Đào Dương Minh Anh\",\"11/15/2026\",\"2\",\"2\",\"1\",\"1\",\"0\",\"3\",\"0\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"https://vt.tiktok.com/ZSpVKmaX8/\",\"915000\"\n\"11/15/2026 8:56:16\",\"PT29 | Phạm Duy Phương\",\"11/15/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"1\",\"0\",\"0\",\"10\",\"0\",\"0\",\"0\",\"2\",\"0\",\"0\",\"3\",\"\",\"3962515\"\n\"11/15/2026 8:57:54\",\"PT25 | Phan Ngọc Ánh\",\"11/15/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"5\",\"1\",\"0\",\"0\",\"0\",\"1\",\"1\",\"0\",\"1\",\"1\",\"5\",\"0\",\"1500000\"\n\"11/15/2026 8:58:22\",\"PT30 | Nguyễn Nhật Quỳnh\",\"11/14/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"20\",\"0\",\"30\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"1\",\"20\",\"https://www.facebook.com/share/1CdrGhtxA1/?mibextid=wwXIfr\",\"1506940\"\n\"11/15/2026 9:08:39\",\"PT10 | Lương Văn Phụng\",\"11/15/2026\",\"4\",\"4\",\"0\",\"0\",\"1\",\"6\",\"0\",\"4\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1Q7R42feXo/?mibextid=wwXIfr\",\"950000\"\n\"11/15/2026 9:15:28\",\"PT04 | Phùng Bảo Trân\",\"11/15/2026\",\"0\",\"0\",\"0\",\"1\",\"1\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"870000\"\n\"11/15/2026 9:16:25\",\"PT14 | Nguyễn Thành Tuyên\",\"11/14/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"2\",\"0\",\"1\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"890000\"\n\"11/15/2026 9:16:43\",\"PT24 | Nguyễn Thị Ngọc Trâm\",\"11/15/2026\",\"1\",\"1\",\"0\",\"1\",\"1\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"\",\"1218000\"\n\"11/15/2026 9:29:15\",\"PT27 | Nguyễn Ngọc Ngân\",\"11/15/2006\",\"1\",\"1\",\"1\",\"1\",\"0\",\"3\",\"1\",\"10\",\"1\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"550000\"\n\"11/15/2026 9:41:56\",\"PT03 | Nguyễn Văn Phòng\",\"11/15/2026\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"562000\"\n\"11/15/2026 9:42:23\",\"PT02 | Nguyễn Anh Quân\",\"11/15/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"1000000\"\n\"11/15/2026 9:45:22\",\"PT07 | Nguyễn Quốc Đại\",\"11/15/2026\",\"1\",\"0\",\"0\",\"0\",\"1\",\"1\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"1\",\"\",\"0\"\n\"11/15/2026 11:29:59\",\"PT26 | Lê Cao Thông\",\"11/14/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"7\",\"0\",\"8\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"5\",\"\",\"300000\"\n\"11/15/2026 11:33:11\",\"PT11 | Phạm Ngọc Huy\",\"11/14/2026\",\"2\",\"1\",\"1\",\"1\",\"1\",\"15\",\"1\",\"5\",\"0\",\"0\",\"1\",\"1\",\"0\",\"0\",\"0\",\"20\",\"\",\"1298010\"\n\"11/15/2026 11:36:00\",\"PT11 | Phạm Ngọc Huy\",\"11/13/2026\",\"2\",\"2\",\"1\",\"0\",\"2\",\"12\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"18\",\"\",\"1128120\"\n\"11/15/2026 11:38:19\",\"PT11 | Phạm Ngọc Huy\",\"11/12/2026\",\"1\",\"2\",\"2\",\"1\",\"2\",\"14\",\"1\",\"2\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"15\",\"\",\"939080\"\n\"11/15/2026 11:40:50\",\"PT11 | Phạm Ngọc Huy\",\"11/11/2026\",\"1\",\"1\",\"1\",\"1\",\"2\",\"1\",\"1\",\"5\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"11\",\"\",\"769530\"\n\"11/15/2026 11:41:53\",\"PT11 | Phạm Ngọc Huy\",\"11/10/2026\",\"2\",\"2\",\"2\",\"2\",\"3\",\"9\",\"0\",\"12\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"571630\"\n\"11/15/2026 12:17:53\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/2/2026\",\"1\",\"2\",\"1\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"0\"\n\"11/15/2026 12:20:01\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/3/2026\",\"1\",\"1\",\"1\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"\",\"0\"\n\"11/15/2026 12:23:22\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/4/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BPvhWUKgj6\",\"0\"\n\"11/15/2026 12:25:07\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/5/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BPvhWUKgj6\",\"0\"\n\"11/15/2026 12:27:25\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/6/2026\",\"2\",\"1\",\"2\",\"2\",\"2\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BPvhWUKgj6\",\"0\"\n\"11/15/2026 12:28:49\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/7/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BPvhWUKgj6\",\"0\"\n\"11/15/2026 12:30:50\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/8/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BPvhWUKgj6\",\"0\"\n\"11/15/2026 12:32:30\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/9/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"2\",\"0\",\"0\",\"0\",\"9\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BPvhWUKgj6\",\"0\"\n\"11/15/2026 12:34:18\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/10/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BPvhWUKgj6\",\"0\"\n\"11/15/2026 16:47:11\",\"PT17 | Từ Quốc Khoa\",\"11/15/2026\",\"1\",\"1\",\"0\",\"1\",\"0\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"1\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/1MPMT4uy3R/?mibextid=wwXIfr\",\"799000\"\n\"11/15/2026 17:46:09\",\"PT13 | Trần Thế Tài\",\"11/15/2026\",\"2\",\"1\",\"1\",\"0\",\"2\",\"4\",\"0\",\"1\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"6\",\"0\",\"1400000\"\n\"11/15/2026 17:46:50\",\"PT13 | Trần Thế Tài\",\"11/1/2026\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\"\n\"11/15/2026 19:00:46\",\"PT11 | Phạm Ngọc Huy\",\"11/15/2026\",\"2\",\"2\",\"1\",\"1\",\"2\",\"8\",\"0\",\"5\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"9\",\"https://m.facebook.com/story.php?story_fbid=pfbid0dEkFdAR52E3hae9fJnxmDzXntV9qu9C6zTwyEYEnP6nqRXsR6HxgtfcWSvuBe2Xpl\u0026id=100005540324781\u0026mibextid=wwXIfr\",\"1517500\"\n\"11/15/2026 19:34:50\",\"PT11 | Phạm Ngọc Huy\",\"11/8/2026\",\"2\",\"2\",\"1\",\"1\",\"3\",\"7\",\"0\",\"7\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"9\",\"\",\"410510\"\n\"11/15/2026 19:43:31\",\"PT35 | Nguyễn Hoàng Kim Ngân\",\"11/15/2026\",\"2\",\"2\",\"2\",\"2\",\"2\",\"2\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.tiktok.com/@only1ngan?_r=1\u0026_t=ZS-9BQS31npjkM\",\"0\"\n\"11/15/2026 19:52:00\",\"PT08 | Nguyễn Thanh Phụng\",\"11/15/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"5\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"2\",\"1\",\"13\",\" www.tiktok.com/@phungvinfast |  https://www.facebook.com/share/1DtdRrK3Sz/?mibextid=wwXIfr \",\"2469000\"\n\"11/15/2026 19:56:09\",\"PT18 | Hoàng Thị Thu Trang\",\"11/15/2026\",\"1\",\"1\",\"1\",\"1\",\"1\",\"3\",\"0\",\"2\",\"2\",\"0\",\"0\",\"0\",\"3\",\"0\",\"0\",\"3\",\"https://www.facebook.com/share/18kETkhH2c/?mibextid=wwXIfr\",\"355725\"\n\"11/15/2026 20:10:40\",\"PT17 | Từ Quốc Khoa\",\"11/2/2026\",\"3\",\"2\",\"0\",\"0\",\"3\",\"3\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"0\",\"https://www.facebook.com/share/18nGemaP5f/?mibextid=wwXIfr\",\"0\"","key":"\"PHÒNG KINH DOANH 2\"\n\"PT13 | Trần Thế Tài\"\n\"PT17 | Từ Quốc Khoa\"\n\"PT12 | Trần Phúc Hân\"\n\"PT14 | Nguyễn Thành Tuyên\"\n\"PT11 | Phạm Ngọc Huy\"\n\"PT08 | Nguyễn Thanh Phụng\"\n\"PT35 | Nguyễn Hoàng Kim Ngân\"\n\"PT18 | Hoàng Thị Thu Trang\"\n\"PT31 | Lê Hoàng Hiệp\"","at":"09:58 16/11/2026"};
+const SHEET_ID = '1MKogwivNMhcznr01LBG71b4Es5keuPvO87EUCl9vKx8';
+
+const GROUPS = {
+  online:{label:'Nội dung online',      short:'Online'},
+  care:  {label:'Chăm sóc & tương tác', short:'Chăm sóc'},
+  field: {label:'Thị trường & quan hệ', short:'Thị trường'}
+};
+const GKEYS = ['online','care','field'];
+
+// h = tiêu đề cột trong sheet, c = vị trí cột dự phòng, s = nhãn ngắn
+const METRICS = [
+  {h:'FB bài',c:3,s:'FB bài',g:'online'},
+  {h:'Story',c:4,s:'Story',g:'online'},
+  {h:'FB Reels',c:5,s:'FB Reels',g:'online'},
+  {h:'TikTok video',c:6,s:'TikTok',g:'online'},
+  {h:'Zalo bài',c:7,s:'Zalo bài',g:'online'},
+  {h:'Livestream',c:9,s:'Livestream',g:'online'},
+  {h:'Zalo chăm KH',c:8,s:'Zalo chăm KH',g:'care'},
+  {h:'Seeding ngày',c:10,s:'Seeding',g:'care'},
+  {h:'Tương tác đúng tệp',c:11,s:'Đúng tệp',g:'care'},
+  {h:'Website/Form',c:12,s:'Web/Form',g:'care'},
+  {h:'Chăm KH cũ TT',c:18,s:'KH cũ TT',g:'care'},
+  {h:'Đi thị trường',c:13,s:'Đi thị trường',g:'field'},
+  {h:'Trường lái/ĐK/Gara/Phụ kiện',c:14,s:'Gara/TL/PK',g:'field'},
+  {h:'Xin giới thiệu',c:15,s:'Xin giới thiệu',g:'field'},
+  {h:'Cafe/đối tác',c:16,s:'Cafe/đối tác',g:'field'},
+  {h:'DN/Sự kiện',c:17,s:'DN/Sự kiện',g:'field'}
+];
+const DOW = ['CN','T2','T3','T4','T5','T6','T7'];
+const DOW_FULL = ['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = new Intl.NumberFormat('vi-VN', {maximumFractionDigits:1});
+const fmt = n => nf.format(Math.round(n*10)/10);
+const fmtInt = n => new Intl.NumberFormat('vi-VN').format(Math.round(n || 0));
+
+function fmtVND(n, compact = false) {
+  if (n == null || isNaN(n) || n === 0) return '0 ₫';
+  if (compact) {
+    if (n >= 1e6) {
+      const v = Math.round((n / 1e6) * 10) / 10;
+      return `${nf.format(v)} tr`;
+    }
+    if (n >= 1e3) {
+      const v = Math.round((n / 1e3) * 10) / 10;
+      return `${nf.format(v)} k`;
+    }
+  }
+  return fmtInt(n) + ' ₫';
+}
+
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromIso = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const addDays = (s, n) => { const d = fromIso(s); d.setDate(d.getDate()+n); return iso(d); };
+const dayDiff = (a, b) => Math.round((fromIso(b) - fromIso(a)) / 864e5);
+const todayIso = () => iso(new Date());
+const dm = s => { const d = fromIso(s); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}`; };
+const dmy = s => { const d = fromIso(s); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`; };
+const dowOf = s => fromIso(s).getDay();
+const range = (a, b) => { const out = []; for (let s = a; s <= b; s = addDays(s, 1)) out.push(s); return out; };
+const norm = s => String(s ?? '').normalize('NFC').trim().toLowerCase();
+const hueOf = s => { let h = 0; for (const ch of s) h = (h*31 + ch.charCodeAt(0)) % 360; return h; };
+const isMobile = () => matchMedia('(max-width:760px)').matches;
+
+function initials(name){
+  const w = name.trim().split(/\s+/);
+  if (w.length === 1) return w[0].slice(0,2).toUpperCase();
+  return (w[w.length-2][0] + w[w.length-1][0]).toUpperCase();
+}
+function shortName(name){ const w = name.trim().split(/\s+/); return w.slice(-2).join(' '); }
+function avatar(m, cls=''){ return `<span class="av ${cls}" style="--h:${hueOf(m.code)}" aria-hidden="true">${esc(initials(m.name))}</span>`; }
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function gColor(g){ return cssVar('--g-'+g); }
+function relDay(s){
+  const t = todayIso(); const d = dayDiff(s, t);
+  if (d === 0) return 'Hôm nay'; if (d === 1) return 'Hôm qua'; if (d === -1) return 'Ngày mai';
+  return DOW_FULL[dowOf(s)];
+}
+
+/* ---------------- state ---------------- */
+const saved = JSON.parse(localStorage.getItem('pkd-dash') || '{}');
+const S = {
+  tab: saved.tab || 'team',
+  scope: saved.scope || 'team',
+  mode: saved.mode || 'day',
+  dupMode: saved.dupMode || 'latest',
+  person: saved.person || null,
+  preset: saved.preset || '7',
+  heatMode: saved.heatMode || 'check', // 'check' (có/không) or 'count' (số lượng)
+  catFilter: saved.catFilter || 'all',  // 'all' | 'online' | 'care' | 'field' | 'budget' | 'm0'..'m15'
+  date: null, from: null, to: null,
+  sort: {key:'total', dir:-1},
+  openDay: null
+};
+
+function persist(){
+  localStorage.setItem('pkd-dash', JSON.stringify({
+    tab:S.tab, scope:S.scope, mode:S.mode, dupMode:S.dupMode,
+    person:S.person, preset:S.preset, heatMode:S.heatMode, catFilter:S.catFilter,
+    theme:document.documentElement.dataset.theme
+  }));
+}
+if (saved.theme) document.documentElement.dataset.theme = saved.theme;
+else if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark';
+
+// Cho phép mở nhanh qua link: dashboard.html?tab=person&person=PT13&cat=budget
+{ const q = new URLSearchParams(location.search);
+  if (q.get('tab')) S.tab = q.get('tab');
+  if (q.get('person')) S.person = q.get('person').toUpperCase();
+  if (q.get('scope')) S.scope = q.get('scope');
+  if (q.get('mode')) S.mode = q.get('mode');
+  if (q.get('heat')) S.heatMode = q.get('heat');
+  if (q.get('cat')) S.catFilter = q.get('cat');
+  if (q.get('theme')) document.documentElement.dataset.theme = q.get('theme'); }
+
+const D = { raw:[], team:[], teamName:'', all:[], byCode:new Map(), recs:[], fixedCount:0, source:'', loadedAt:null, minDate:null, maxDate:null };
+
+/* ---------------- loading ---------------- */
+function parseCSV(text){
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (q){
+      if (c === '"'){ if (text[i+1] === '"'){ f += '"'; i++; } else q = false; }
+      else f += c;
+    } else if (c === '"') q = true;
+    else if (c === ','){ row.push(f); f = ''; }
+    else if (c === '\n'){ row.push(f); rows.push(row); row = []; f = ''; }
+    else if (c !== '\r') f += c;
+  }
+  if (f !== '' || row.length){ row.push(f); rows.push(row); }
+  return rows;
+}
+async function fetchCSV(sheet){
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
+  const r = await fetch(url, {cache:'no-store'});
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const t = await r.text();
+  if (/^\s*</.test(t)) throw new Error('not csv');
+  return parseCSV(t);
+}
+function fetchJSONP(sheet){
+  return new Promise((res, rej) => {
+    const cb = '__gv' + Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const timer = setTimeout(() => { done(); rej(new Error('timeout')); }, 15000);
+    function done(){ clearTimeout(timer); delete window[cb]; s.remove(); }
+    window[cb] = r => {
+      done();
+      if (!r || r.status !== 'ok') return rej(new Error('gviz error'));
+      const cols = r.table.cols, out = [];
+      if (cols.some(c => c.label)) out.push(cols.map(c => c.label));
+      for (const row of r.table.rows) out.push(cols.map((c, i) => { const v = row.c[i]; if (!v) return ''; return v.f != null ? String(v.f) : (v.v == null ? '' : String(v.v)); }));
+      res(out);
+    };
+    s.onerror = () => { done(); rej(new Error('network')); };
+    s.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:${cb}&sheet=${encodeURIComponent(sheet)}&_=${Date.now()}`;
+    document.head.appendChild(s);
+  });
+}
+async function loadSheet(sheet){
+  try { return {rows: await fetchCSV(sheet), via:'csv'}; }
+  catch(e){ return {rows: await fetchJSONP(sheet), via:'jsonp'}; }
+}
+
+function setSync(state, text){
+  const el = $('#sync'); el.dataset.s = state; el.querySelector('span').textContent = text; el.title = text;
+}
+
+async function load(manual){
+  const btn = $('#btnRefresh'); btn.classList.add('spin'); btn.disabled = true;
+  setSync('load', 'Đang đồng bộ…');
+  try {
+    const [d, k] = await Promise.all([loadSheet('Data'), loadSheet('KEY')]);
+    build(d.rows, k.rows);
+    D.source = 'live'; D.loadedAt = new Date();
+    setSync('ok', 'Cập nhật ' + D.loadedAt.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}));
+  } catch(err){
+    console.warn(err);
+    if (!D.raw.length && SNAPSHOT){
+      build(parseCSV(SNAPSHOT.data), parseCSV(SNAPSHOT.key));
+      D.source = 'snapshot';
+      setSync('warn', 'Ngoại tuyến · dữ liệu lưu lúc ' + SNAPSHOT.at);
+    } else if (D.raw.length){
+      setSync('warn', 'Không đồng bộ được · đang hiện dữ liệu cũ');
+    } else {
+      setSync('warn', 'Không tải được dữ liệu');
+      $('#loading').innerHTML = `<div class="card empty">Không tải được Google Sheet. Kiểm tra kết nối mạng hoặc quyền chia sẻ “Bất kỳ ai có đường liên kết”.<br><br><button class="chip-btn" onclick="load(true)">Thử lại</button></div>`;
+      btn.classList.remove('spin'); btn.disabled = false;
+      return;
+    }
+  }
+  btn.classList.remove('spin'); btn.disabled = false;
+  if (!S.date) initDates();
+  $('#loading').hidden = true; $('#foot').hidden = false;
+  render();
+}
+
+/* ---------------- data model ---------------- */
+function parseWho(s){
+  const t = String(s || '').normalize('NFC').trim();
+  const m = t.match(/^([A-Za-z]{1,6}\s*\d+)\s*[|\-–:]\s*(.+)$/);
+  if (m) return {code: m[1].replace(/\s+/g,'').toUpperCase(), name: m[2].trim().replace(/\s+/g,' ')};
+  return {code: t.toUpperCase(), name: t};
+}
+function parseTs(s){
+  const m = String(s || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if (!m) return null;
+  return new Date(+m[3], +m[1]-1, +m[2], +(m[4]||0), +(m[5]||0), +(m[6]||0));
+}
+// Hiệu chỉnh "Ngày ghi nhận" khi người nhập gõ nhầm định dạng ngày/tháng hoặc năm
+function fixDate(raw, ts){
+  const tsDay = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate());
+  const m = String(raw || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{1,4})/);
+  if (!m) return {d: iso(tsDay), fixed: !!String(raw||'').trim(), raw};
+  const a = +m[1], b = +m[2]; let y = +m[3];
+  if (y < 100) y += 2000; else if (y < 1000) y = 2000 + (y % 100);
+  if (Math.abs(y - tsDay.getFullYear()) > 1) y = tsDay.getFullYear();
+  const cands = [];
+  const mk = (mo, da) => { if (mo>=1 && mo<=12 && da>=1 && da<=31){ const d = new Date(y, mo-1, da); if (d.getMonth() === mo-1) cands.push(d); } };
+  mk(a, b); mk(b, a);
+  let best = null, bs = Infinity;
+  for (const d of cands){
+    const diff = (tsDay - d) / 864e5;           // số ngày trước thời điểm nộp
+    const score = diff < -1 ? 1e6 - diff : Math.abs(diff);
+    if (score < bs){ bs = score; best = d; }
+  }
+  if (!best || bs > 31) return {d: iso(tsDay), fixed: true, raw};
+  const same = best.getMonth()+1 === a && best.getDate() === b && best.getFullYear() === +m[3];
+  return {d: iso(best), fixed: !same, raw};
+}
+const num = v => {
+  if (v == null) return 0;
+  const s = String(v).replace(/\s+|[₫đ]/gi, '').replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(s);
+  return isFinite(n) && n > 0 ? n : 0;
+};
+
+function build(dataRows, keyRows){
+  // KEY
+  D.team = []; D.teamName = '';
+  for (const r of keyRows){
+    const v = String(r[0] || '').trim(); if (!v) continue;
+    if (/^[A-Za-z]{1,6}\s*\d+\s*[|\-–:]/.test(v)){ const p = parseWho(v); if (!D.team.some(t => t.code === p.code)) D.team.push(p); }
+    else if (!D.teamName) D.teamName = v;
+  }
+  // Data
+  const head = (dataRows[0] || []).map(norm);
+  const col = (name, fb) => { const i = head.indexOf(norm(name)); return i >= 0 ? i : fb; };
+  const iTs = col('Dấu thời gian', 0), iWho = col('TVBH (Mã | Họ tên)', 1), iDate = col('Ngày ghi nhận', 2);
+  const iLink = col('Link/bằng chứng', 19);
+  // Column "Ngân sách quảng cáo hiện tại trong tháng (VNĐ)"
+  let iBudget = head.findIndex(h => /ngân sách/i.test(h));
+  if (iBudget < 0) iBudget = 20;
+
+  const mIdx = METRICS.map(m => col(m.h, m.c));
+  D.raw = [];
+  for (const r of dataRows.slice(1)){
+    if (!r[iWho] || !String(r[iWho]).trim()) continue;
+    const ts = parseTs(r[iTs]) || parseTs(r[iDate]) || new Date();
+    const who = parseWho(r[iWho]);
+    const fd = fixDate(r[iDate], ts);
+    const vals = mIdx.map(i => num(r[i]));
+    const link = String(r[iLink] ?? '').trim();
+    const budgetRaw = iBudget >= 0 ? r[iBudget] : '';
+    const budget = num(budgetRaw);
+    D.raw.push({...who, ts, date: fd.d, dateFixed: fd.fixed, rawDate: String(r[iDate]||''), vals, budget,
+      link: link && link !== '0' ? link : '', note: ''});
+  }
+  D.raw.sort((a, b) => a.ts - b.ts);
+  D.fixedCount = D.raw.filter(r => r.dateFixed).length;
+
+  // all members
+  const map = new Map();
+  D.team.forEach(t => map.set(t.code, {...t, inTeam:true}));
+  for (const r of D.raw) if (!map.has(r.code)) map.set(r.code, {code:r.code, name:r.name, inTeam:false});
+  D.all = [...map.values()].sort((a, b) => (b.inTeam - a.inTeam) || (a.inTeam ? 0 : a.code.localeCompare(b.code, 'vi', {numeric:true})));
+  if (!D.team.length) S.scope = 'all';
+  aggregate();
+}
+
+function aggregate(){
+  const map = new Map();
+  for (const r of D.raw){
+    const k = r.code + '|' + r.date;
+    if (!map.has(k)) map.set(k, {code:r.code, name:r.name, date:r.date, subs:[]});
+    map.get(k).subs.push(r);
+  }
+  D.byCode = new Map(); D.recs = [];
+  for (const e of map.values()){
+    const last = e.subs[e.subs.length-1];
+    const vals = S.dupMode === 'sum'
+      ? METRICS.map((_, i) => e.subs.reduce((s, x) => s + x.vals[i], 0))
+      : last.vals.slice();
+    // For budget: take latest budget of the day
+    const budget = last.budget;
+    const g = {online:0, care:0, field:0};
+    METRICS.forEach((m, i) => g[m.g] += vals[i]);
+    const rec = {code:e.code, name:e.name, date:e.date, vals, g, total: g.online + g.care + g.field, budget,
+      subs: e.subs, ts: last.ts, dateFixed: e.subs.some(x => x.dateFixed),
+      links: [...new Set(e.subs.map(x => x.link).filter(Boolean))],
+      notes: []};
+    D.recs.push(rec);
+    if (!D.byCode.has(e.code)) D.byCode.set(e.code, new Map());
+    D.byCode.get(e.code).set(e.date, rec);
+  }
+  const ds = D.recs.map(r => r.date).sort();
+  D.minDate = ds[0] || todayIso(); D.maxDate = ds[ds.length-1] || todayIso();
+}
+
+const members = () => (S.scope === 'team' && D.team.length) ? D.team.map(t => D.all.find(a => a.code === t.code) || t) : D.all;
+const recOf = (code, day) => D.byCode.get(code)?.get(day) || null;
+
+// Lấy ngân sách quảng cáo hiện tại (mới nhất trong tháng/kỳ) của thành viên
+function memberCurrentBudget(code, upToDate){
+  const mRecs = [...(D.byCode.get(code)?.values() || [])].sort((a,b) => a.date.localeCompare(b.date));
+  const valid = upToDate ? mRecs.filter(r => r.date <= upToDate) : mRecs;
+  for (let i = valid.length - 1; i >= 0; i--){
+    if (valid[i].budget > 0) return valid[i].budget;
+  }
+  return 0;
+}
+
+function initDates(){
+  const t = todayIso(); const ms = members();
+  const hasToday = ms.some(m => recOf(m.code, t));
+  if (hasToday) S.date = t;
+  else {
+    const codes = new Set(ms.map(m => m.code));
+    const ds = D.recs.filter(r => codes.has(r.code) && r.date <= t).map(r => r.date).sort();
+    S.date = ds[ds.length-1] || t;
+  }
+  applyPreset(S.preset, true);
+}
+function applyPreset(p, silent){
+  const t = todayIso(); const d = fromIso(t);
+  if (p === 'month'){ S.from = iso(new Date(d.getFullYear(), d.getMonth(), 1)); S.to = t; }
+  else if (p === 'lastmonth'){ S.from = iso(new Date(d.getFullYear(), d.getMonth()-1, 1)); S.to = iso(new Date(d.getFullYear(), d.getMonth(), 0)); }
+  else if (p !== 'custom'){ const n = +p || 7; S.to = t; S.from = addDays(t, -(n-1)); }
+  if (!S.from){ S.to = t; S.from = addDays(t, -6); }
+  if (!silent) render();
+}
+
+function period(){
+  if (S.mode === 'day') return [S.date];
+  return range(S.from, S.to);
+}
+function prevPeriod(){
+  const p = period(); const n = p.length;
+  return range(addDays(p[0], -n), addDays(p[0], -1));
+}
+function trendDays(){
+  if (S.mode === 'day') return range(addDays(S.date, -13), S.date);
+  const p = period(); return p.length > 92 ? p.slice(-92) : p;
+}
+function agg(ms, days){
+  const by = new Map();
+  const tot = {vals: METRICS.map(() => 0), g:{online:0, care:0, field:0}, total:0, budgetSum:0, latestBudgetTotal:0, pairs:0};
+  for (const m of ms){
+    const a = {m, vals: METRICS.map(() => 0), g:{online:0, care:0, field:0}, total:0, days:0, recs:[],
+      dailyBudget:{}, latestBudget: 0};
+    for (const d of days){
+      const r = recOf(m.code, d); if (!r) continue;
+      a.days++; a.recs.push(r);
+      r.vals.forEach((v, i) => { a.vals[i] += v; tot.vals[i] += v; });
+      GKEYS.forEach(g => { a.g[g] += r.g[g]; tot.g[g] += r.g[g]; });
+      a.total += r.total; tot.total += r.total; tot.pairs++;
+      if (r.budget > 0) a.dailyBudget[d] = r.budget;
+    }
+    // Ngân sách hiện tại của nhân sự tính đến ngày cuối kỳ
+    a.latestBudget = memberCurrentBudget(m.code, days[days.length-1]);
+    tot.latestBudgetTotal += a.latestBudget;
+    by.set(m.code, a);
+  }
+  return {by, tot};
+}
+
+/* ---------------- render: shell ---------------- */
+function periodLabel(){
+  if (S.mode === 'day') return `${relDay(S.date)}, ${dmy(S.date)}`;
+  return `${dm(S.from)} → ${dm(S.to)} (${period().length} ngày)`;
+}
+function renderControls(){
+  $$('#tabs button').forEach(b => { const on = b.dataset.tab === S.tab; b.setAttribute('aria-pressed', on); b.setAttribute('aria-selected', on); });
+  $$('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
+  $$('#scopeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.scope === S.scope));
+  $('#scopeTeamBtn').textContent = `Nhóm (${D.team.length})`;
+  $('#scopeTeamBtn').hidden = !D.team.length;
+  $('#dayCtl').hidden = S.mode !== 'day';
+  $('#rangeCtl').hidden = S.mode !== 'range';
+  const lbl = isMobile() ? `${DOW[dowOf(S.date)]}, ${dm(S.date)}` : `${relDay(S.date)}, ${dmy(S.date)}`;
+  $('#dayLabel').textContent = lbl;
+  $('#dayInput').value = S.date;
+  $('#nextDay').disabled = S.date >= todayIso();
+  $('#btnToday').hidden = S.date === todayIso();
+  $('#preset').value = S.preset;
+  $('#fromInput').value = S.from; $('#toInput').value = S.to;
+  $('#dupMode').value = S.dupMode;
+  const name = D.teamName || 'Phòng Kinh Doanh 2';
+  $('#teamName').textContent = S.scope === 'team' ? name : 'Toàn bộ TVBH';
+  const mk = name.match(/(\d+)\s*$/); $('#brandMark').textContent = S.scope === 'team' ? ('PKD' + (mk ? mk[1] : '2')) : 'ALL';
+  $('#footInfo').innerHTML = `${D.raw.length} lượt nộp · ${D.recs.length} báo cáo ngày` +
+    (D.fixedCount ? ` · <span title="Ngày ghi nhận bị nhập sai định dạng hoặc năm; đã tự suy ra từ thời điểm nộp">${D.fixedCount} lượt đã tự hiệu chỉnh ngày</span>` : '') +
+    ` · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank" rel="noopener">Mở Google Sheet</a>`;
+}
+
+function render(){
+  renderControls();
+  $('#viewTeam').hidden = S.tab !== 'team';
+  $('#viewPerson').hidden = S.tab !== 'person';
+  if (S.tab === 'team') renderTeam(); else renderPerson();
+  persist();
+}
+
+function deltaHtml(cur, prev){
+  if (!prev && !cur) return `<span class="delta flat">0%</span>`;
+  if (!prev) return `<span class="delta up">mới</span>`;
+  const p = (cur - prev) / prev * 100;
+  if (Math.abs(p) < 0.5) return `<span class="delta flat">±0%</span>`;
+  return `<span class="delta ${p > 0 ? 'up' : 'down'}">${p > 0 ? '▲' : '▼'} ${fmt(Math.abs(p))}%</span>`;
+}
+const prevLabel = () => S.mode === 'day' ? 'so với hôm trước' : 'so với kỳ trước';
+
+/* ---------------- render: team ---------------- */
+function renderTeam(){
+  const ms = members(), days = period();
+  const A = agg(ms, days), P = agg(ms, prevPeriod());
+
+  // 1. Roll call
+  const n = ms.length, nd = days.length;
+  if (S.mode === 'day'){
+    const done = ms.filter(m => recOf(m.code, S.date)), miss = ms.filter(m => !recOf(m.code, S.date));
+    done.sort((a, b) => recOf(b.code, S.date).total - recOf(a.code, S.date).total);
+    $('#rcTitle').textContent = 'Điểm danh báo cáo';
+    $('#rcSub').textContent = `${relDay(S.date)}, ${dmy(S.date)}` + (S.date === todayIso() && miss.length ? ' · cập nhật theo thời gian thực' : '');
+    $('#rcNum').innerHTML = `${done.length}<small>/${n}</small>`;
+    $('#rcBar').style.width = (n ? done.length / n * 100 : 0) + '%';
+    const chip = (m, ok) => {
+      const r = recOf(m.code, S.date);
+      return `<button class="person ${ok ? '' : 'miss'}" data-person="${esc(m.code)}" title="${esc(m.code + ' · ' + m.name)}">
+        ${avatar(m)}<span><span class="nm">${esc(shortName(m.name))}</span><br>
+        <span class="meta">${ok ? `<span class="val">${fmt(r.total)}</span> HĐ${r.budget ? ' · ' + fmtVND(r.budget, true) : ''} · ${r.ts.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}${r.subs.length > 1 ? ' · ' + r.subs.length + ' lần' : ''}` : 'Chưa báo cáo'}</span></span></button>`;
+    };
+    $('#rcGroups').innerHTML =
+      (miss.length ? `<div><div class="rc-label">Chưa báo cáo <b>${miss.length}</b></div><div class="people">${miss.map(m => chip(m, false)).join('')}</div></div>` : '') +
+      (done.length ? `<div><div class="rc-label">Đã báo cáo <b>${done.length}</b></div><div class="people">${done.map(m => chip(m, true)).join('')}</div></div>` : '') +
+      (!n ? `<div class="empty">Chưa có thành viên.</div>` : '');
+  } else {
+    const rate = n && nd ? A.tot.pairs / (n * nd) : 0;
+    $('#rcTitle').textContent = 'Mức độ báo cáo đều đặn';
+    $('#rcSub').textContent = `${dmy(S.from)} → ${dmy(S.to)} · ${A.tot.pairs}/${n*nd} lượt-ngày`;
+    $('#rcNum').innerHTML = `${Math.round(rate*100)}<small>%</small>`;
+    $('#rcBar').style.width = rate*100 + '%';
+    const list = ms.map(m => ({m, a: A.by.get(m.code)})).sort((x, y) => x.a.days - y.a.days || x.a.total - y.a.total);
+    const low = list.filter(x => x.a.days / nd < 0.6), ok = list.filter(x => x.a.days / nd >= 0.6).reverse();
+    const chip = x => `<button class="person ${x.a.days / nd < 0.6 ? 'miss' : ''}" data-person="${esc(x.m.code)}" title="${esc(x.m.code + ' · ' + x.m.name)}">
+      ${avatar(x.m)}<span><span class="nm">${esc(shortName(x.m.name))}</span><br>
+      <span class="meta">${x.a.days}/${nd} ngày <span class="mini-bar"><i style="width:${x.a.days/nd*100}%"></i></span> · ${fmt(x.a.total)} HĐ${x.a.latestBudget ? ' · ' + fmtVND(x.a.latestBudget, true) : ''}</span></span></button>`;
+    $('#rcGroups').innerHTML =
+      (low.length ? `<div><div class="rc-label">Báo cáo dưới 60% số ngày <b>${low.length}</b></div><div class="people">${low.map(chip).join('')}</div></div>` : '') +
+      (ok.length ? `<div><div class="rc-label">Đều đặn <b>${ok.length}</b></div><div class="people">${ok.map(chip).join('')}</div></div>` : '');
+  }
+
+  // 2. 5 KPI Cards (including Ad Budget)
+  const reporters = S.mode === 'day' ? ms.filter(m => recOf(m.code, S.date)).length : A.tot.pairs;
+  const topMetric = g => { let bi = -1, bv = 0; METRICS.forEach((m, i) => { if (m.g === g && A.tot.vals[i] > bv){ bv = A.tot.vals[i]; bi = i; } }); return bi < 0 ? 'Chưa có' : `Nhiều nhất: ${METRICS[bi].s} (${fmt(bv)})`; };
+  const budgetRunners = ms.filter(m => A.by.get(m.code).latestBudget > 0);
+  const avgBudgetPerRunner = budgetRunners.length ? A.tot.latestBudgetTotal / budgetRunners.length : 0;
+
+  $('#teamKpis').innerHTML = [
+    `<div class="card kpi"><div class="lbl">Tổng hoạt động</div><div class="v">${fmt(A.tot.total)}</div>
+      <div class="d">${deltaHtml(A.tot.total, P.tot.total)}<span>${prevLabel()} · TB ${reporters ? fmt(A.tot.total / reporters) : 0}/${S.mode === 'day' ? 'người' : 'lượt'}</span></div></div>`,
+    ...GKEYS.map(g => `<div class="card kpi"><div class="lbl"><i style="background:var(--g-${g})"></i>${GROUPS[g].label}</div>
+      <div class="v">${fmt(A.tot.g[g])}</div><div class="d">${deltaHtml(A.tot.g[g], P.tot.g[g])}<span>${topMetric(g)}</span></div></div>`),
+    `<div class="card kpi clickable" id="kpiBudgetCard" title="Bấm để xem Bảng Ngân sách quảng cáo riêng biệt">
+      <div class="lbl"><i style="background:var(--g-budget)"></i>Ngân sách QC tháng</div>
+      <div class="v" style="color:var(--g-budget)">${fmtVND(A.tot.latestBudgetTotal, true)}</div>
+      <div class="d"><span class="delta up" style="background:var(--g-budget-bg);color:var(--g-budget)">${budgetRunners.length}/${ms.length} TVBH</span><span>TB ${fmtVND(avgBudgetPerRunner, true)}</span></div></div>`
+  ].join('');
+
+  // 3. Trend chart
+  const td = trendDays();
+  $('#trendSub').textContent = S.mode === 'day' ? `14 ngày đến ${dm(S.date)} · bấm cột để chọn ngày` : `${td.length} ngày · bấm cột để xem ngày đó`;
+  legend('#teamLegend', true);
+  const series = GKEYS.map(g => td.map(d => ms.reduce((s, m) => s + (recOf(m.code, d)?.g[g] || 0), 0)));
+  const counts = td.map(d => ms.filter(m => recOf(m.code, d)).length);
+  drawChart('teamChart', td, series, counts, n);
+
+  // 4. Categories breakdown
+  $('#catSub').textContent = periodLabel();
+  renderCats('#teamCats', A.tot.vals, null);
+
+  // 5. Attendance / Heatmap with Check Mode
+  renderHeat(ms, td);
+
+  // 6. Filterable Data Table / Budget Table
+  renderTable(ms, A);
+}
+
+function legend(sel, withLine){
+  $(sel).innerHTML = GKEYS.map(g => `<span><i style="background:var(--g-${g})"></i>${GROUPS[g].short}</span>`).join('') +
+    (withLine ? `<span><i class="line"></i>Số người BC</span>` : '');
+}
+
+const charts = {};
+function drawChart(id, days, series, counts, maxCount, opts = {}){
+  if (!window.Chart){ $('#' + id).parentElement.innerHTML = '<div class="empty">Không tải được thư viện biểu đồ.</div>'; return; }
+  charts[id]?.destroy();
+  const muted = cssVar('--muted'), line = cssVar('--line'), text = cssVar('--text'), surface = cssVar('--surface');
+  const selIdx = S.mode === 'day' ? days.indexOf(S.date) : -1;
+  const alpha = (c, i) => (selIdx >= 0 && i !== selIdx) ? c + '8C' : c;
+  const ds = GKEYS.map((g, k) => ({
+    type:'bar', label: GROUPS[g].short, data: series[k], stack:'s', yAxisID:'y', order:2,
+    backgroundColor: days.map((_, i) => alpha(gColor(g), i)), borderRadius: 3, borderSkipped:false,
+    maxBarThickness: 30, borderWidth: {top: 1, bottom: 0, left: 0, right: 0}, borderColor: surface
+  }));
+  if (counts) ds.push({type:'line', label:'Số người báo cáo', data: counts, yAxisID:'y1', order:1,
+    borderColor: muted, borderDash:[4,3], borderWidth:1.5, pointRadius: 2.5, pointBackgroundColor: surface, pointBorderColor: muted, tension:.3});
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  charts[id] = new Chart(document.getElementById(id), {
+    data: {labels: days.map(d => [DOW[dowOf(d)], dm(d)]), datasets: ds},
+    options: {
+      responsive:true, maintainAspectRatio:false, animation: reduce ? false : {duration: 350, easing:'easeOutQuart'},
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor: text, titleColor: surface, bodyColor: surface, footerColor: surface, padding:10, cornerRadius:8, boxPadding:4, usePointStyle:true,
+          callbacks:{
+            title: it => { const d = days[it[0].dataIndex]; return `${DOW_FULL[dowOf(d)]}, ${dmy(d)}`; },
+            label: c => c.dataset.yAxisID === 'y1' ? ` ${c.dataset.label}: ${c.raw}/${maxCount}` : ` ${c.dataset.label}: ${fmt(c.raw)}`,
+            footer: it => { const i = it[0].dataIndex; if (opts.missing && opts.missing[i]) return 'Chưa báo cáo'; const t = series.reduce((s, a) => s + a[i], 0); return 'Tổng: ' + fmt(t); }
+          }
+        }
+      },
+      scales:{
+        x:{stacked:true, grid:{display:false}, border:{color:line}, ticks:{color:muted, font:{size:10.5}, maxRotation:0, autoSkipPadding:8}},
+        y:{stacked:true, beginAtZero:true, grid:{color:line}, border:{display:false}, ticks:{color:muted, precision:0, font:{size:11}}},
+        ...(counts ? {y1:{position:'right', beginAtZero:true, max: Math.max(1, maxCount), grid:{display:false}, border:{display:false}, ticks:{color:muted, precision:0, font:{size:11}}}} : {})
+      },
+      onClick:(e, els) => { if (!els.length) return; const d = days[els[0].index]; if (opts.onPick) opts.onPick(d); else { S.mode = 'day'; S.date = d; render(); } },
+      onHover:(e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; }
+    }
+  });
+}
+
+function renderCats(sel, vals, avg){
+  const max = Math.max(1, ...vals, ...(avg || []));
+  $(sel).innerHTML = GKEYS.map(g => {
+    const idx = METRICS.map((m, i) => i).filter(i => METRICS[i].g === g);
+    const sum = idx.reduce((s, i) => s + vals[i], 0);
+    const avgSum = avg ? idx.reduce((s, i) => s + avg[i], 0) : null;
+    return `<div><div class="cat-g-h"><span><i style="background:var(--g-${g})"></i>${GROUPS[g].label}</span>
+      <span><b>${fmt(sum)}</b>${avg ? `<span class="muted" style="font-weight:500">&nbsp;/ TB ${fmt(avgSum)}</span>` : ''}</span></div>
+      ${idx.map(i => `<div class="cat-row ${vals[i] ? '' : 'zero'}" title="${esc(METRICS[i].h)}${avg ? ` · TB nhóm ${fmt(avg[i])}` : ''}">
+        <span class="nm">${esc(METRICS[i].s)}</span>
+        <span class="track"><span class="fill" style="width:${vals[i]/max*100}%;background:var(--g-${g})"></span>${avg ? `<span class="avg" style="left:calc(${Math.min(100, avg[i]/max*100)}% - 1px)"></span>` : ''}</span>
+        <span class="n">${fmt(vals[i])}</span></div>`).join('')}</div>`;
+  }).join('');
+}
+
+/* ---------------- render: heatmap / attendance map ---------------- */
+function renderHeat(ms, days){
+  // update buttons state
+  $$('#heatModeSeg button').forEach(b => b.classList.toggle('active', b.dataset.heat === S.heatMode));
+
+  if (S.heatMode === 'check'){
+    $('#heatSub').textContent = 'Điểm danh có (✓) hoặc không (—) nộp báo cáo theo ngày. Bấm vào ô để xem chi tiết.';
+    $('#heatLegend').innerHTML = `
+      <span class="leg-pill chk-yes"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Có báo cáo</span>
+      <span class="leg-pill chk-no">— Chưa báo cáo</span>
+    `;
+  } else {
+    $('#heatSub').textContent = 'Số trong ô = tổng hoạt động của ngày. Bấm vào ô để xem chi tiết.';
+    const heat = cssVar('--heat');
+    $('#heatLegend').innerHTML = `<span class="sw" style="background:repeating-linear-gradient(135deg,var(--surface-2) 0 3px,var(--line) 3px 4px)"></span>Chưa BC
+      <span class="sw" style="background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);margin-left:4px"></span>0
+      <span class="sw" style="background:color-mix(in oklab, ${heat} 20%, var(--surface));margin-left:4px"></span>
+      <span class="sw" style="background:color-mix(in oklab, ${heat} 55%, var(--surface))"></span>
+      <span class="sw" style="background:color-mix(in oklab, ${heat} 92%, var(--surface))"></span>Nhiều`;
+  }
+
+  let max = 1;
+  for (const m of ms) for (const d of days){ const r = recOf(m.code, d); if (r && r.total > max) max = r.total; }
+  const heat = cssVar('--heat');
+
+  const cell = (r, m, d) => {
+    const sel = S.mode === 'day' && d === S.date ? ' sel' : '';
+    const t = `${m.name} · ${DOW[dowOf(d)]} ${dm(d)}`;
+    if (S.heatMode === 'check'){
+      if (!r) return `<button class="hc chk-no${sel}" data-cell="${esc(m.code)}|${d}" title="${esc(t)}: Chưa báo cáo" aria-label="${esc(t)}: Chưa báo cáo">—</button>`;
+      if (!r.total) return `<button class="hc chk-zero${sel}" data-cell="${esc(m.code)}|${d}" title="${esc(t)}: Có báo cáo 0 hoạt động">0</button>`;
+      const bgtStr = r.budget ? ` · QC: ${fmtVND(r.budget, true)}` : '';
+      return `<button class="hc chk-yes${sel}" data-cell="${esc(m.code)}|${d}" title="${esc(t)}: Đã báo cáo ${fmt(r.total)} HĐ${bgtStr} · ${r.ts.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>`;
+    } else {
+      // count mode
+      if (!r) return `<button class="hc none${sel}" data-cell="${esc(m.code)}|${d}" title="${esc(t)}: chưa báo cáo" aria-label="${esc(t)}: chưa báo cáo">–</button>`;
+      if (!r.total) return `<button class="hc zero${sel}" data-cell="${esc(m.code)}|${d}" title="${esc(t)}: báo cáo 0 hoạt động">0</button>`;
+      const p = 14 + Math.round(Math.sqrt(r.total / max) * 78);
+      const dark = p > 52;
+      return `<button class="hc${sel}" data-cell="${esc(m.code)}|${d}" title="${esc(t)}: ${fmt(r.total)} hoạt động" style="background:color-mix(in oklab, ${heat} ${p}%, var(--surface));color:${dark ? '#fff' : 'var(--text)'}">${fmt(r.total)}</button>`;
+    }
+  };
+
+  // daily count of reported members
+  const dayReporters = days.map(d => ms.filter(m => recOf(m.code, d)).length);
+
+  $('#heat').innerHTML = `
+    <thead>
+      <tr>
+        <th style="text-align:left;padding-left:4px">Thành viên</th>
+        ${days.map(d => `<th class="${S.mode === 'day' && d === S.date ? 'sel' : ''}"><span class="dw">${DOW[dowOf(d)]}</span>${fromIso(d).getDate()}</th>`).join('')}
+        <th style="text-align:right">Tỷ lệ BC</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${ms.map(m => {
+        const n = days.filter(d => recOf(m.code, d)).length;
+        const pct = days.length ? Math.round(n / days.length * 100) : 0;
+        return `<tr>
+          <td class="nm"><button data-person="${esc(m.code)}" title="${esc(m.code + ' · ' + m.name)}">${avatar(m)}<span>${esc(shortName(m.name))}</span></button></td>
+          ${days.map(d => `<td>${cell(recOf(m.code, d), m, d)}</td>`).join('')}
+          <td class="sum"><b style="color:var(--text)">${n}</b>/${days.length} <span class="mini-bar"><i style="width:${pct}%"></i></span></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="nm">Cả nhóm (${ms.length})</td>
+        ${days.map((d, i) => {
+          const c = dayReporters[i];
+          const allOk = c === ms.length && ms.length > 0;
+          return `<td style="${allOk ? 'color:var(--ok);font-weight:700' : ''}" title="${dm(d)}: ${c}/${ms.length} người nộp báo cáo">${c}</td>`;
+        }).join('')}
+        <td style="text-align:right;font-weight:700">${Math.round(dayReporters.reduce((s,v)=>s+v,0) / (ms.length * days.length || 1) * 100)}%</td>
+      </tr>
+    </tfoot>`;
+
+  const wrap = $('#heat').parentElement; requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
+}
+
+/* ---------------- render: data table & category filters ---------------- */
+function renderTable(ms, A){
+  // update filter tabs
+  $$('#catTabs .cat-pill').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === S.catFilter);
+  });
+  const selMetric = $('#singleMetricSelect');
+  if (S.catFilter.startsWith('m')){
+    selMetric.value = S.catFilter;
+    selMetric.classList.add('active');
+  } else {
+    selMetric.value = '';
+    selMetric.classList.remove('active');
+  }
+
+  // Branch 1: Dedicated Ad Budget Table!
+  if (S.catFilter === 'budget'){
+    renderBudgetTable(ms, A);
+    return;
+  }
+
+  // Branch 2: Single Metric Daily Matrix Table!
+  if (S.catFilter.startsWith('m')){
+    renderSingleMetricTable(ms, A, +S.catFilter.slice(1));
+    return;
+  }
+
+  // Branch 3: Standard / Category Table (all | online | care | field)
+  $('#budgetSummaryBox').hidden = true;
+  renderStandardTable(ms, A);
+}
+
+function renderBudgetTable(ms, A){
+  const days = period();
+  const summaryBox = $('#budgetSummaryBox');
+  summaryBox.hidden = false;
+
+  const budgetRunners = ms.filter(m => A.by.get(m.code).latestBudget > 0);
+  const totalBudget = A.tot.latestBudgetTotal;
+  const avgBudget = budgetRunners.length ? totalBudget / budgetRunners.length : 0;
+  let topSpender = null, topVal = 0;
+  ms.forEach(m => {
+    const b = A.by.get(m.code).latestBudget;
+    if (b > topVal){ topVal = b; topSpender = m; }
+  });
+
+  summaryBox.innerHTML = `
+    <div class="budget-summary-grid">
+      <div class="bs-item">
+        <div class="lbl"><span>💰</span> Tổng ngân sách tháng (PKD)</div>
+        <div class="val accent">${fmtVND(totalBudget)}</div>
+        <div class="sub">Toàn bộ nhân sự trong nhóm</div>
+      </div>
+      <div class="bs-item">
+        <div class="lbl"><span>👥</span> Nhân sự chạy QC</div>
+        <div class="val">${budgetRunners.length}<small style="font-size:13px;font-weight:500;color:var(--muted)">/${ms.length}</small></div>
+        <div class="sub">${Math.round(budgetRunners.length / ms.length * 100)}% thành viên có ngân sách</div>
+      </div>
+      <div class="bs-item">
+        <div class="lbl"><span>📊</span> Trung bình / TVBH có chạy</div>
+        <div class="val">${fmtVND(avgBudget)}</div>
+        <div class="sub">Tính trên người có phát sinh QC</div>
+      </div>
+      <div class="bs-item">
+        <div class="lbl"><span>🏆</span> Ngân sách cao nhất</div>
+        <div class="val" style="font-size:16px">${topSpender ? esc(shortName(topSpender.name)) : '—'}</div>
+        <div class="sub">${topSpender ? fmtVND(topVal) : 'Chưa có'}</div>
+      </div>
+    </div>
+  `;
+
+  $('#tableTitle').textContent = 'Bảng Ngân sách quảng cáo trong tháng (VNĐ)';
+  $('#tableSub').textContent = `${periodLabel()} · hiển thị mức ngân sách tích luỹ ghi nhận theo từng ngày & hiện tại`;
+
+  // Sort rows
+  const rows = ms.map(m => A.by.get(m.code));
+  const {key, dir} = S.sort;
+  rows.sort((x, y) => {
+    if (key === 'name') return dir * x.m.name.localeCompare(y.m.name, 'vi');
+    if (key === 'budget' || key === 'total') return dir * (x.latestBudget - y.latestBudget) || x.m.name.localeCompare(y.m.name, 'vi');
+    if (key.startsWith('d_')){
+      const day = key.slice(2);
+      const vx = x.dailyBudget[day] || 0, vy = y.dailyBudget[day] || 0;
+      return dir * (vx - vy) || x.m.name.localeCompare(y.m.name, 'vi');
+    }
+    return dir * (x.latestBudget - y.latestBudget);
+  });
+
+  const ar = k => key === k ? `<span class="ar">${dir > 0 ? '▲' : '▼'}</span>` : '';
+
+  // Calculate day totals
+  const dayTotals = days.map(d => ms.reduce((s, m) => s + (A.by.get(m.code).dailyBudget[d] || 0), 0));
+
+  $('#teamTable').innerHTML = `
+    <thead>
+      <tr class="cols">
+        <th data-sort="name" class="${key === 'name' ? 'sorted' : ''}">Thành viên${ar('name')}</th>
+        <th data-sort="budget" class="${key === 'budget' || key === 'total' ? 'sorted' : ''}" style="color:var(--g-budget)">Ngân sách hiện tại${ar('budget')}</th>
+        <th style="cursor:default;font-size:11.5px">Tỷ trọng</th>
+        ${days.map(d => `<th data-sort="d_${d}" class="${key === 'd_' + d ? 'sorted' : ''}" title="${dm(d)}"><span class="dw" style="font-size:10px;display:block;color:var(--faint)">${DOW[dowOf(d)]}</span>${dm(d)}${ar('d_' + d)}</th>`).join('')}
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(a => {
+        const b = a.latestBudget;
+        const pct = totalBudget ? Math.round(b / totalBudget * 1000) / 10 : 0;
+        return `<tr data-person="${esc(a.m.code)}">
+          <td><div class="nmcell">${avatar(a.m)}<div>${esc(a.m.name)}<small>${esc(a.m.code)}</small></div></div></td>
+          <td class="bgt">${fmtVND(b)}</td>
+          <td><div class="pct-bar"><span class="bar"><i style="width:${Math.min(100, pct)}%"></i></span><small>${pct}%</small></div></td>
+          ${days.map(d => {
+            const val = a.dailyBudget[d];
+            return `<td class="${val ? '' : 'z'}">${val ? fmtVND(val, isMobile()) : '—'}</td>`;
+          }).join('')}
+        </tr>`;
+      }).join('')}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>Tổng nhóm (${rows.length})</td>
+        <td class="bgt">${fmtVND(totalBudget)}</td>
+        <td>100%</td>
+        ${dayTotals.map(t => `<td>${t ? fmtVND(t, isMobile()) : '0 ₫'}</td>`).join('')}
+      </tr>
+    </tfoot>
+  `;
+}
+
+function renderSingleMetricTable(ms, A, mIdx){
+  $('#budgetSummaryBox').hidden = true;
+  const days = period();
+  const metric = METRICS[mIdx];
+  $('#tableTitle').textContent = `Ma trận chỉ số: ${metric.h} (${GROUPS[metric.g].label})`;
+  $('#tableSub').textContent = `${periodLabel()} · số lượng thực hiện theo từng ngày và tổng cộng`;
+
+  const rows = ms.map(m => {
+    const a = A.by.get(m.code);
+    const dayVals = {};
+    let sum = 0;
+    days.forEach(d => {
+      const r = recOf(m.code, d);
+      const v = r ? r.vals[mIdx] : 0;
+      dayVals[d] = v;
+      sum += v;
+    });
+    return {m: a.m, sum, dayVals};
+  });
+
+  const {key, dir} = S.sort;
+  rows.sort((x, y) => {
+    if (key === 'name') return dir * x.m.name.localeCompare(y.m.name, 'vi');
+    if (key === 'sum' || key === 'total') return dir * (x.sum - y.sum) || x.m.name.localeCompare(y.m.name, 'vi');
+    if (key.startsWith('d_')){
+      const d = key.slice(2);
+      return dir * (x.dayVals[d] - y.dayVals[d]) || x.m.name.localeCompare(y.m.name, 'vi');
+    }
+    return dir * (x.sum - y.sum);
+  });
+
+  const ar = k => key === k ? `<span class="ar">${dir > 0 ? '▲' : '▼'}</span>` : '';
+  const daySums = days.map(d => rows.reduce((s, r) => s + r.dayVals[d], 0));
+  const totalSum = rows.reduce((s, r) => s + r.sum, 0);
+
+  $('#teamTable').innerHTML = `
+    <thead>
+      <tr class="cols">
+        <th data-sort="name" class="${key === 'name' ? 'sorted' : ''}">Thành viên${ar('name')}</th>
+        <th data-sort="sum" class="${key === 'sum' || key === 'total' ? 'sorted' : ''}" style="color:var(--g-${metric.g})">Tổng ${metric.s}${ar('sum')}</th>
+        ${days.map(d => `<th data-sort="d_${d}" class="${key === 'd_' + d ? 'sorted' : ''}"><span class="dw" style="font-size:10px;display:block;color:var(--faint)">${DOW[dowOf(d)]}</span>${dm(d)}${ar('d_' + d)}</th>`).join('')}
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(r => `<tr data-person="${esc(r.m.code)}">
+        <td><div class="nmcell">${avatar(r.m)}<div>${esc(r.m.name)}<small>${esc(r.m.code)}</small></div></div></td>
+        <td class="tot" style="color:var(--g-${metric.g})">${fmt(r.sum)}</td>
+        ${days.map(d => `<td class="${r.dayVals[d] ? '' : 'z'}">${r.dayVals[d] ? fmt(r.dayVals[d]) : '·'}</td>`).join('')}
+      </tr>`).join('')}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>Tổng nhóm (${rows.length})</td>
+        <td style="color:var(--g-${metric.g})">${fmt(totalSum)}</td>
+        ${daySums.map(s => `<td>${fmt(s)}</td>`).join('')}
+      </tr>
+    </tfoot>
+  `;
+}
+
+function tableCols(filter){
+  const base = [
+    {key:'days', label:'Ngày BC', g:null},
+    {key:'total', label:'Tổng HĐ', g:null},
+    {key:'budget', label:'Ngân sách QC', title:'Ngân sách quảng cáo hiện tại trong tháng (VNĐ)', g:'budget'}
+  ];
+
+  if (filter === 'online'){
+    return [
+      {key:'days', label:'Ngày BC', g:null},
+      {key:'g_online', label:'Tổng Online', g:'online', dot:'online'},
+      ...METRICS.map((m, i) => ({key:'m' + i, label:m.s, title:m.h, g:m.g, idx:i})).filter(c => c.g === 'online')
+    ];
+  }
+  if (filter === 'care'){
+    return [
+      {key:'days', label:'Ngày BC', g:null},
+      {key:'g_care', label:'Tổng Chăm sóc', g:'care', dot:'care'},
+      ...METRICS.map((m, i) => ({key:'m' + i, label:m.s, title:m.h, g:m.g, idx:i})).filter(c => c.g === 'care')
+    ];
+  }
+  if (filter === 'field'){
+    return [
+      {key:'days', label:'Ngày BC', g:null},
+      {key:'g_field', label:'Tổng Thị trường', g:'field', dot:'field'},
+      ...METRICS.map((m, i) => ({key:'m' + i, label:m.s, title:m.h, g:m.g, idx:i})).filter(c => c.g === 'field')
+    ];
+  }
+
+  // All
+  return [
+    ...base,
+    ...GKEYS.map(g => ({key:'g_' + g, label: GROUPS[g].short, g:null, dot:g})),
+    ...METRICS.map((m, i) => ({key:'m' + i, label:m.s, title:m.h, g:m.g, idx:i}))
+  ];
+}
+
+function cellVal(a, key){
+  if (key === 'days') return a.days;
+  if (key === 'total') return a.total;
+  if (key === 'budget') return a.latestBudget;
+  if (key === 'name') return a.m.name;
+  if (key.startsWith('g_')) return a.g[key.slice(2)];
+  return a.vals[+key.slice(1)];
+}
+
+function renderStandardTable(ms, A){
+  const filter = S.catFilter;
+  const cols = tableCols(filter);
+  const rows = ms.map(m => A.by.get(m.code));
+  const {key, dir} = S.sort;
+
+  rows.sort((x, y) => key === 'name' ? dir * x.m.name.localeCompare(y.m.name, 'vi') : dir * (cellVal(x, key) - cellVal(y, key)) || x.m.name.localeCompare(y.m.name, 'vi'));
+  const maxBy = {}; cols.forEach(c => maxBy[c.key] = Math.max(0, ...rows.map(r => cellVal(r, c.key))));
+  const ar = k => key === k ? `<span class="ar">${dir > 0 ? '▲' : '▼'}</span>` : '';
+  const nd = period().length;
+
+  $('#tableTitle').textContent = filter === 'all' ? 'Bảng chi tiết thành viên' : `Bảng chi tiết: ${filter === 'online' ? 'Nội dung Online' : filter === 'care' ? 'Chăm sóc KH' : 'Thị trường'}`;
+  $('#tableSub').textContent = `${periodLabel()} · bấm tiêu đề cột để sắp xếp, bấm dòng để xem chi tiết`;
+
+  let grpHeader = '';
+  if (filter === 'all'){
+    const grpSpan = g => METRICS.filter(m => m.g === g).length;
+    grpHeader = `<tr class="grp"><th></th><th colspan="6"></th>${GKEYS.map(g => `<th colspan="${grpSpan(g)}" class="gcol" style="color:var(--g-${g})">${GROUPS[g].label}</th>`).join('')}</tr>`;
+  }
+
+  $('#teamTable').innerHTML = `
+    <thead>
+      ${grpHeader}
+      <tr class="cols">
+        <th data-sort="name" class="${key === 'name' ? 'sorted' : ''}">Thành viên${ar('name')}</th>
+        ${cols.map((c, i) => `<th data-sort="${c.key}" title="${esc(c.title || c.label)}" class="${key === c.key ? 'sorted' : ''} ${c.g === 'budget' ? 'bgt' : ''}">${c.dot ? `<span class="gtag"><i style="background:var(--g-${c.dot})"></i>${esc(c.label)}</span>` : esc(c.label)}${ar(c.key)}</th>`).join('')}
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(a => `<tr data-person="${esc(a.m.code)}">
+        <td><div class="nmcell">${avatar(a.m)}<div>${esc(a.m.name)}<small>${esc(a.m.code)}</small></div></div></td>
+        ${cols.map(c => {
+          const v = cellVal(a, c.key);
+          if (c.key === 'budget'){
+            return `<td class="${v ? 'bgt' : 'z'}">${v ? fmtVND(v, true) : '—'}</td>`;
+          }
+          const cls = [c.key === 'total' ? 'tot' : '', !v ? 'z' : '', v && v === maxBy[c.key] && c.key !== 'days' && rows.length > 1 ? 'top' : ''].join(' ');
+          return `<td class="${cls}">${c.key === 'days' ? `${v}<span class="muted">/${nd}</span>` : (v ? fmt(v) : '·')}</td>`;
+        }).join('')}
+      </tr>`).join('')}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>Tổng nhóm (${rows.length})</td>
+        ${cols.map(c => {
+          if (c.key === 'budget') return `<td class="bgt">${fmtVND(A.tot.latestBudgetTotal, true)}</td>`;
+          const v = c.key === 'days' ? A.tot.pairs : (c.key === 'total' ? A.tot.total : (c.key.startsWith('g_') ? A.tot.g[c.key.slice(2)] : A.tot.vals[+c.key.slice(1)]));
+          return `<td>${fmt(v)}</td>`;
+        }).join('')}
+      </tr>
+    </tfoot>
+  `;
+}
+
+function exportCSV(){
+  const ms = members();
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  let lines = [];
+
+  if (S.catFilter === 'budget'){
+    const days = period();
+    const A = agg(ms, days);
+    lines.push(['Mã TVBH', 'Họ tên', 'Ngân sách hiện tại (VNĐ)', ...days.map(d => `${DOW[dowOf(d)]} ${dm(d)}`)].map(q).join(','));
+    ms.forEach(m => {
+      const a = A.by.get(m.code);
+      lines.push([m.code, m.name, a.latestBudget, ...days.map(d => a.dailyBudget[d] || 0)].map(q).join(','));
+    });
+  } else if (S.catFilter.startsWith('m')){
+    const mIdx = +S.catFilter.slice(1);
+    const metric = METRICS[mIdx];
+    const days = period();
+    lines.push(['Mã TVBH', 'Họ tên', `Tổng ${metric.h}`, ...days.map(d => `${DOW[dowOf(d)]} ${dm(d)}`)].map(q).join(','));
+    ms.forEach(m => {
+      let sum = 0;
+      const dVals = days.map(d => {
+        const v = recOf(m.code, d)?.vals[mIdx] || 0;
+        sum += v;
+        return v;
+      });
+      lines.push([m.code, m.name, sum, ...dVals].map(q).join(','));
+    });
+  } else {
+    const cols = tableCols(S.catFilter);
+    const A = agg(ms, period());
+    lines.push(['Mã', 'Họ tên', ...cols.map(c => c.title || c.label)].map(q).join(','));
+    ms.forEach(m => {
+      const a = A.by.get(m.code);
+      lines.push([m.code, m.name, ...cols.map(c => cellVal(a, c.key))].map(q).join(','));
+    });
+  }
+
+  const blob = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `bao-cao_${S.catFilter}_${S.mode === 'day' ? S.date : S.from + '_' + S.to}.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ---------------- render: person ---------------- */
+function streakOf(code, end){
+  let d = end, n = 0;
+  if (!recOf(code, d) && d === todayIso()) d = addDays(d, -1);
+  while (recOf(code, d)){ n++; d = addDays(d, -1); }
+  return n;
+}
+
+function renderPerson(){
+  const ms = members();
+  if (!ms.length){ $('#hero').innerHTML = '<div class="empty">Chưa có thành viên.</div>'; return; }
+  if (!S.person || !ms.some(m => m.code === S.person)) S.person = ms[0].code;
+  const me = ms.find(m => m.code === S.person);
+  const days = period(), endDay = days[days.length-1];
+  const A = agg(ms, days), P = agg([me], prevPeriod());
+  const a = A.by.get(me.code), pa = P.by.get(me.code);
+
+  // picker
+  $('#picker').innerHTML = ms.map(m => {
+    const done = S.mode === 'day' ? !!recOf(m.code, S.date) : A.by.get(m.code).days > 0;
+    return `<button class="person" role="option" aria-pressed="${m.code === me.code}" aria-selected="${m.code === me.code}" data-pick="${esc(m.code)}" title="${esc(m.code + ' · ' + m.name)}">
+      ${avatar(m)}<span class="nm">${esc(shortName(m.name))}</span><span class="dot ${done ? '' : 'off'}" title="${done ? 'Đã báo cáo' : 'Chưa báo cáo'}"></span></button>`;
+  }).join('');
+  requestAnimationFrame(() => { const el = $('#picker [aria-pressed="true"]'); el && el.scrollIntoView({block:'nearest', inline:'nearest'}); });
+
+  // hero
+  const ranked = ms.map(m => A.by.get(m.code)).sort((x, y) => y.total - x.total);
+  const rank = ranked.findIndex(x => x.m.code === me.code) + 1;
+  const allRecs = [...(D.byCode.get(me.code)?.values() || [])].sort((x, y) => x.ts - y.ts);
+  const lastSub = allRecs.length ? allRecs.reduce((p, c) => c.ts > p.ts ? c : p) : null;
+  const curBgt = a.latestBudget;
+
+  $('#hero').innerHTML = `<div class="who">${avatar(me, 'lg')}<div style="min-width:0"><h2>${esc(me.name)}</h2>
+    <div class="code">${esc(me.code)}${me.inTeam ? ' · ' + esc(D.teamName || 'PKD 2') : ''} · ${periodLabel()}</div></div></div>
+    <div class="hero-stats">
+      <div class="hs"><div class="k">${S.mode === 'day' ? 'Trạng thái' : 'Ngày báo cáo'}</div><div class="v">${S.mode === 'day'
+        ? (a.days ? '<span style="color:var(--ok)">Đã BC</span>' : '<span style="color:var(--miss)">Chưa BC</span>')
+        : `${a.days}<small>/${days.length}</small>`}</div></div>
+      <div class="hs"><div class="k">Ngân sách QC tháng</div><div class="v bgt">${curBgt ? fmtVND(curBgt, true) : '0 ₫'}</div></div>
+      <div class="hs"><div class="k">Chuỗi liên tiếp</div><div class="v">${streakOf(me.code, endDay)}<small> ngày</small></div></div>
+      <div class="hs"><div class="k">Xếp hạng</div><div class="v">${a.total ? '#' + rank : '—'}<small>/${ms.length}</small></div></div>
+      <div class="hs"><div class="k">Nộp gần nhất</div><div class="v" style="font-size:14px;padding-top:2px">${lastSub ? `${lastSub.ts.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} <small>${dm(iso(lastSub.ts))}</small>` : '—'}</div></div>
+    </div>`;
+
+  // KPIs vs team average
+  const nM = ms.length || 1;
+  const avgVals = A.tot.vals.map(v => v / nM);
+  const avgG = g => A.tot.g[g] / nM, avgT = A.tot.total / nM;
+  const vsAvg = (v, av) => { if (!av) return ''; const p = (v - av) / av * 100; return `<span class="delta ${p >= 0.5 ? 'up' : p <= -0.5 ? 'down' : 'flat'}">${p >= 0 ? '+' : '−'}${fmt(Math.abs(p))}% vs TB</span>`; };
+
+  $('#personKpis').innerHTML = [
+    `<div class="card kpi"><div class="lbl">Tổng hoạt động</div><div class="v">${fmt(a.total)}</div>
+      <div class="d">${deltaHtml(a.total, pa.total)}<span>${prevLabel()}</span><span>· TB nhóm ${fmt(avgT)}</span></div></div>`,
+    ...GKEYS.map(g => `<div class="card kpi"><div class="lbl"><i style="background:var(--g-${g})"></i>${GROUPS[g].label}</div>
+      <div class="v">${fmt(a.g[g])}</div><div class="d">${vsAvg(a.g[g], avgG(g))}<span>TB nhóm ${fmt(avgG(g))}</span></div></div>`),
+    `<div class="card kpi">
+      <div class="lbl"><i style="background:var(--g-budget)"></i>Ngân sách QC tháng</div>
+      <div class="v" style="color:var(--g-budget)">${fmtVND(curBgt)}</div>
+      <div class="d"><span>${curBgt && A.tot.latestBudgetTotal ? Math.round(curBgt / A.tot.latestBudgetTotal * 100) + '% ngân sách cả nhóm' : 'Chưa có ngân sách'}</span></div>
+    </div>`
+  ].join('');
+
+  // chart
+  const td = trendDays();
+  $('#pTrendSub').textContent = S.mode === 'day' ? `14 ngày đến ${dm(S.date)} · bấm cột để mở ngày đó` : `${td.length} ngày`;
+  legend('#personLegend', false);
+  const series = GKEYS.map(g => td.map(d => recOf(me.code, d)?.g[g] || 0));
+  drawChart('personChart', td, series, null, 0, {missing: td.map(d => !recOf(me.code, d)), onPick: d => {
+    S.openDay = d; if (S.mode === 'day'){ S.date = d; } render();
+    requestAnimationFrame(() => document.querySelector(`#hist details[data-day="${d}"]`)?.scrollIntoView({behavior:'smooth', block:'center'}));
+  }});
+
+  // compare cats
+  $('#pCatSub').textContent = `${periodLabel()} · vạch đen = trung bình mỗi thành viên`;
+  renderCats('#personCats', a.vals, avgVals);
+
+  // history
+  const hd = td.slice().reverse();
+  const reported = hd.filter(d => recOf(me.code, d)).length;
+  $('#histSub').textContent = `${reported}/${hd.length} ngày có báo cáo · mới nhất ở trên`;
+  const open = S.openDay || (S.mode === 'day' ? S.date : null);
+
+  $('#hist').innerHTML = hd.map(d => {
+    const r = recOf(me.code, d);
+    const dt = `<div class="dt"><b>${DOW[dowOf(d)]}, ${dm(d)}</b><span>${relDay(d) === DOW_FULL[dowOf(d)] ? fromIso(d).getFullYear() : relDay(d)}</span></div>`;
+    if (!r) return `<details class="missing" data-day="${d}"><summary>${dt}<span class="tag">Chưa báo cáo</span><span></span><span></span></summary>
+      <div class="hist-body"><div class="empty" style="padding:14px 0 4px">Không có báo cáo nào được ghi nhận cho ngày này.</div></div></details>`;
+    const bar = r.total ? GKEYS.map(g => `<i style="width:${r.g[g]/r.total*100}%;background:var(--g-${g})" title="${GROUPS[g].short}: ${fmt(r.g[g])}"></i>`).join('') : '';
+    const late = dayDiff(d, iso(r.subs[0].ts));
+    const flags = [];
+    flags.push(`<span class="flag">Nộp lúc ${r.ts.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} ${dm(iso(r.ts))}</span>`);
+    if (r.budget > 0) flags.push(`<span class="flag bgt">Ngân sách QC ghi nhận: ${fmtVND(r.budget)}</span>`);
+    if (late > 0) flags.push(`<span class="flag">Nộp bù sau ${late} ngày</span>`);
+    if (r.subs.length > 1) flags.push(`<span class="flag warn">Nộp ${r.subs.length} lần · ${S.dupMode === 'sum' ? 'đang cộng dồn' : 'lấy bản mới nhất'}</span>`);
+    if (r.dateFixed) flags.push(`<span class="flag warn" title="Ngày người nhập điền: ${esc(r.subs.filter(x => x.dateFixed).map(x => x.rawDate).join(', '))} (định dạng tháng/ngày/năm)">Ngày đã tự hiệu chỉnh từ “${esc(r.subs.find(x => x.dateFixed).rawDate)}”</span>`);
+    return `<details data-day="${d}" ${open === d ? 'open' : ''}><summary>${dt}<span class="stackbar">${bar}</span><span class="tot">${fmt(r.total)}</span>
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+      <div class="hist-body">
+        <div class="mgrid">${GKEYS.map(g => `<div><h4><i style="background:var(--g-${g})"></i>${GROUPS[g].label} · ${fmt(r.g[g])}</h4>
+          ${METRICS.map((m, i) => m.g === g ? `<div class="mrow ${r.vals[i] ? '' : 'z'}"><span>${esc(m.h)}</span><b>${fmt(r.vals[i])}</b></div>` : '').join('')}</div>`).join('')}</div>
+        ${r.links.length ? `<div class="links"><span class="muted" style="font-size:12px">Link / bằng chứng</span>${r.links.map(l => linkify(l)).join('')}</div>` : ''}
+        ${r.notes.length ? r.notes.map(n => `<div class="note">${esc(n)}</div>`).join('') : ''}
+        <div class="flags">${flags.join('')}</div>
+      </div></details>`;
+  }).join('');
+}
+
+function linkify(s){
+  const urls = s.match(/https?:\/\/[^\s,]+/g);
+  if (!urls) return `<span>${esc(s)}</span>`;
+  return urls.map(u => { let host = u; try { const x = new URL(u); host = x.hostname.replace(/^www\./, '') + (x.pathname.length > 1 ? x.pathname.slice(0, 28) + (x.pathname.length > 28 ? '…' : '') : ''); } catch(e){}
+    return `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(host)} ↗</a>`; }).join('');
+}
+
+/* ---------------- events ---------------- */
+function openPerson(code, day){
+  S.person = code; S.tab = 'person'; S.openDay = day || null;
+  if (day && S.mode === 'day') S.date = day;
+  render(); window.scrollTo({top:0, behavior:'smooth'});
+}
+
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; S.tab = b.dataset.tab; S.openDay = null; render(); });
+$('#modeSeg').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (!b) return; S.mode = b.dataset.mode; S.openDay = null; render(); });
+$('#scopeSeg').addEventListener('click', e => { const b = e.target.closest('[data-scope]'); if (!b) return; S.scope = b.dataset.scope; render(); });
+
+// Heatmap mode toggle
+$('#heatModeSeg').addEventListener('click', e => {
+  const b = e.target.closest('[data-heat]'); if (!b) return;
+  S.heatMode = b.dataset.heat;
+  renderHeat(members(), trendDays());
+  persist();
+});
+
+// Category & Ad Budget Filters
+$('#catTabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-cat]'); if (!b) return;
+  S.catFilter = b.dataset.cat;
+  $('#singleMetricSelect').value = '';
+  renderTable(members(), agg(members(), period()));
+  persist();
+});
+
+$('#singleMetricSelect').addEventListener('change', e => {
+  const val = e.target.value;
+  if (val){
+    S.catFilter = val;
+    renderTable(members(), agg(members(), period()));
+    persist();
+  } else {
+    S.catFilter = 'all';
+    renderTable(members(), agg(members(), period()));
+    persist();
+  }
+});
+
+// Click on KPI Budget Card scrolls to budget table!
+document.addEventListener('click', e => {
+  if (e.target.closest('#kpiBudgetCard')){
+    S.catFilter = 'budget';
+    renderTable(members(), agg(members(), period()));
+    persist();
+    $('#tableCard').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+});
+
+$('#prevDay').onclick = () => { S.date = addDays(S.date, -1); S.openDay = null; render(); };
+$('#nextDay').onclick = () => { if (S.date < todayIso()){ S.date = addDays(S.date, 1); S.openDay = null; render(); } };
+$('#btnToday').onclick = () => { S.date = todayIso(); S.openDay = null; render(); };
+$('#dayPill').addEventListener('click', e => { const i = $('#dayInput'); if (i.showPicker){ try { i.showPicker(); e.preventDefault(); } catch(_){} } });
+$('#dayInput').addEventListener('change', e => { if (e.target.value){ S.date = e.target.value; S.openDay = null; render(); } });
+$('#preset').addEventListener('change', e => { S.preset = e.target.value; applyPreset(S.preset); });
+$('#fromInput').addEventListener('change', e => { if (!e.target.value) return; S.from = e.target.value; if (S.from > S.to) S.to = S.from; S.preset = 'custom'; render(); });
+$('#toInput').addEventListener('change', e => { if (!e.target.value) return; S.to = e.target.value; if (S.to < S.from) S.from = S.to; S.preset = 'custom'; render(); });
+$('#dupMode').addEventListener('change', e => { S.dupMode = e.target.value; aggregate(); render(); });
+$('#btnRefresh').onclick = () => load(true);
+$('#btnExport').onclick = exportCSV;
+$('#btnTheme').onclick = () => {
+  const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.querySelector('meta[name=theme-color]').content = cssVar('--bg'); persist(); if (D.raw.length) render();
+};
+
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-cell]'); if (c){ const [code, d] = c.dataset.cell.split('|'); openPerson(code, d); return; }
+  const p = e.target.closest('[data-person]'); if (p){ openPerson(p.dataset.person); return; }
+  const k = e.target.closest('[data-pick]'); if (k){ S.person = k.dataset.pick; S.openDay = null; render(); return; }
+  const th = e.target.closest('th[data-sort]'); if (th){
+    const key = th.dataset.sort;
+    S.sort = S.sort.key === key ? {key, dir: -S.sort.dir} : {key, dir: key === 'name' ? 1 : -1};
+    renderTable(members(), agg(members(), period()));
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,select,textarea') || e.metaKey || e.ctrlKey || e.altKey || !D.raw.length) return;
+  if (e.key === 'ArrowLeft' && S.mode === 'day'){ S.date = addDays(S.date, -1); render(); }
+  else if (e.key === 'ArrowRight' && S.mode === 'day' && S.date < todayIso()){ S.date = addDays(S.date, 1); render(); }
+  else if (e.key === 'r' || e.key === 'R') load(true);
+  else if (S.tab === 'person' && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'j' || e.key === 'k')){
+    if (e.key.startsWith('Arrow')) return;
+    const ms = members(), i = ms.findIndex(m => m.code === S.person);
+    S.person = ms[(i + (e.key === 'j' ? 1 : -1) + ms.length) % ms.length].code; render();
+  }
+});
+
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => D.raw.length && renderControls(), 150); });
+// tự đồng bộ mỗi 5 phút khi tab đang mở
+setInterval(() => { if (document.visibilityState === 'visible') load(); }, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D.loadedAt && Date.now() - D.loadedAt > 120000) load(); });
+
+load();
+</script>
+</body>
+</html>
